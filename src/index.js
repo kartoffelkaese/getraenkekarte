@@ -17,12 +17,13 @@ const io = socketIo(server, {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
 
 // Admin-Bereich mit Authentifizierung
-app.use('/', express.static('public', { index: 'index.html' }));
-app.use('/admin.html', auth, express.static('public/admin.html'));
-app.use('/js/admin.js', auth, express.static('public/js/admin.js'));
+app.use('/admin.html', auth);
+app.use('/js/admin.js', auth);
+
+// Statische Dateien
+app.use(express.static('public'));
 
 // Datenbank-Verbindung
 const db = mysql.createConnection({
