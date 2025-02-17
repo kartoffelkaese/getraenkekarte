@@ -188,13 +188,8 @@ app.post('/api/ads/update-order', (req, res) => {
 
 // Socket.io Verbindung
 io.on('connection', (socket) => {
-    console.log('Client connected');
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
-    });
+    socket.on('disconnect', () => {});
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server läuft auf Port ${PORT}`);
-}); 
+server.listen(PORT); 
