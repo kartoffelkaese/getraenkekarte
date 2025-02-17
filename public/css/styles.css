@@ -1,0 +1,391 @@
+:root {
+    --bg-dark: #121212;
+    --bg-card: #1E1E1E;
+    --bg-header: #1A1A1A;
+    --text-primary: #E0E0E0;
+    --text-secondary: #BBBBBB;
+    --border-color: #333333;
+    --hover-color: #2A2A2A;
+    --category-bg: #252525;
+    --category-border: #4A4A4A;
+    --category-text: #FFFFFF;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+/* Hauptseiten-spezifische Styles */
+body.drinks-page {
+    overflow: hidden;
+}
+
+.fullscreen-container {
+    height: calc(100vh - 1rem);
+    width: calc(100vw - 1rem);
+    margin: 0.5rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+}
+
+#drinksList {
+    flex: 7;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.drinks-container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+}
+
+.drinks-row {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: flex;
+}
+
+.category-column {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Platzhalter für zusätzlichen Content */
+.additional-content {
+    flex: 3;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.drink-ad {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.drink-ad.active {
+    opacity: 1;
+}
+
+.drink-ad img {
+    width: 80%;
+    height: 60vh;
+    object-fit: contain;
+    margin-bottom: 2rem;
+    transform-origin: center center;
+}
+
+.drink-ad.active img {
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.drink-ad .drink-name {
+    font-size: 3rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.drink-ad .drink-price {
+    font-size: 2.5rem;
+    color: #a50775;
+    font-weight: bold;
+    text-align: center;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    20%, 80% { opacity: 1; }
+}
+
+.category-container {
+    margin-bottom: 0.5rem;
+}
+
+.category-header {
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-dark);
+    padding: 0.5rem 0;
+    z-index: 1;
+}
+
+.category-header h2 {
+    color: var(--category-text);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    padding: 0;
+}
+
+.drinks-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.card {
+    transition: all 0.3s ease;
+    margin-bottom: 0.25rem;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    background-color: var(--hover-color);
+}
+
+.card-body {
+    padding: 0.25rem 0.5rem;
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-size: clamp(1rem, 2vh, 1.3rem);
+}
+
+/* Schriftgrößen basierend auf Viewport-Höhe */
+h1 {
+    font-size: clamp(1.5rem, 3vh, 2.5rem);
+    margin-bottom: 0.5rem !important;
+    color: var(--text-primary);
+}
+
+h2 {
+    font-size: clamp(1rem, 2.2vh, 1.3rem);
+    color: var(--text-primary);
+    margin: 0;
+    padding-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Kompakteres Layout für niedrige Bildschirme */
+@media screen and (max-height: 800px) {
+    .category-container {
+        margin-bottom: 0.25rem;
+    }
+    
+    .card {
+        margin-bottom: 0.15rem;
+    }
+    
+    .card-body {
+        padding: 0.15rem 0.35rem;
+    }
+    
+    .drinks-list {
+        gap: 0.15rem;
+    }
+}
+
+/* Noch kompakteres Layout für sehr niedrige Bildschirme */
+@media screen and (max-height: 600px) {
+    .category-container {
+        margin-bottom: 0.15rem;
+    }
+    
+    .card {
+        margin-bottom: 0.1rem;
+    }
+    
+    .card-body {
+        padding: 0.1rem 0.25rem;
+    }
+    
+    .drinks-list {
+        gap: 0.1rem;
+    }
+}
+
+/* Admin-spezifische Styles */
+.admin-container {
+    padding: 1rem;
+    color: #333333;
+    background-color: #ffffff;
+}
+
+.version-info {
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Helles Theme für Admin-Tabellen */
+.table {
+    color: #333333;
+    background-color: #ffffff;
+}
+
+.table > thead {
+    background-color: #f8f9fa;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+    border-color: #dee2e6;
+    background-color: #ffffff;
+}
+
+.form-switch {
+    padding-left: 2.5em;
+}
+
+.form-check-input {
+    cursor: pointer;
+    background-color: #ffffff;
+    border-color: #dee2e6;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Admin-spezifische Überschriften */
+.admin-container h1,
+.admin-container h2 {
+    color: #333333;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444444;
+}
+
+/* Responsive Anpassungen für Breite */
+@media (max-width: 767px) {
+    .content-area {
+        flex-direction: column;
+    }
+
+    #drinksList {
+        flex: 1;
+    }
+
+    .additional-content {
+        display: none;
+    }
+}
+
+/* Kategorie-Überschriften */
+h2 {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+@media (max-width: 991px) {
+    .category-container {
+        width: calc(50% - 1rem) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .category-container {
+        width: 100% !important;
+    }
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 767px) {
+    .content-area {
+        flex-direction: column;
+    }
+
+    #drinksList {
+        flex: 1;
+    }
+
+    .additional-content {
+        display: none;
+    }
+}
+
+.middle-column {
+    position: relative;
+}
+
+.middle-column::after {
+    content: '';
+    position: absolute;
+    bottom: 1rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    height: 20vh;
+    background-image: url('https://tanzstudio-schlegl.de/wp-content/themes/tanzstudio-schlegl/img/schlegl__logo.svg');
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: contain;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+} 

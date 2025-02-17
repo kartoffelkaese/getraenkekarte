@@ -1,0 +1,5 @@
+env_variables:
+  DB_HOST: "mysql2f16.netcup.net"
+  DB_USER: "k18900_bar"
+  DB_NAME: "k18900_bar"
+  # DB_PASSWORD wird über --set-secrets gesetzt 
