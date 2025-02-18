@@ -1,22 +1,38 @@
-# Digitale Getränkekarte (Version 1.2.1)
+# Digitale Getränkekarte (Version 2.0.0)
 
 Eine moderne, digitale Getränkekarte mit Echtzeit-Updates, entwickelt für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien und Werbeanzeigen in Echtzeit.
 
 ## Features
 
-### Getränkekarte
+### Getränkekarten
+- **Haupttheke**
+  - Dynamisches 3-Spalten-Layout
+  - Werbeanzeigen im mittleren Bereich
+  - Zusatzstoff-Informationen am unteren Rand
+  
+- **Theke Hinten**
+  - Kompaktes 3-Spalten-Layout
+  - Integriertes Logo im Footer
+  - Optimiert für kleinere Displays
+
+- **Jugendkarte (NEU)**
+  - Spezielles Layout für alkoholfreie Getränke
+  - Social Media Integration (Instagram)
+  - App Store & Google Play Store Badges
+  - Geteilter Bildschirm mit Werbung
+
+### Allgemeine Features
 - Responsive Design für verschiedene Bildschirmgrößen
-- Dynamisches 3-Spalten-Layout mit automatischer Verteilung
 - Echtzeit-Updates durch Socket.IO
 - Animierte Werbeanzeigen mit sanften Übergängen
 - Automatische Spaltenumbrüche für optimale Darstellung
 - Anpassbare Preisanzeige pro Getränk und Kategorie
-- Separate Ansichten für Haupttheke und hintere Theke
 - Dynamische Logo-Positionierung
 - Dunkles Design für optimale Lesbarkeit
 
 ### Admin-Panel
 - Benutzerfreundliches Interface zur Verwaltung
+- Separate Tabs für jede Karte (Haupttheke, Theke Hinten, Jugendkarte)
 - Getränke aktivieren/deaktivieren
 - Preisanzeige pro Getränk und Kategorie steuerbar
 - Kategorien ein-/ausblenden
@@ -24,7 +40,6 @@ Eine moderne, digitale Getränkekarte mit Echtzeit-Updates, entwickelt für Bars
 - Manuelle Spaltenumbrüche möglich
 - Werbeanzeigen-Verwaltung mit Bildupload
 - Logo-Verwaltung mit Positions- und Sichtbarkeitssteuerung
-- Einfaches Tab-System für verschiedene Theken
 
 ## Technologie-Stack
 
@@ -43,7 +58,8 @@ Eine moderne, digitale Getränkekarte mit Echtzeit-Updates, entwickelt für Bars
 
 - **Deployment:**
   - Docker-Support
-  - Google Cloud Run kompatibel
+  - Google Cloud Run ready
+  - Automatisierte Builds
 
 ## Installation
 
@@ -59,7 +75,7 @@ npm install
 ```
 
 3. Umgebungsvariablen konfigurieren:
-Erstellen Sie eine `.env`-Datei im Hauptverzeichnis:
+Erstellen Sie eine `.env`-Datei im Hauptverzeichnis basierend auf `.env.example`:
 ```env
 DB_HOST=your-db-host
 DB_USER=your-db-user
@@ -97,13 +113,15 @@ CREATE TABLE ads (
     image_path VARCHAR(255) NOT NULL,
     price DECIMAL(10,2),
     is_active BOOLEAN DEFAULT TRUE,
-    sort_order INT DEFAULT 0
+    sort_order INT DEFAULT 0,
+    card_type ENUM('default', 'jugendliche') DEFAULT 'default'
 );
 
 CREATE TABLE logo_settings (
     location VARCHAR(50) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     sort_order INT DEFAULT 0,
+    force_column_break BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (location)
 );
 
@@ -131,7 +149,9 @@ Produktionsserver starten:
 npm start
 ```
 
-## Docker Deployment
+## Deployment
+
+### Docker Deployment
 
 1. Image bauen:
 ```bash
@@ -143,34 +163,43 @@ docker build -t getraenkekarte .
 docker run -p 3000:8080 --env-file .env getraenkekarte
 ```
 
-## Google Cloud Run Deployment
+### Google Cloud Run Deployment
 
-1. Image für Cloud Run bauen und pushen:
+1. Authentifizierung:
 ```bash
-gcloud builds submit --tag gcr.io/[PROJECT-ID]/getraenkekarte
+gcloud auth login
 ```
 
 2. Service deployen:
 ```bash
-gcloud run deploy getraenkekarte \
-  --image gcr.io/[PROJECT-ID]/getraenkekarte \
+gcloud run deploy gkarte \
+  --source . \
   --platform managed \
   --region europe-west1 \
   --allow-unauthenticated \
   --set-env-vars="DB_HOST=your-db-host,DB_USER=your-db-user,DB_NAME=your-db-name" \
-  --set-secrets="DB_PASSWORD=gkarte-db-password:latest"
+  --set-secrets="DB_PASSWORD=your-db-password-secret:latest"
 ```
 
 ## Zugriff
 
 - **Haupttheke:** `http://[ihre-domain]/haupttheke`
 - **Hintere Theke:** `http://[ihre-domain]/theke-hinten`
+- **Jugendkarte:** `http://[ihre-domain]/jugendliche`
 - **Admin-Panel:** `http://[ihre-domain]/admin.html`
 
 ## Changelog
 
+### Version 2.0.0 (Aktuell)
+- Integration der Jugendkarte
+- Social Media Features (Instagram)
+- App Store & Google Play Store Integration
+- Verbessertes responsives Design
+- Optimierte Bildanzeige
+- Neue Animationen und Übergänge
+
 ### Version 1.2.1
-- Verbesserte Werbungsanimation mit sanfteren Übergängen
+- Verbesserte Werbungsanimation
 - Optimiertes dunkles Design
 - Synchronisierte Animations- und Übergangszeiten
 - Verbesserte Lesbarkeit durch angepasste Kontraste
