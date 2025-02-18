@@ -31,6 +31,10 @@ app.get('/theke-hinten', (req, res) => {
     res.sendFile('theke-hinten.html', { root: './public' });
 });
 
+app.get('/jugendliche', (req, res) => {
+    res.sendFile('jugendliche.html', { root: './public' });
+});
+
 // Umleitung von / auf /haupttheke
 app.get('/', (req, res) => {
     res.redirect('/haupttheke');
@@ -237,11 +241,12 @@ app.get('/api/ads/:location', async (req, res) => {
         LEFT JOIN display_settings ds ON ds.element_type = 'ad' 
             AND ds.element_id = a.id 
             AND ds.location = ?
+        WHERE (a.card_type = ? OR (a.card_type = 'default' AND ? != 'jugendliche'))
         ORDER BY sort_order ASC
     `;
     
     try {
-        const [rows] = await db.query(query, [location]);
+        const [rows] = await db.query(query, [location, location, location]);
         console.log('Ads API Response:', Array.isArray(rows), rows?.length);
         res.json(rows || []);
     } catch (err) {
@@ -300,7 +305,7 @@ app.get('/api/logo/:location', async (req, res) => {
     
     try {
         const [rows] = await db.query(query, [location]);
-        res.json(rows[0] || { is_active: true, sort_order: 0 });
+        res.json(rows[0] || { is_active: true, sort_order: 0, force_column_break: false });
     } catch (err) {
         console.error('Logo API Error:', err);
         res.status(500).json({ error: err.message });
@@ -340,6 +345,26 @@ app.post('/api/logo/toggle/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, is_active, is_active]);
+        io.emit('logoChanged', { location });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Toggle Logo-Spaltenumbruch
+app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
+    const { force_column_break } = req.body;
+    const location = req.params.location;
+    
+    const query = `
+        INSERT INTO logo_settings (location, force_column_break)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE force_column_break = ?
+    `;
+    
+    try {
+        await db.query(query, [location, force_column_break, force_column_break]);
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {

@@ -133,10 +133,9 @@ body.drinks-page {
 
 .drink-ad .drink-price {
     font-size: 2.5rem;
-    color: #ff0095;
+    color: #a50775;
     font-weight: bold;
     text-align: center;
-    text-shadow: 0 0 10px rgba(255,0,149,0.5);
 }
 
 @keyframes fadeInOut {
@@ -372,7 +371,7 @@ h2 {
 }
 
 /* Logo nur für die hintere Theke */
-body:not(.haupttheke) .middle-column::after {
+body.theke-hinten .middle-column::after {
     content: '';
     position: absolute;
     bottom: 1rem;
@@ -507,7 +506,7 @@ body.haupttheke .logo-container {
 }
 
 body.haupttheke .logo-image {
-    max-height: 5.6vh;
+    max-height: 13.4vh;
 }
 
 /* Admin Tabs Styling */
@@ -527,4 +526,117 @@ body.haupttheke .logo-image {
     color: #0d6efd;
     font-weight: 500;
     border-color: #dee2e6 #dee2e6 #fff;
+}
+
+/* Jugendkarten-spezifische Styles */
+body.jugendliche .content-area {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+body.jugendliche .drinks-container {
+    flex: 1;
+    min-height: 50%;
+}
+
+body.jugendliche .jugend-ads-container {
+    flex: 1;
+    min-height: 50%;
+    max-height: 50%;
+    position: relative;
+    background-color: var(--bg-dark);
+    border-top: 1px solid var(--border-color);
+    margin-top: 1rem;
+    display: flex;
+}
+
+body.jugendliche .social-app-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    border-right: 1px solid var(--border-color);
+}
+
+body.jugendliche .social-media {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4rem;
+}
+
+body.jugendliche .social-media img {
+    width: 64px;
+    height: 64px;
+    margin-right: 1.5rem;
+    object-fit: contain;
+}
+
+body.jugendliche .social-media .handle {
+    color: var(--text-primary);
+    font-size: 2rem;
+    white-space: nowrap;
+}
+
+body.jugendliche .app-store-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+body.jugendliche .app-store-badges h3 {
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+    text-align: center;
+}
+
+body.jugendliche .app-store-badges img {
+    height: 64px;
+    width: auto;
+    object-fit: contain;
+}
+
+body.jugendliche .app-store-badges a {
+    display: block;
+    text-decoration: none;
+}
+
+body.jugendliche .additional-content {
+    flex: 2;
+}
+
+body.jugendliche .drink-ad {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+}
+
+body.jugendliche .drink-ad img {
+    height: 90%;
+    width: auto;
+    margin: 0 2rem;
+}
+
+body.jugendliche .drink-ad .drink-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+body.jugendliche .drink-ad .drink-name {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+body.jugendliche .drink-ad .drink-price {
+    font-size: 2rem;
 } 

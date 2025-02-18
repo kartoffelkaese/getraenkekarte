@@ -11,7 +11,7 @@
 <body>
     <div class="container admin-container">
         <h1>Admin - Getränkeverwaltung</h1>
-        <small class="version-info text-muted mb-4 d-block">Version 1.2.1</small>
+        <small class="version-info text-muted mb-4 d-block">Version 2.0.0</small>
 
         <!-- Karten-Auswahl als Tabs -->
         <ul class="nav nav-tabs mb-4" id="locationTabs" role="tablist">
@@ -27,6 +27,12 @@
                     Theke Hinten
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="jugendliche-tab" data-bs-toggle="tab" 
+                        data-location="jugendliche" type="button" role="tab">
+                    Jugendkarte
+                </button>
+            </li>
         </ul>
         
         <!-- Kategorien-Sektion -->
@@ -39,6 +45,7 @@
                             <th>Element</th>
                             <th>Anzeigen</th>
                             <th>Reihenfolge</th>
+                            <th>Spaltenumbruch</th>
                         </tr>
                     </thead>
                     <tbody id="logoTableBody">
@@ -56,6 +63,13 @@
                                        style="width: 80px"
                                        id="logo-order"
                                        onchange="updateLogoOrder(this.value)">
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="logo-column-break-switch"
+                                           onchange="toggleLogoColumnBreak(this.checked)">
+                                </div>
                             </td>
                         </tr>
                     </tbody>

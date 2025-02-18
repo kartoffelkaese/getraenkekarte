@@ -163,6 +163,7 @@ async function fetchLogo() {
         
         const visibilitySwitch = document.querySelector('#logo-visibility-switch');
         const orderInput = document.querySelector('#logo-order');
+        const columnBreakSwitch = document.querySelector('#logo-column-break-switch');
         
         if (visibilitySwitch) {
             visibilitySwitch.checked = logoSettings.is_active;
@@ -170,6 +171,10 @@ async function fetchLogo() {
         
         if (orderInput) {
             orderInput.value = logoSettings.sort_order || 0;
+        }
+
+        if (columnBreakSwitch) {
+            columnBreakSwitch.checked = logoSettings.force_column_break || false;
         }
     } catch (error) {
         console.error('Fehler beim Laden der Logo-Einstellungen:', error);
@@ -252,6 +257,17 @@ function displayDrinks(drinks) {
 // Funktion zum Anzeigen der Werbungen
 function displayAds(ads) {
     const adsTableBody = document.getElementById('adsTableBody');
+    const adsSection = document.querySelector('div.mb-4 h2').textContent === 'Werbung' 
+        ? adsTableBody.closest('.mb-4')
+        : null;
+    
+    // Zeige die Werbungssektion nur für nicht-Jugendkarten oder wenn es Jugendkarten-Werbungen gibt
+    if (currentLocation === 'jugendliche' && (!Array.isArray(ads) || ads.length === 0)) {
+        if (adsSection) adsSection.style.display = 'none';
+        return;
+    }
+    
+    if (adsSection) adsSection.style.display = 'block';
     adsTableBody.innerHTML = '';
     
     ads.forEach(ad => {
@@ -508,5 +524,29 @@ async function updateLogoOrder(sort_order) {
         console.error('Fehler beim Aktualisieren der Logo-Position:', error);
         // Bei Fehler die Logo-Einstellungen neu laden
         fetchLogo();
+    }
+}
+
+// Funktion zum Umschalten des Logo-Spaltenumbruchs
+async function toggleLogoColumnBreak(force_column_break) {
+    try {
+        const response = await fetch(`/api/logo/toggle-column-break/${currentLocation}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ force_column_break })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Netzwerk-Antwort war nicht ok');
+        }
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren des Logo-Spaltenumbruchs:', error);
+        // Bei Fehler Switch zurücksetzen
+        const switchElement = document.querySelector('#logo-column-break-switch');
+        if (switchElement) {
+            switchElement.checked = !force_column_break;
+        }
     }
 } 

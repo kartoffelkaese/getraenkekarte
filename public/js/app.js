@@ -318,6 +318,8 @@ function displayLogo(settings) {
     
     // Füge das Logo an der richtigen Position ein
     let inserted = false;
+    let currentColumn = 0;
+    
     columns.forEach(column => {
         const categories = column.querySelectorAll('.category-container');
         categories.forEach(category => {
@@ -326,12 +328,26 @@ function displayLogo(settings) {
             if (categoryData && !inserted && settings.sort_order <= parseInt(categoryData.dataset.sortOrder || '999999')) {
                 column.insertBefore(logoContainer, category);
                 inserted = true;
+                
+                // Wenn Spaltenumbruch aktiviert ist, erhöhe den Spaltenindex
+                if (settings.force_column_break) {
+                    currentColumn++;
+                    // Verschiebe verbleibende Kategorien in die nächste Spalte
+                    if (currentColumn < columns.length) {
+                        const remainingCategories = Array.from(categories).slice(Array.from(categories).indexOf(category));
+                        remainingCategories.forEach(cat => columns[currentColumn].appendChild(cat));
+                    }
+                }
             }
         });
         
         // Wenn das Logo noch nicht eingefügt wurde und dies die letzte Kategorie ist
         if (!inserted) {
             column.appendChild(logoContainer);
+            // Wenn Spaltenumbruch aktiviert ist, beginne die nächste Spalte
+            if (settings.force_column_break) {
+                currentColumn++;
+            }
         }
     });
 } 
