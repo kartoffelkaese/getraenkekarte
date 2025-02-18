@@ -1,13 +1,13 @@
 :root {
-    --bg-dark: #121212;
-    --bg-card: #1E1E1E;
-    --bg-header: #1A1A1A;
-    --text-primary: #E0E0E0;
-    --text-secondary: #BBBBBB;
+    --bg-dark: #000000;
+    --bg-card: #1A1A1A;
+    --bg-header: #000000;
+    --text-primary: #FFFFFF;
+    --text-secondary: #CCCCCC;
     --border-color: #333333;
     --hover-color: #2A2A2A;
-    --category-bg: #252525;
-    --category-border: #4A4A4A;
+    --category-bg: #000000;
+    --category-border: #333333;
     --category-text: #FFFFFF;
 }
 
@@ -88,7 +88,7 @@ body.drinks-page {
     justify-content: center;
     align-items: center;
     opacity: 0;
-    transition: opacity 1s ease-in-out;
+    transition: opacity 0.5s ease-in-out;
 }
 
 .drink-ad.active {
@@ -104,14 +104,20 @@ body.drinks-page {
 }
 
 .drink-ad.active img {
-    animation: float 4s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite;
 }
 
 @keyframes float {
     0% {
         transform: translateY(0px);
     }
+    25% {
+        transform: translateY(-15px);
+    }
     50% {
+        transform: translateY(0px);
+    }
+    75% {
         transform: translateY(-15px);
     }
     100% {
@@ -122,15 +128,15 @@ body.drinks-page {
 .drink-ad .drink-name {
     font-size: 3rem;
     color: var(--text-primary);
-    margin-bottom: 1rem;
     text-align: center;
 }
 
 .drink-ad .drink-price {
     font-size: 2.5rem;
-    color: #a50775;
+    color: #ff0095;
     font-weight: bold;
     text-align: center;
+    text-shadow: 0 0 10px rgba(255,0,149,0.5);
 }
 
 @keyframes fadeInOut {
@@ -148,6 +154,7 @@ body.drinks-page {
     background-color: var(--bg-dark);
     padding: 0.5rem 0;
     z-index: 1;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .category-header h2 {
@@ -157,6 +164,7 @@ body.drinks-page {
     letter-spacing: 0.5px;
     margin: 0;
     padding: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .drinks-list {
@@ -171,11 +179,12 @@ body.drinks-page {
     margin-bottom: 0.25rem;
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 8px rgba(255,255,255,0.1);
     background-color: var(--hover-color);
 }
 
@@ -362,7 +371,8 @@ h2 {
     position: relative;
 }
 
-.middle-column::after {
+/* Logo nur für die hintere Theke */
+body:not(.haupttheke) .middle-column::after {
     content: '';
     position: absolute;
     bottom: 1rem;
@@ -388,4 +398,133 @@ h2 {
     100% {
         transform: scale(1);
     }
+}
+
+/* Haupttheken-spezifische Styles */
+body.haupttheke .content-area {
+    flex-direction: column;
+}
+
+body.haupttheke .drinks-container {
+    width: 100%;
+    height: 100%;
+}
+
+body.haupttheke .drinks-row {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+body.haupttheke .category-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    overflow-y: auto;
+}
+
+body.haupttheke .middle-column {
+    position: relative;
+    padding-bottom: 4.2rem;
+}
+
+body.haupttheke .additional-content {
+    position: relative;
+    height: 20vh;
+    min-height: 150px;
+    margin-bottom: 1rem;
+    background-color: var(--bg-dark);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+body.haupttheke .drink-ad {
+    position: absolute;
+    top: 7rem;
+    left: 0;
+    width: 100%;
+    height: 75%;
+}
+
+body.haupttheke .drink-ad img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+body.haupttheke .drink-ad .drink-name {
+    font-size: 2rem;
+}
+
+body.haupttheke .drink-ad .drink-price {
+    font-size: 1.8rem;
+}
+
+/* Zusatzstoffe Container Styles */
+body.haupttheke .additives-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-dark);
+    border-top: 1px solid var(--border-color);
+    padding: 0.5rem;
+    z-index: 1000;
+}
+
+body.haupttheke .additives-content {
+    margin: 0 auto;
+    text-align: center;
+}
+
+body.haupttheke .additives-content small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* Logo Styles */
+.logo-container {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-image {
+    max-width: 100%;
+    height: auto;
+    max-height: 15vh;
+}
+
+/* Haupttheken-spezifische Logo Styles */
+body.haupttheke .logo-container {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+body.haupttheke .logo-image {
+    max-height: 5.6vh;
+}
+
+/* Admin Tabs Styling */
+.nav-tabs .nav-link {
+    color: #333333;
+    border: 1px solid #dee2e6;
+    margin-right: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    font-weight: 500;
+    border-color: #dee2e6 #dee2e6 #fff;
 } 

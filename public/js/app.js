@@ -1,46 +1,69 @@
 const socket = io();
 const drinksList = document.getElementById('drinksList');
+const currentLocation = document.body.dataset.location;
 
-// Lade die Getränke beim Start
+// Lade die Daten beim Start
 fetchDrinks();
+fetchAds();
+fetchLogo();
 
 // Lade die Werbungen beim Start
 fetchAds();
 
 // Socket.io Events
-socket.on('drinkStatusChanged', () => {
-    fetchDrinks();
+socket.on('drinkStatusChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchDrinks();
+    }
 });
 
-socket.on('categoryPricesChanged', () => {
-    fetchDrinks();
+socket.on('categoryPricesChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchDrinks();
+    }
 });
 
-socket.on('drinkPriceChanged', () => {
-    fetchDrinks();
+socket.on('drinkPriceChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchDrinks();
+    }
 });
 
-socket.on('categoryVisibilityChanged', () => {
-    fetchDrinks();
+socket.on('categoryVisibilityChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchDrinks();
+    }
 });
 
-socket.on('categorySortChanged', () => {
-    fetchDrinks();
+socket.on('categorySortChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchDrinks();
+    }
 });
 
-socket.on('categoryColumnBreakChanged', () => {
-    fetchDrinks();
+socket.on('categoryColumnBreakChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchDrinks();
+    }
 });
 
 // Socket.io Events für Werbungen
-socket.on('adsChanged', () => {
-    fetchAds();
+socket.on('adsChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchAds();
+    }
+});
+
+socket.on('logoChanged', (data) => {
+    if (data.location === currentLocation) {
+        fetchLogo();
+    }
 });
 
 // Funktion zum Laden der Getränke
 async function fetchDrinks() {
     try {
-        const response = await fetch('/api/drinks');
+        const response = await fetch(`/api/drinks/${currentLocation}`);
         const drinks = await response.json();
         displayDrinks(drinks);
     } catch (error) {
@@ -50,31 +73,60 @@ async function fetchDrinks() {
 
 // Funktion zum Anzeigen der Getränke
 function displayDrinks(drinks) {
-    drinksList.innerHTML = '';
+    const isHaupttheke = currentLocation === 'haupttheke';
     
-    // Container für die Getränke
-    const drinksContainer = document.createElement('div');
-    drinksContainer.className = 'drinks-container';
-    drinksList.appendChild(drinksContainer);
+    if (isHaupttheke) {
+        // Für Haupttheke: Verwende existierende Spalten
+        const columns = [
+            document.querySelector('.left-column'),
+            document.querySelector('.middle-column'),
+            document.querySelector('.right-column')
+        ];
+        
+        // Leere die Spalten (außer additional-content)
+        columns.forEach(column => {
+            const additionalContent = column.querySelector('.additional-content');
+            column.innerHTML = '';
+            if (additionalContent) {
+                column.appendChild(additionalContent);
+            }
+        });
+    } else {
+        // Für Theke-Hinten: Erstelle neue Spalten
+        const drinksList = document.getElementById('drinksList');
+        drinksList.innerHTML = '';
+        
+        // Container für die Getränke
+        const drinksContainer = document.createElement('div');
+        drinksContainer.className = 'drinks-container';
+        drinksList.appendChild(drinksContainer);
 
-    // Container für die Spalten
-    const rowContainer = document.createElement('div');
-    rowContainer.className = 'drinks-row';
-    drinksContainer.appendChild(rowContainer);
+        // Container für die Spalten
+        const rowContainer = document.createElement('div');
+        rowContainer.className = 'drinks-row';
+        drinksContainer.appendChild(rowContainer);
 
-    // Erstelle die drei Spalten
-    const columns = [
-        document.createElement('div'),
-        document.createElement('div'),
-        document.createElement('div')
-    ];
-    columns.forEach((col, index) => {
-        col.className = 'category-column';
-        if (index === 1) {
-            col.classList.add('middle-column');
-        }
-        rowContainer.appendChild(col);
-    });
+        // Erstelle die drei Spalten
+        const columns = [
+            document.createElement('div'),
+            document.createElement('div'),
+            document.createElement('div')
+        ];
+        columns.forEach((col, index) => {
+            col.className = 'category-column';
+            if (index === 1) {
+                col.classList.add('middle-column');
+            }
+            rowContainer.appendChild(col);
+        });
+    }
+    
+    // Gemeinsame Logik für beide Layouts
+    const columns = isHaupttheke ? [
+        document.querySelector('.left-column'),
+        document.querySelector('.middle-column'),
+        document.querySelector('.right-column')
+    ] : document.querySelectorAll('.category-column');
     
     // Gruppiere Getränke nach Kategorien
     const drinksByCategory = {};
@@ -101,10 +153,6 @@ function displayDrinks(drinks) {
         return orderA - orderB;
     });
     
-    // Berechne die optimale Verteilung der Kategorien
-    const totalCategories = sortedCategories.length;
-    const categoriesPerColumn = Math.ceil(totalCategories / 3);
-    
     let currentColumn = 0;
     
     // Verteile Kategorien auf die Spalten
@@ -130,7 +178,11 @@ function displayDrinks(drinks) {
         // Kategorie-Überschrift
         const categoryHeader = document.createElement('div');
         categoryHeader.className = 'category-header';
-        categoryHeader.innerHTML = `<h2 class="border-bottom pb-2">${categoryName}</h2>`;
+        const categoryH2 = document.createElement('h2');
+        categoryH2.className = 'border-bottom pb-2';
+        categoryH2.textContent = categoryName;
+        categoryH2.dataset.sortOrder = categoryData.category_sort_order || '999999';
+        categoryHeader.appendChild(categoryH2);
         categoryContainer.appendChild(categoryHeader);
 
         // Container für die Getränke dieser Kategorie
@@ -165,12 +217,15 @@ function displayDrinks(drinks) {
         // Füge die Kategorie zur entsprechenden Spalte hinzu
         columns[currentColumn].appendChild(categoryContainer);
     });
+
+    // Lade das Logo neu, nachdem die Getränke aktualisiert wurden
+    fetchLogo();
 }
 
 // Funktion zum Laden der Werbungen
 async function fetchAds() {
     try {
-        const response = await fetch('/api/ads');
+        const response = await fetch(`/api/ads/${currentLocation}`);
         const ads = await response.json();
         displayAds(ads);
     } catch (error) {
@@ -231,5 +286,52 @@ function initAdRotation(ads) {
     showNextAd();
 
     // Ads alle 6 Sekunden wechseln
-    setInterval(showNextAd, 6000);
+    setInterval(showNextAd, 6000); // Synchronisiert mit der 6s Float-Animation
+}
+
+// Funktion zum Laden der Logo-Einstellungen
+async function fetchLogo() {
+    try {
+        const response = await fetch(`/api/logo/${currentLocation}`);
+        const logoSettings = await response.json();
+        displayLogo(logoSettings);
+    } catch (error) {
+        console.error('Fehler beim Laden der Logo-Einstellungen:', error);
+    }
+}
+
+// Funktion zum Anzeigen des Logos
+function displayLogo(settings) {
+    const logoPath = '/images/logo.png';
+    const columns = document.querySelectorAll('.category-column');
+    
+    // Entferne alte Logo-Container
+    document.querySelectorAll('.logo-container').forEach(container => container.remove());
+    
+    if (!settings.is_active) return;
+    
+    const logoContainer = document.createElement('div');
+    logoContainer.className = 'logo-container';
+    logoContainer.innerHTML = `
+        <img src="${logoPath}" alt="Logo" class="logo-image">
+    `;
+    
+    // Füge das Logo an der richtigen Position ein
+    let inserted = false;
+    columns.forEach(column => {
+        const categories = column.querySelectorAll('.category-container');
+        categories.forEach(category => {
+            // Finde die erste Kategorie, deren sort_order größer ist als die des Logos
+            const categoryData = category.querySelector('h2');
+            if (categoryData && !inserted && settings.sort_order <= parseInt(categoryData.dataset.sortOrder || '999999')) {
+                column.insertBefore(logoContainer, category);
+                inserted = true;
+            }
+        });
+        
+        // Wenn das Logo noch nicht eingefügt wurde und dies die letzte Kategorie ist
+        if (!inserted) {
+            column.appendChild(logoContainer);
+        }
+    });
 } 

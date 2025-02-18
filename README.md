@@ -1,4 +1,4 @@
-# Digitale Getränkekarte (Version 1.1.0)
+# Digitale Getränkekarte (Version 1.2.1)
 
 Eine moderne, digitale Getränkekarte mit Echtzeit-Updates, entwickelt für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien und Werbeanzeigen in Echtzeit.
 

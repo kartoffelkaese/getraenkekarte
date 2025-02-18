@@ -11,8 +11,58 @@
 <body>
     <div class="container admin-container">
         <h1>Admin - Getränkeverwaltung</h1>
-        <small class="version-info text-muted mb-4 d-block">Version 1.1.0</small>
+        <small class="version-info text-muted mb-4 d-block">Version 1.2.1</small>
+
+        <!-- Karten-Auswahl als Tabs -->
+        <ul class="nav nav-tabs mb-4" id="locationTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="haupttheke-tab" data-bs-toggle="tab" 
+                        data-location="haupttheke" type="button" role="tab">
+                    Haupttheke
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="theke-hinten-tab" data-bs-toggle="tab" 
+                        data-location="theke-hinten" type="button" role="tab">
+                    Theke Hinten
+                </button>
+            </li>
+        </ul>
         
+        <!-- Kategorien-Sektion -->
+        <div class="mb-4">
+            <h2>Logo</h2>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Anzeigen</th>
+                            <th>Reihenfolge</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logoTableBody">
+                        <tr>
+                            <td>Logo</td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="logo-visibility-switch"
+                                           onchange="toggleLogoVisibility(this.checked)">
+                                </div>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" 
+                                       style="width: 80px"
+                                       id="logo-order"
+                                       onchange="updateLogoOrder(this.value)">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Kategorien-Sektion -->
         <div class="mb-4">
             <h2>Kategorien</h2>
