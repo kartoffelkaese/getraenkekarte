@@ -18,9 +18,9 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// Admin-Bereich mit Authentifizierung
-app.use('/admin.html', auth);
-app.use('/js/admin.js', auth);
+// Admin-Bereich ohne Authentifizierung
+// app.use('/admin.html', auth);
+// app.use('/js/admin.js', auth);
 
 // Routen für die verschiedenen Karten
 app.get('/haupttheke', (req, res) => {
