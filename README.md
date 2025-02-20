@@ -1,67 +1,62 @@
-# Digitale Getränkekarte (Version 2.0.0)
+# Digitale Getränkekarte (Version 2.1.0)
 
-Eine moderne, digitale Getränkekarte mit Echtzeit-Updates, entwickelt für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien und Werbeanzeigen in Echtzeit.
+Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien, Events und Werbeanzeigen in Echtzeit.
 
-## Features
+## 🚀 Hauptfunktionen
 
-### Getränkekarten
+### 📱 Kartentypen
 - **Haupttheke**
   - Dynamisches 3-Spalten-Layout
-  - Werbeanzeigen im mittleren Bereich
-  - Zusatzstoff-Informationen am unteren Rand
+  - Zentrale Werbeanzeigen
+  - Zusatzstoff-Informationen
   
 - **Theke Hinten**
   - Kompaktes 3-Spalten-Layout
-  - Integriertes Logo im Footer
+  - Integriertes Logo
   - Optimiert für kleinere Displays
 
-- **Jugendkarte (NEU)**
+- **Jugendkarte**
   - Spezielles Layout für alkoholfreie Getränke
-  - Social Media Integration (Instagram)
-  - App Store & Google Play Store Badges
-  - Geteilter Bildschirm mit Werbung
+  - Event-Integration
+  - Social Media Features
+  - App Store & Play Store Integration
 
-### Allgemeine Features
-- Responsive Design für verschiedene Bildschirmgrößen
-- Echtzeit-Updates durch Socket.IO
-- Animierte Werbeanzeigen mit sanften Übergängen
-- Automatische Spaltenumbrüche für optimale Darstellung
-- Anpassbare Preisanzeige pro Getränk und Kategorie
-- Dynamische Logo-Positionierung
+### 💫 Allgemeine Features
+- Echtzeit-Updates via Socket.IO
+- Responsives Design
+- Animierte Werbeanzeigen
+- Dynamische Spaltenumbrüche
+- Flexible Preisanzeige
 - Dunkles Design für optimale Lesbarkeit
 
-### Admin-Panel
-- Benutzerfreundliches Interface zur Verwaltung
-- Separate Tabs für jede Karte (Haupttheke, Theke Hinten, Jugendkarte)
-- Getränke aktivieren/deaktivieren
-- Preisanzeige pro Getränk und Kategorie steuerbar
-- Kategorien ein-/ausblenden
-- Reihenfolge der Kategorien anpassbar
-- Manuelle Spaltenumbrüche möglich
-- Werbeanzeigen-Verwaltung mit Bildupload
-- Logo-Verwaltung mit Positions- und Sichtbarkeitssteuerung
+### ⚙️ Admin-Panel
+- Benutzerfreundliches Interface
+- Separate Tabs pro Karte
+- Umfassende Verwaltungsmöglichkeiten:
+  - Getränke & Kategorien
+  - Events & Werbung
+  - Logo & Layout
+  - Preisanzeigen
 
-## Technologie-Stack
+## 🛠 Technologie-Stack
 
-- **Backend:**
-  - Node.js mit Express.js
-  - Socket.IO für Echtzeit-Updates
-  - MySQL Datenbank
-  
-- **Frontend:**
-  - HTML5 & CSS3
-  - Bootstrap 5
-  - Vanilla JavaScript
-  - Socket.IO Client
-  - Responsive Design
-  - Animationen & Transitions
+### Backend
+- Node.js & Express.js
+- Socket.IO
+- MySQL Datenbank
+- Firebase (Events)
 
-- **Deployment:**
-  - Docker-Support
-  - Google Cloud Run ready
-  - Automatisierte Builds
+### Frontend
+- HTML5 & CSS3
+- Bootstrap 5
+- Vanilla JavaScript
+- Socket.IO Client
 
-## Installation
+### Deployment
+- Docker-Support
+- Cloud-Ready
+
+## 📦 Installation
 
 1. Repository klonen:
 ```bash
@@ -74,8 +69,7 @@ cd getraenkekarte
 npm install
 ```
 
-3. Umgebungsvariablen konfigurieren:
-Erstellen Sie eine `.env`-Datei im Hauptverzeichnis basierend auf `.env.example`:
+3. Umgebungsvariablen in `.env` konfigurieren:
 ```env
 DB_HOST=your-db-host
 DB_USER=your-db-user
@@ -137,9 +131,9 @@ CREATE TABLE display_settings (
 );
 ```
 
-## Entwicklung
+## 🚀 Entwicklung
 
-Entwicklungsserver mit automatischem Neuladen starten:
+Entwicklungsserver starten:
 ```bash
 npm run dev
 ```
@@ -149,9 +143,7 @@ Produktionsserver starten:
 npm start
 ```
 
-## Deployment
-
-### Docker Deployment
+## 🐳 Docker Deployment
 
 1. Image bauen:
 ```bash
@@ -163,46 +155,33 @@ docker build -t getraenkekarte .
 docker run -p 3000:8080 --env-file .env getraenkekarte
 ```
 
-### Google Cloud Run Deployment
+## 🔗 Zugriff
 
-1. Authentifizierung:
-```bash
-gcloud auth login
-```
+- Haupttheke: `http://[domain]/haupttheke`
+- Hintere Theke: `http://[domain]/theke-hinten`
+- Jugendkarte: `http://[domain]/jugendliche`
+- Admin-Panel: `http://[domain]/admin.html`
 
-2. Service deployen:
-```bash
-gcloud run deploy gkarte \
-  --source . \
-  --platform managed \
-  --region europe-west1 \
-  --allow-unauthenticated \
-  --set-env-vars="DB_HOST=your-db-host,DB_USER=your-db-user,DB_NAME=your-db-name" \
-  --set-secrets="DB_PASSWORD=your-db-password-secret:latest"
-```
+## 📝 Changelog
 
-## Zugriff
+### Version 2.1.0 (Aktuell)
+- Event-System Integration
+- Optimierte Event-Anzeige
+- Verbesserte Social Media Integration
+- Angepasstes responsives Layout
+- Feinjustierte Animationen
 
-- **Haupttheke:** `http://[ihre-domain]/haupttheke`
-- **Hintere Theke:** `http://[ihre-domain]/theke-hinten`
-- **Jugendkarte:** `http://[ihre-domain]/jugendliche`
-- **Admin-Panel:** `http://[ihre-domain]/admin.html`
-
-## Changelog
-
-### Version 2.0.0 (Aktuell)
+### Version 2.0.0
 - Integration der Jugendkarte
-- Social Media Features (Instagram)
-- App Store & Google Play Store Integration
+- Social Media Features
+- App Store Integration
 - Verbessertes responsives Design
 - Optimierte Bildanzeige
-- Neue Animationen und Übergänge
 
 ### Version 1.2.1
 - Verbesserte Werbungsanimation
 - Optimiertes dunkles Design
-- Synchronisierte Animations- und Übergangszeiten
-- Verbesserte Lesbarkeit durch angepasste Kontraste
+- Verbesserte Lesbarkeit
 
 ### Version 1.2.0
 - Einführung des dunklen Designs
@@ -210,22 +189,20 @@ gcloud run deploy gkarte \
 - Optimierte Werbungsanzeige
 
 ### Version 1.1.0
-- Initiale Version mit grundlegenden Funktionen
-- Getränke- und Kategorienverwaltung
-- Werbungsintegration
+- Initiale Version
+- Grundlegende Funktionen
 - Admin-Panel
 
-## Sicherheitshinweise
+## 🔒 Sicherheit
 
-- Die `.env` Datei enthält sensible Daten und ist in `.gitignore` aufgenommen
-- Alle Passwörter und Zugangsdaten sollten sicher verwahrt werden
-- Das Admin-Panel ist durch Basic Authentication geschützt
-- Regelmäßige Backups der Datenbank werden empfohlen
+- Sensible Daten in `.env` (gitignored)
+- Basic Authentication für Admin-Panel
+- Regelmäßige Backups empfohlen
 
-## Support
+## 📫 Support
 
-Bei Fragen oder Problemen öffnen Sie bitte ein Issue auf GitHub.
+Bei Fragen oder Problemen wenden Sie sich bitte an den Support.
 
-## Lizenz
+## ⚖️ Lizenz
 
-Dieses Projekt ist privat und nicht zur öffentlichen Nutzung bestimmt. Alle Rechte vorbehalten. 
+Dieses Projekt ist privat lizenziert. Alle Rechte vorbehalten. 
