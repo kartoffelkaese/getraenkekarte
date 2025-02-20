@@ -152,7 +152,7 @@ body.drinks-page {
     position: sticky;
     top: 0;
     background-color: var(--bg-dark);
-    padding: 0.5rem 0;
+    padding: 0.4rem 0;
     z-index: 1;
     border-bottom: 1px solid var(--border-color);
 }
@@ -434,7 +434,7 @@ body.haupttheke .category-column {
     display: flex;
     flex-direction: column;
     padding: 0.5rem;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 body.haupttheke .middle-column {
