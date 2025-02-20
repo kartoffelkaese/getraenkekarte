@@ -1,4 +1,4 @@
-# Digitale Getränkekarte (Version 2.2.1)
+# Digitale Getränkekarte (Version 2.2.2)
 
 Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien, Events, Werbeanzeigen und Zusatzstoffen in Echtzeit.
 
@@ -200,7 +200,14 @@ docker run -p 3000:8080 --env-file .env getraenkekarte
 
 ## 📝 Changelog
 
-### Version 2.2.1 (Aktuell)
+### Version 2.2.2 (Aktuell)
+- Aktualisierung der externen Bibliotheken
+  - jQuery auf Version 3.7.1
+  - Firebase auf Version 10.7.2
+  - Verbesserte Sicherheit und Performance
+  - Optimierte Event-Integration
+
+### Version 2.2.1
 - Optimierte Darstellung der Haupttheke
   - Verbessertes Scrollverhalten
   - Angepasste Layout-Integration

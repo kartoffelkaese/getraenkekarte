@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events - Jugendkarte</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="module">
         class EventItem {
             constructor(date, start, end, hasEnd, img, name, selection, desc, eintritt) {
@@ -20,7 +20,7 @@
             }
         }
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
         import {
             collection,
             getDocs,
@@ -30,7 +30,7 @@
             limit,
             where,
             Timestamp,
-        } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDMnQr16h-2-ofKciZiJCslIVSWncxp2xM",

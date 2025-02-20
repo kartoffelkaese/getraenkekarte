@@ -12,14 +12,14 @@ class EventItem {
     }
 }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import {
     collection,
     getDocs,
     getFirestore,
     query,
     limit,
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDMnQr16h-2-ofKciZiJCslIVSWncxp2xM",
