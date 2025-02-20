@@ -599,7 +599,19 @@ body.jugendliche .social-media img {
     height: 60px;
     margin-right: 2rem;
     object-fit: contain;
-    filter: brightness(1.1);
+    animation: socialPulse 5s ease-in-out infinite;
+}
+
+@keyframes socialPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 body.jugendliche .social-media .handle {
@@ -680,8 +692,15 @@ body.jugendliche .additional-content::before {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 1px;
-    background: linear-gradient(180deg, transparent, rgba(165, 7, 117, 0.5), transparent);
+    width: 2px;
+    background: linear-gradient(180deg, 
+        transparent,
+        rgba(165, 7, 117, 0.8),
+        rgba(165, 7, 117, 0.8),
+        rgba(165, 7, 117, 0.8),
+        transparent
+    );
+    box-shadow: 0 0 15px rgba(165, 7, 117, 0.5);
 }
 
 body.jugendliche .drink-ad {
@@ -714,4 +733,193 @@ body.jugendliche .drink-ad .drink-name {
 
 body.jugendliche .drink-ad .drink-price {
     font-size: 2rem;
+}
+
+/* Events Styles */
+.events-section {
+    margin-top: 2rem;
+}
+
+#events-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.event-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(165, 7, 117, 0.1);
+    transition: transform 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-card:hover {
+    transform: translateY(-5px);
+}
+
+.event-image {
+    position: relative;
+    width: 100%;
+    padding-top: 40%; /* Reduziert von 56.25% für kleinere Bilder */
+    overflow: hidden;
+}
+
+.event-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.event-info {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.event-info h3 {
+    color: var(--text-light);
+    font-size: 2.2rem; /* Vergrößert von 1.8rem */
+    margin: 0 0 1rem 0;
+    line-height: 1.2;
+}
+
+.event-date, .event-time {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin: 0.5rem 0;
+    font-size: 1.5rem; /* Vergrößert von 1.2rem */
+    line-height: 1.3;
+}
+
+.event-description {
+    color: var(--text-light);
+    opacity: 0.8;
+    margin: 1rem 0;
+    line-height: 1.5;
+}
+
+.event-price {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 1rem 0 0 0;
+}
+
+.event-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.badge-youth {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+.badge-all {
+    background-color: #2a2a2a;
+    color: var(--text-light);
+    border: 1px solid var(--primary-color);
+}
+
+.no-events {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.no-events h3 {
+    color: var(--text-light);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+/* Responsive Events */
+@media (max-width: 1200px) {
+    #events-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    #events-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Jugendkarten-spezifische Event Styles */
+body.jugendliche #events-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+body.jugendliche .event-card {
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid rgba(165, 7, 117, 0.3);
+    margin-bottom: 0;
+}
+
+body.jugendliche .event-info {
+    min-height: 180px;
+}
+
+body.jugendliche .event-info h3 {
+    font-size: 2rem; /* Vergrößert von 1.2rem */
+    margin-bottom: 0.8rem;
+}
+
+body.jugendliche .event-date,
+body.jugendliche .event-time {
+    font-size: 1.4rem; /* Vergrößert von 0.9rem */
+    margin: 0.3rem 0;
+}
+
+/* Responsive Anpassungen für Events in der Jugendkarte */
+@media (max-width: 1400px) {
+    body.jugendliche #events-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body.jugendliche .jugend-ads-container {
+        flex-direction: column;
+    }
+    
+    body.jugendliche .social-app-container,
+    body.jugendliche .additional-content {
+        flex: none;
+        width: 100%;
+        min-height: auto;
+    }
+    
+    body.jugendliche #events-container {
+        max-height: 50vh;
+    }
 } 
