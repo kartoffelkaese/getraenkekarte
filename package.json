@@ -1,5 +1,5 @@
 {
-  "name": "gkarte",
+  "name": "getraenkekarte",
   "version": "2.1.0",
   "main": "src/index.js",
   "scripts": {
