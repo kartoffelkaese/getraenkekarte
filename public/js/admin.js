@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchDrinks();
     fetchAds();
     fetchLogo();
+    fetchAdditives();
 });
 
 // Socket.io Events
@@ -99,6 +100,10 @@ socket.on('logoChanged', ({ location }) => {
     if (location === currentLocation) {
         fetchLogo();
     }
+});
+
+socket.on('drinkAdditivesChanged', ({ drinkId }) => {
+    fetchDrinks();
 });
 
 // Funktion zum Laden der Kategorien
@@ -181,6 +186,28 @@ async function fetchLogo() {
     }
 }
 
+// Funktion zum Laden der Zusatzstoffe
+async function fetchAdditives() {
+    try {
+        const response = await fetch('/api/additives');
+        const additives = await response.json();
+        displayAdditives(additives);
+    } catch (error) {
+        console.error('Fehler beim Laden der Zusatzstoffe:', error);
+    }
+}
+
+// Funktion zum Laden der Zusatzstoffe eines Getränks
+async function fetchDrinkAdditives(drinkId) {
+    try {
+        const response = await fetch(`/api/drink-additives/${drinkId}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Fehler beim Laden der Getränkezusatzstoffe:', error);
+        return [];
+    }
+}
+
 // Funktion zum Anzeigen der Kategorien
 function displayCategories(categories) {
     categoriesTableBody.innerHTML = '';
@@ -224,11 +251,15 @@ function displayCategories(categories) {
 }
 
 // Funktion zum Anzeigen der Getränke
-function displayDrinks(drinks) {
+async function displayDrinks(drinks) {
     drinksTableBody.innerHTML = '';
-    drinks.forEach(drink => {
+    const additives = await fetch('/api/additives').then(res => res.json());
+    
+    for (const drink of drinks) {
+        const drinkAdditives = await fetchDrinkAdditives(drink.id);
         const row = document.createElement('tr');
         const preis = parseFloat(drink.preis) || 0;
+        
         row.innerHTML = `
             <td>${drink.name}</td>
             <td>${preis.toFixed(2)} €</td>
@@ -249,9 +280,21 @@ function displayDrinks(drinks) {
                            onchange="toggleDrinkPrice(${drink.id}, this.checked)">
                 </div>
             </td>
+            <td>
+                <select class="form-select form-select-sm additives-select" 
+                        multiple
+                        onchange="updateDrinkAdditives(${drink.id}, this)">
+                    ${additives.map(additive => `
+                        <option value="${additive.id}" 
+                                ${drinkAdditives.some(a => a.id === additive.id) ? 'selected' : ''}>
+                            ${additive.code}) ${additive.name}
+                        </option>
+                    `).join('')}
+                </select>
+            </td>
         `;
         drinksTableBody.appendChild(row);
-    });
+    }
 }
 
 // Funktion zum Anzeigen der Werbungen
@@ -293,6 +336,111 @@ function displayAds(ads) {
             </td>
         `;
         adsTableBody.appendChild(row);
+    });
+}
+
+// Zusatzstoff-Verwaltung
+let additiveModal;
+let currentAdditiveId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    additiveModal = new bootstrap.Modal(document.getElementById('additiveModal'));
+});
+
+function showAddAdditiveModal() {
+    currentAdditiveId = null;
+    document.getElementById('additiveModalTitle').textContent = 'Zusatzstoff hinzufügen';
+    document.getElementById('additiveForm').reset();
+    additiveModal.show();
+}
+
+function editAdditive(id) {
+    currentAdditiveId = id;
+    document.getElementById('additiveModalTitle').textContent = 'Zusatzstoff bearbeiten';
+    
+    // Lade die Daten des ausgewählten Zusatzstoffs
+    fetch(`/api/additives/${id}`)
+        .then(response => response.json())
+        .then(additive => {
+            document.getElementById('additiveCode').value = additive.code;
+            document.getElementById('additiveName').value = additive.name;
+            additiveModal.show();
+        })
+        .catch(error => {
+            console.error('Fehler beim Laden des Zusatzstoffs:', error);
+            alert('Fehler beim Laden des Zusatzstoffs');
+        });
+}
+
+function deleteAdditive(id) {
+    if (confirm('Möchten Sie diesen Zusatzstoff wirklich löschen?')) {
+        fetch(`/api/additives/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                fetchAdditives();
+            } else {
+                alert('Fehler beim Löschen des Zusatzstoffs');
+            }
+        })
+        .catch(error => {
+            console.error('Fehler beim Löschen des Zusatzstoffs:', error);
+            alert('Fehler beim Löschen des Zusatzstoffs');
+        });
+    }
+}
+
+function saveAdditive() {
+    const code = document.getElementById('additiveCode').value;
+    const name = document.getElementById('additiveName').value;
+    
+    const method = currentAdditiveId ? 'PUT' : 'POST';
+    const url = currentAdditiveId ? `/api/additives/${currentAdditiveId}` : '/api/additives';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code, name })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            additiveModal.hide();
+            fetchAdditives();
+        } else {
+            alert('Fehler beim Speichern des Zusatzstoffs');
+        }
+    })
+    .catch(error => {
+        console.error('Fehler beim Speichern des Zusatzstoffs:', error);
+        alert('Fehler beim Speichern des Zusatzstoffs');
+    });
+}
+
+// Funktion zum Anzeigen der Zusatzstoffe
+function displayAdditives(additives) {
+    const additivesTableBody = document.getElementById('additivesTableBody');
+    additivesTableBody.innerHTML = '';
+    
+    additives.forEach(additive => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${additive.code}</td>
+            <td>${additive.name}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="editAdditive(${additive.id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteAdditive(${additive.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        additivesTableBody.appendChild(row);
     });
 }
 
@@ -548,5 +696,29 @@ async function toggleLogoColumnBreak(force_column_break) {
         if (switchElement) {
             switchElement.checked = !force_column_break;
         }
+    }
+}
+
+// Funktion zum Aktualisieren der Zusatzstoffe eines Getränks
+async function updateDrinkAdditives(drinkId, selectElement) {
+    const selectedOptions = Array.from(selectElement.selectedOptions);
+    const additiveIds = selectedOptions.map(option => parseInt(option.value));
+    
+    try {
+        const response = await fetch(`/api/drink-additives/${drinkId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ additiveIds })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Netzwerk-Antwort war nicht ok');
+        }
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren der Zusatzstoffe:', error);
+        // Bei Fehler die Getränke neu laden
+        fetchDrinks();
     }
 } 

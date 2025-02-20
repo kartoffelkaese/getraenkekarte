@@ -1,6 +1,6 @@
-# Digitale Getränkekarte (Version 2.1.0)
+# Digitale Getränkekarte (Version 2.2.0)
 
-Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien, Events und Werbeanzeigen in Echtzeit.
+Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien, Events, Werbeanzeigen und Zusatzstoffen in Echtzeit.
 
 ## 🚀 Hauptfunktionen
 
@@ -8,18 +8,21 @@ Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaur
 - **Haupttheke**
   - Dynamisches 3-Spalten-Layout
   - Zentrale Werbeanzeigen
-  - Zusatzstoff-Informationen
+  - Dynamische Zusatzstoff-Anzeige
+  - Optimierte Darstellung
   
 - **Theke Hinten**
   - Kompaktes 3-Spalten-Layout
   - Integriertes Logo
   - Optimiert für kleinere Displays
+  - Angepasste Zusatzstoff-Darstellung
 
 - **Jugendkarte**
   - Spezielles Layout für alkoholfreie Getränke
   - Event-Integration
   - Social Media Features
   - App Store & Play Store Integration
+  - Jugendgerechte Zusatzstoff-Anzeige
 
 ### 💫 Allgemeine Features
 - Echtzeit-Updates via Socket.IO
@@ -28,6 +31,7 @@ Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaur
 - Dynamische Spaltenumbrüche
 - Flexible Preisanzeige
 - Dunkles Design für optimale Lesbarkeit
+- Dynamische Zusatzstoff-Verwaltung
 
 ### ⚙️ Admin-Panel
 - Benutzerfreundliches Interface
@@ -37,12 +41,13 @@ Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaur
   - Events & Werbung
   - Logo & Layout
   - Preisanzeigen
+  - Zusatzstoff-Management
 
 ## 🛠 Technologie-Stack
 
 ### Backend
 - Node.js & Express.js
-- Socket.IO
+- Socket.IO für Echtzeit-Updates
 - MySQL Datenbank
 - Firebase (Events)
 
@@ -51,10 +56,12 @@ Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaur
 - Bootstrap 5
 - Vanilla JavaScript
 - Socket.IO Client
+- Responsive Design
 
 ### Deployment
 - Docker-Support
 - Cloud-Ready
+- Skalierbare Architektur
 
 ## 📦 Installation
 
@@ -129,6 +136,35 @@ CREATE TABLE display_settings (
     force_column_break BOOLEAN DEFAULT NULL,
     PRIMARY KEY (location, element_type, element_id)
 );
+
+CREATE TABLE additives (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(10) NOT NULL,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE drink_additives (
+    drink_id INT NOT NULL,
+    additive_id INT NOT NULL,
+    PRIMARY KEY (drink_id, additive_id),
+    FOREIGN KEY (drink_id) REFERENCES drinks2(id) ON DELETE CASCADE,
+    FOREIGN KEY (additive_id) REFERENCES additives(id) ON DELETE CASCADE
+);
+
+-- Füge Standardzusatzstoffe ein
+INSERT INTO additives (code, name) VALUES
+('1', 'mit Farbstoff'),
+('2', 'mit Konservierungsstoff'),
+('3', 'mit Antioxidationsmittel'),
+('4', 'mit Geschmacksverstärker'),
+('5', 'geschwefelt'),
+('6', 'geschwärzt'),
+('7', 'gewachst'),
+('8', 'mit Phosphat'),
+('9', 'mit Süßungsmitteln'),
+('10', 'enthält eine Phenylalaninquelle'),
+('11', 'mit Taurin'),
+('12', 'koffeinhaltig');
 ```
 
 ## 🚀 Entwicklung
@@ -164,7 +200,22 @@ docker run -p 3000:8080 --env-file .env getraenkekarte
 
 ## 📝 Changelog
 
-### Version 2.1.0 (Aktuell)
+### Version 2.2.0 (Aktuell)
+- Optimierte Darstellung der Zusatzstoffe
+  - Verbesserte Layout-Integration
+  - Angepasste Abstände und Positionierung
+  - Optimierte mobile Darstellung
+- Dynamische Zusatzstoff-Anzeige aus der Datenbank
+  - Echtzeit-Aktualisierung
+  - Verbesserte Performance
+- Verbessertes responsives Verhalten
+  - Optimierte Darstellung auf allen Bildschirmgrößen
+  - Angepasste Schriftgrößen
+- Erweiterte Admin-Funktionalitäten
+  - Verbessertes Zusatzstoff-Management
+  - Intuitivere Benutzerführung
+
+### Version 2.1.0
 - Event-System Integration
 - Optimierte Event-Anzeige
 - Verbesserte Social Media Integration
@@ -198,11 +249,13 @@ docker run -p 3000:8080 --env-file .env getraenkekarte
 - Sensible Daten in `.env` (gitignored)
 - Basic Authentication für Admin-Panel
 - Regelmäßige Backups empfohlen
-
-## 📫 Support
-
-Bei Fragen oder Problemen wenden Sie sich bitte an den Support.
+- Sichere Datenbank-Verbindung
+- XSS-Schutz implementiert
 
 ## ⚖️ Lizenz
 
-Dieses Projekt ist privat lizenziert. Alle Rechte vorbehalten. 
+Dieses Projekt ist unter der GNU General Public License v3.0 (GPL-3.0) lizenziert.
+
+Die vollständige Lizenz finden Sie in der [LICENSE](LICENSE) Datei oder unter https://www.gnu.org/licenses/gpl-3.0.html
+
+© 2024 Martin Urban 

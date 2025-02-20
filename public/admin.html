@@ -12,7 +12,7 @@
 <body>
     <div class="container admin-container">
         <h1>Admin - Getränkeverwaltung</h1>
-        <small class="version-info text-muted mb-4 d-block">Version 2.1.0</small>
+        <small class="version-info text-muted mb-4 d-block">Version 2.2.0</small>
 
         <!-- Karten-Auswahl als Tabs -->
         <ul class="nav nav-tabs mb-4" id="locationTabs" role="tablist">
@@ -132,12 +132,66 @@
                             <th>Kategorie</th>
                             <th>Aktiv</th>
                             <th>Preis anzeigen</th>
+                            <th>Zusatzstoffe</th>
                         </tr>
                     </thead>
                     <tbody id="drinksTableBody">
                         <!-- Getränke werden hier dynamisch eingefügt -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Zusatzstoffe-Sektion -->
+        <div class="mt-4">
+            <h2>Zusatzstoffe verwalten</h2>
+            <div class="mb-3">
+                <button class="btn btn-primary" onclick="showAddAdditiveModal()">
+                    <i class="bi bi-plus-circle"></i> Neuer Zusatzstoff
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="additivesTableBody">
+                        <!-- Zusatzstoffe werden hier dynamisch eingefügt -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal für Zusatzstoff hinzufügen/bearbeiten -->
+        <div class="modal fade" id="additiveModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="additiveModalTitle">Zusatzstoff hinzufügen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="additiveForm">
+                            <input type="hidden" id="additiveId">
+                            <div class="mb-3">
+                                <label for="additiveCode" class="form-label">Code</label>
+                                <input type="text" class="form-control" id="additiveCode" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="additiveName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="additiveName" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-primary" onclick="saveAdditive()">Speichern</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

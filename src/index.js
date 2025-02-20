@@ -62,7 +62,8 @@ app.get('/api/drinks/:location', async (req, res) => {
                COALESCE(ds_cat.show_price, c.show_prices) as category_show_prices,
                COALESCE(ds_cat.is_active, c.is_visible) as category_is_visible,
                COALESCE(ds_cat.sort_order, c.sort_order) as category_sort_order,
-               COALESCE(ds_cat.force_column_break, c.force_column_break) as category_force_column_break
+               COALESCE(ds_cat.force_column_break, c.force_column_break) as category_force_column_break,
+               GROUP_CONCAT(CONCAT(a.code, ') ', a.name) SEPARATOR ', ') as additives
         FROM drinks2 d 
         LEFT JOIN categories c ON d.category_id = c.id
         LEFT JOIN display_settings ds_drink ON ds_drink.element_type = 'drink' 
@@ -71,6 +72,9 @@ app.get('/api/drinks/:location', async (req, res) => {
         LEFT JOIN display_settings ds_cat ON ds_cat.element_type = 'category' 
             AND ds_cat.element_id = c.id 
             AND ds_cat.location = ?
+        LEFT JOIN drink_additives da ON da.drink_id = d.id
+        LEFT JOIN additives a ON a.id = da.additive_id
+        GROUP BY d.id
         ORDER BY category_sort_order ASC, c.name ASC, d.name ASC
     `;
     
@@ -372,9 +376,146 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
     }
 });
 
+// API-Endpunkte für Zusatzstoffe
+app.get('/api/additives', async (req, res) => {
+    const query = `
+        SELECT * FROM additives
+        ORDER BY code ASC
+    `;
+    
+    try {
+        const [rows] = await db.query(query);
+        res.json(rows || []);
+    } catch (err) {
+        console.error('Additives API Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/drink-additives/:drinkId', async (req, res) => {
+    const drinkId = req.params.drinkId;
+    const query = `
+        SELECT a.* FROM additives a
+        JOIN drink_additives da ON da.additive_id = a.id
+        WHERE da.drink_id = ?
+        ORDER BY a.code ASC
+    `;
+    
+    try {
+        const [rows] = await db.query(query, [drinkId]);
+        res.json(rows || []);
+    } catch (err) {
+        console.error('Drink Additives API Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/drink-additives/:drinkId', async (req, res) => {
+    const drinkId = req.params.drinkId;
+    const { additiveIds } = req.body;
+    
+    try {
+        // Lösche bestehende Zuordnungen
+        await db.query('DELETE FROM drink_additives WHERE drink_id = ?', [drinkId]);
+        
+        // Füge neue Zuordnungen hinzu
+        if (additiveIds && additiveIds.length > 0) {
+            const values = additiveIds.map(id => [drinkId, id]);
+            await db.query('INSERT INTO drink_additives (drink_id, additive_id) VALUES ?', [values]);
+        }
+        
+        io.emit('drinkAdditivesChanged', { drinkId });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Update Drink Additives Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API-Endpunkte für Zusatzstoffe
+app.get('/api/additives/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = 'SELECT * FROM additives WHERE id = ?';
+    
+    try {
+        const [rows] = await db.query(query, [id]);
+        if (rows.length > 0) {
+            res.json(rows[0]);
+        } else {
+            res.status(404).json({ error: 'Zusatzstoff nicht gefunden' });
+        }
+    } catch (err) {
+        console.error('Fehler beim Laden des Zusatzstoffs:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/additives', async (req, res) => {
+    const { code, name } = req.body;
+    const query = 'INSERT INTO additives (code, name) VALUES (?, ?)';
+    
+    try {
+        await db.query(query, [code, name]);
+        io.emit('additivesChanged');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Fehler beim Erstellen des Zusatzstoffs:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/additives/:id', async (req, res) => {
+    const id = req.params.id;
+    const { code, name } = req.body;
+    const query = 'UPDATE additives SET code = ?, name = ? WHERE id = ?';
+    
+    try {
+        await db.query(query, [code, name, id]);
+        io.emit('additivesChanged');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Fehler beim Aktualisieren des Zusatzstoffs:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/additives/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = 'DELETE FROM additives WHERE id = ?';
+    
+    try {
+        await db.query(query, [id]);
+        io.emit('additivesChanged');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Fehler beim Löschen des Zusatzstoffs:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API-Endpunkt für die Zusatzstoff-Liste
+app.get('/api/additives-list', async (req, res) => {
+    const query = `
+        SELECT code, name 
+        FROM additives 
+        ORDER BY CAST(code AS SIGNED)
+    `;
+    
+    try {
+        const [rows] = await db.query(query);
+        res.json(rows || []);
+    } catch (err) {
+        console.error('Additives List API Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Socket.io Verbindung
 io.on('connection', (socket) => {
     socket.on('disconnect', () => {});
+    socket.on('additivesChanged', () => {
+        socket.broadcast.emit('additivesChanged');
+    });
 });
 
 const PORT = process.env.PORT || 3000;

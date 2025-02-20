@@ -6,6 +6,7 @@ const currentLocation = document.body.dataset.location;
 fetchDrinks();
 fetchAds();
 fetchLogo();
+loadAdditives();
 
 // Lade die Werbungen beim Start
 fetchAds();
@@ -58,6 +59,30 @@ socket.on('logoChanged', (data) => {
     if (data.location === currentLocation) {
         fetchLogo();
     }
+});
+
+// Funktion zum Laden der Zusatzstoffe
+async function loadAdditives() {
+    try {
+        const response = await fetch('/api/additives-list');
+        const additives = await response.json();
+        
+        const additivesContent = document.querySelector('.additives-content');
+        if (additivesContent) {
+            additivesContent.innerHTML = `
+                <small>
+                    ${additives.map(a => `${a.code}) ${a.name}`).join(' • ')}
+                </small>
+            `;
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Zusatzstoffe:', error);
+    }
+}
+
+// Socket.io Events für Zusatzstoffe
+socket.on('additivesChanged', () => {
+    loadAdditives();
 });
 
 // Funktion zum Laden der Getränke
@@ -205,7 +230,10 @@ function displayDrinks(drinks) {
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title d-flex justify-content-between mb-0">
-                            ${drink.name}
+                            <span class="drink-name">
+                                ${drink.name}
+                                ${drink.additives ? `<small class="additives-info">(${drink.additives.split(', ').map(a => a.split(')')[0]).join(',')})</small>` : ''}
+                            </span>
                             ${priceHtml}
                         </h5>
                     </div>
