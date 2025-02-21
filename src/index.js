@@ -15,6 +15,8 @@ const io = socketIo(server, {
     }
 });
 
+// Base path für die Anwendung
+app.use('/getraenkekarte', express.static('public'));
 app.use(cors());
 app.use(express.json());
 
@@ -23,25 +25,22 @@ app.use(express.json());
 // app.use('/js/admin.js', auth);
 
 // Routen für die verschiedenen Karten
-app.get('/haupttheke', (req, res) => {
+app.get('/getraenkekarte/haupttheke', (req, res) => {
     res.sendFile('haupttheke.html', { root: './public' });
 });
 
-app.get('/theke-hinten', (req, res) => {
+app.get('/getraenkekarte/theke-hinten', (req, res) => {
     res.sendFile('theke-hinten.html', { root: './public' });
 });
 
-app.get('/jugendliche', (req, res) => {
+app.get('/getraenkekarte/jugendliche', (req, res) => {
     res.sendFile('jugendliche.html', { root: './public' });
 });
 
 // Umleitung von / auf /haupttheke
-app.get('/', (req, res) => {
-    res.redirect('/haupttheke');
+app.get('/getraenkekarte', (req, res) => {
+    res.redirect('/getraenkekarte/haupttheke');
 });
-
-// Statische Dateien
-app.use(express.static('public'));
 
 // Datenbank-Verbindung
 const db = mysql.createConnection({
@@ -67,7 +66,7 @@ db.query('SELECT 1')
   });
 
 // API-Endpunkte mit Location-Parameter
-app.get('/api/drinks/:location', async (req, res) => {
+app.get('/getraenkekarte/api/drinks/:location', async (req, res) => {
     const location = req.params.location;
     const query = `
         SELECT d.id, d.name, d.preis, d.category_id,
@@ -104,7 +103,7 @@ app.get('/api/drinks/:location', async (req, res) => {
 });
 
 // Hole alle Kategorien mit kartenspezifischen Einstellungen
-app.get('/api/categories/:location', async (req, res) => {
+app.get('/getraenkekarte/api/categories/:location', async (req, res) => {
     const location = req.params.location;
     const query = `
         SELECT c.id, c.name, 
@@ -130,7 +129,7 @@ app.get('/api/categories/:location', async (req, res) => {
 });
 
 // Update drink status für spezifische Karte
-app.post('/api/drinks/toggle/:location', async (req, res) => {
+app.post('/getraenkekarte/api/drinks/toggle/:location', async (req, res) => {
     const { id, is_active } = req.body;
     const location = req.params.location;
     
@@ -150,7 +149,7 @@ app.post('/api/drinks/toggle/:location', async (req, res) => {
 });
 
 // Toggle Preisanzeige für ein Getränk auf spezifischer Karte
-app.post('/api/drinks/toggle-price/:location', async (req, res) => {
+app.post('/getraenkekarte/api/drinks/toggle-price/:location', async (req, res) => {
     const { id, show_price } = req.body;
     const location = req.params.location;
     
@@ -170,7 +169,7 @@ app.post('/api/drinks/toggle-price/:location', async (req, res) => {
 });
 
 // Toggle Preisanzeige für eine Kategorie auf spezifischer Karte
-app.post('/api/categories/toggle-prices/:location', async (req, res) => {
+app.post('/getraenkekarte/api/categories/toggle-prices/:location', async (req, res) => {
     const { id, show_prices } = req.body;
     const location = req.params.location;
     
@@ -190,7 +189,7 @@ app.post('/api/categories/toggle-prices/:location', async (req, res) => {
 });
 
 // Toggle Sichtbarkeit für eine Kategorie auf spezifischer Karte
-app.post('/api/categories/toggle-visibility/:location', async (req, res) => {
+app.post('/getraenkekarte/api/categories/toggle-visibility/:location', async (req, res) => {
     const { id, is_visible } = req.body;
     const location = req.params.location;
     
@@ -210,7 +209,7 @@ app.post('/api/categories/toggle-visibility/:location', async (req, res) => {
 });
 
 // Toggle Spaltenumbruch für eine Kategorie auf spezifischer Karte
-app.post('/api/categories/toggle-column-break/:location', async (req, res) => {
+app.post('/getraenkekarte/api/categories/toggle-column-break/:location', async (req, res) => {
     const { id, force_column_break } = req.body;
     const location = req.params.location;
     
@@ -230,7 +229,7 @@ app.post('/api/categories/toggle-column-break/:location', async (req, res) => {
 });
 
 // Update Sortierreihenfolge einer Kategorie auf spezifischer Karte
-app.post('/api/categories/update-order/:location', async (req, res) => {
+app.post('/getraenkekarte/api/categories/update-order/:location', async (req, res) => {
     const { id, sort_order } = req.body;
     const location = req.params.location;
     
@@ -250,7 +249,7 @@ app.post('/api/categories/update-order/:location', async (req, res) => {
 });
 
 // Hole alle Werbungen mit kartenspezifischen Einstellungen
-app.get('/api/ads/:location', async (req, res) => {
+app.get('/getraenkekarte/api/ads/:location', async (req, res) => {
     const location = req.params.location;
     const query = `
         SELECT a.id, a.name, a.image_path, a.price,
@@ -275,7 +274,7 @@ app.get('/api/ads/:location', async (req, res) => {
 });
 
 // Toggle Aktivierung einer Werbung auf spezifischer Karte
-app.post('/api/ads/toggle/:location', async (req, res) => {
+app.post('/getraenkekarte/api/ads/toggle/:location', async (req, res) => {
     const { id, is_active } = req.body;
     const location = req.params.location;
     
@@ -295,7 +294,7 @@ app.post('/api/ads/toggle/:location', async (req, res) => {
 });
 
 // Update Sortierreihenfolge einer Werbung auf spezifischer Karte
-app.post('/api/ads/update-order/:location', async (req, res) => {
+app.post('/getraenkekarte/api/ads/update-order/:location', async (req, res) => {
     const { id, sort_order } = req.body;
     const location = req.params.location;
     
@@ -315,7 +314,7 @@ app.post('/api/ads/update-order/:location', async (req, res) => {
 });
 
 // Hole Logo-Einstellungen für spezifische Karte
-app.get('/api/logo/:location', async (req, res) => {
+app.get('/getraenkekarte/api/logo/:location', async (req, res) => {
     const location = req.params.location;
     const query = `
         SELECT * FROM logo_settings
@@ -332,7 +331,7 @@ app.get('/api/logo/:location', async (req, res) => {
 });
 
 // Update Logo-Position
-app.post('/api/logo/update-order/:location', async (req, res) => {
+app.post('/getraenkekarte/api/logo/update-order/:location', async (req, res) => {
     const { sort_order } = req.body;
     const location = req.params.location;
     
@@ -352,7 +351,7 @@ app.post('/api/logo/update-order/:location', async (req, res) => {
 });
 
 // Toggle Logo-Sichtbarkeit
-app.post('/api/logo/toggle/:location', async (req, res) => {
+app.post('/getraenkekarte/api/logo/toggle/:location', async (req, res) => {
     const { is_active } = req.body;
     const location = req.params.location;
     
@@ -372,7 +371,7 @@ app.post('/api/logo/toggle/:location', async (req, res) => {
 });
 
 // Toggle Logo-Spaltenumbruch
-app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
+app.post('/getraenkekarte/api/logo/toggle-column-break/:location', async (req, res) => {
     const { force_column_break } = req.body;
     const location = req.params.location;
     
@@ -392,7 +391,7 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
 });
 
 // API-Endpunkte für Zusatzstoffe
-app.get('/api/additives', async (req, res) => {
+app.get('/getraenkekarte/api/additives', async (req, res) => {
     const query = `
         SELECT * FROM additives
         ORDER BY code ASC
@@ -407,7 +406,7 @@ app.get('/api/additives', async (req, res) => {
     }
 });
 
-app.get('/api/drink-additives/:drinkId', async (req, res) => {
+app.get('/getraenkekarte/api/drink-additives/:drinkId', async (req, res) => {
     const drinkId = req.params.drinkId;
     const query = `
         SELECT a.* FROM additives a
@@ -425,7 +424,7 @@ app.get('/api/drink-additives/:drinkId', async (req, res) => {
     }
 });
 
-app.post('/api/drink-additives/:drinkId', async (req, res) => {
+app.post('/getraenkekarte/api/drink-additives/:drinkId', async (req, res) => {
     const drinkId = req.params.drinkId;
     const { additiveIds } = req.body;
     
@@ -448,7 +447,7 @@ app.post('/api/drink-additives/:drinkId', async (req, res) => {
 });
 
 // API-Endpunkte für Zusatzstoffe
-app.get('/api/additives/:id', async (req, res) => {
+app.get('/getraenkekarte/api/additives/:id', async (req, res) => {
     const id = req.params.id;
     const query = 'SELECT * FROM additives WHERE id = ?';
     
@@ -465,7 +464,7 @@ app.get('/api/additives/:id', async (req, res) => {
     }
 });
 
-app.post('/api/additives', async (req, res) => {
+app.post('/getraenkekarte/api/additives', async (req, res) => {
     const { code, name } = req.body;
     const query = 'INSERT INTO additives (code, name) VALUES (?, ?)';
     
@@ -479,7 +478,7 @@ app.post('/api/additives', async (req, res) => {
     }
 });
 
-app.put('/api/additives/:id', async (req, res) => {
+app.put('/getraenkekarte/api/additives/:id', async (req, res) => {
     const id = req.params.id;
     const { code, name } = req.body;
     const query = 'UPDATE additives SET code = ?, name = ? WHERE id = ?';
@@ -494,7 +493,7 @@ app.put('/api/additives/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/additives/:id', async (req, res) => {
+app.delete('/getraenkekarte/api/additives/:id', async (req, res) => {
     const id = req.params.id;
     const query = 'DELETE FROM additives WHERE id = ?';
     
@@ -509,7 +508,7 @@ app.delete('/api/additives/:id', async (req, res) => {
 });
 
 // API-Endpunkt für die Zusatzstoff-Liste
-app.get('/api/additives-list', async (req, res) => {
+app.get('/getraenkekarte/api/additives-list', async (req, res) => {
     const query = `
         SELECT code, name 
         FROM additives 

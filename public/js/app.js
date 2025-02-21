@@ -64,7 +64,7 @@ socket.on('logoChanged', (data) => {
 // Funktion zum Laden der Zusatzstoffe
 async function loadAdditives() {
     try {
-        const response = await fetch('/api/additives-list');
+        const response = await fetch('/getraenkekarte/api/additives-list');
         const additives = await response.json();
         
         const additivesContent = document.querySelector('.additives-content');
@@ -88,7 +88,7 @@ socket.on('additivesChanged', () => {
 // Funktion zum Laden der Getränke
 async function fetchDrinks() {
     try {
-        const response = await fetch(`/api/drinks/${currentLocation}`);
+        const response = await fetch(`/getraenkekarte/api/drinks/${currentLocation}`);
         const drinks = await response.json();
         displayDrinks(drinks);
     } catch (error) {
@@ -253,7 +253,7 @@ function displayDrinks(drinks) {
 // Funktion zum Laden der Werbungen
 async function fetchAds() {
     try {
-        const response = await fetch(`/api/ads/${currentLocation}`);
+        const response = await fetch(`/getraenkekarte/api/ads/${currentLocation}`);
         const ads = await response.json();
         displayAds(ads);
     } catch (error) {
@@ -320,7 +320,7 @@ function initAdRotation(ads) {
 // Funktion zum Laden der Logo-Einstellungen
 async function fetchLogo() {
     try {
-        const response = await fetch(`/api/logo/${currentLocation}`);
+        const response = await fetch(`/getraenkekarte/api/logo/${currentLocation}`);
         const logoSettings = await response.json();
         displayLogo(logoSettings);
     } catch (error) {
