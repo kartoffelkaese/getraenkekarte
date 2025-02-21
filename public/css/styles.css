@@ -445,7 +445,8 @@ body.haupttheke .middle-column {
 body.haupttheke .additional-content {
     position: relative;
     height: 20vh;
-    min-height: 150px;
+    /* min-height: 150px; */
+    min-height: 739.3px;
     margin-bottom: 1rem;
     background-color: var(--bg-dark);
     border-radius: 8px;
@@ -532,7 +533,8 @@ body.haupttheke .logo-container {
 }
 
 body.haupttheke .logo-image {
-    max-height: 13.4vh;
+    /* max-height: 13.4vh; */
+    max-height: 17.6vh;
 }
 
 /* Admin Tabs Styling */
