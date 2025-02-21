@@ -330,7 +330,7 @@ async function fetchLogo() {
 
 // Funktion zum Anzeigen des Logos
 function displayLogo(settings) {
-    const logoPath = '/images/logo.png';
+    const logoPath = '/getraenkekarte/images/logo.png';
     const columns = document.querySelectorAll('.category-column');
     
     // Entferne alte Logo-Container
