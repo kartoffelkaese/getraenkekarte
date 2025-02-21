@@ -1,1 +1,294 @@
- 
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Jugendkarte</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script type="module">
+        class EventItem {
+            constructor(date, start, end, hasEnd, img, name, selection, desc, eintritt) {
+                this.date = date;
+                this.name = name;
+                this.desc = desc;
+                this.eintritt = eintritt;
+                this.selection = selection;
+                this.hasEnd = hasEnd;
+                this.img = img;
+                this.start = start;
+                this.end = end;
+            }
+        }
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+        import {
+            collection,
+            getDocs,
+            getFirestore,
+            query,
+            orderBy,
+            limit,
+            where,
+            Timestamp,
+        } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMnQr16h-2-ofKciZiJCslIVSWncxp2xM",
+            authDomain: "schleglapp-dce81.firebaseapp.com",
+            projectId: "schleglapp-dce81",
+            storageBucket: "schleglapp-dce81.appspot.com",
+            messagingSenderId: "596674561612",
+            appId: "1:596674561612:web:035f933ec53eb7e6d756e9",
+            measurementId: "G-3GFM2S4GH8",
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        var events = [];
+        getEvents();
+
+        async function getEvents() {
+            events = [];
+            const now = new Date();
+            
+            const q1 = query(
+                collection(db, "books", "2023-03", "events"),
+                limit(12)  // Erhöhen des Limits, da wir client-seitig filtern
+            );
+            
+            const querySnapshot = await getDocs(q1);
+            querySnapshot.forEach((doc) => {
+                let end = doc.data().end.toDate();
+                let start = doc.data().start.toDate();
+                let hasEnd = doc.data().hasEnd;
+                let img = doc.data().img;
+                let name = doc.data().name;
+                let selection = doc.data().selection;
+                let date = doc.data().date.toDate();
+                let desc = doc.data().desc;
+                let eintritt = doc.data().eintritt;
+
+                // Filtern nach Datum und selection
+                if (date.getTime() >= now.getTime() && selection === "Für Jugendliche") {
+                    let item = new EventItem(
+                        date,
+                        start,
+                        end,
+                        hasEnd,
+                        img,
+                        name,
+                        selection,
+                        desc,
+                        eintritt
+                    );
+                    events.push(item);
+                }
+            });
+
+            // Sortiere Events nach Datum (aufsteigend)
+            events.sort((a, b) => a.date.getTime() - b.date.getTime());
+            
+            // Beschränke auf die ersten 4 Events
+            events = events.slice(0, 4);
+
+            console.log(events);
+            displayEvents();
+        }
+
+        function displayEvents() {
+            const eventsContainer = document.getElementById('events-container');
+            if (!eventsContainer) return;
+            
+            eventsContainer.innerHTML = ''; // Leere Container vor dem Hinzufügen neuer Events
+
+            if (events.length === 0) {
+                eventsContainer.innerHTML = `
+                    <div class="no-events">
+                        <h3>Keine anstehenden Events</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'event-card';
+                
+                const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const timeOptions = { hour: '2-digit', minute: '2-digit' };
+                
+                eventCard.innerHTML = `
+                    <div class="event-image">
+                        <img src="${event.img}" alt="${event.name}">
+                            ${event.selection}
+                        </div>
+                    </div>
+                    <div class="event-info">
+                        <h3>${event.name}</h3>
+                        <p class="event-date">
+                            ${event.date.toLocaleDateString('de-DE', dateOptions)}
+                        </p>
+                        <p class="event-time">
+                            ${event.start.toLocaleTimeString('de-DE', timeOptions)} Uhr
+                            ${event.hasEnd ? ' - ' + event.end.toLocaleTimeString('de-DE', timeOptions) + ' Uhr' : ''}
+                        </p>
+                    </div>
+                `;
+                
+                eventsContainer.appendChild(eventCard);
+            });
+        }
+    </script>
+    <style>
+        :root {
+            --primary-color: #a50775;
+            --bg-dark: #000000;
+            --text-light: #ffffff;
+            --card-bg: rgba(10, 10, 10, 0.95);
+            --border-color: rgba(165, 7, 117, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        #events-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .event-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(165, 7, 117, 0.1);
+            transition: transform 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .event-image {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+        }
+
+        .event-image img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .event-info {
+            padding: 1.5rem;
+        }
+
+        .event-info h3 {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .event-date, .event-time {
+            color: var(--primary-color);
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+
+        .event-description {
+            color: var(--text-light);
+            opacity: 0.8;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+
+        .event-price {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 1rem 0 0 0;
+        }
+
+        .event-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .badge-youth {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .badge-all {
+            background-color: #2a2a2a;
+            color: var(--text-light);
+            border: 1px solid var(--primary-color);
+        }
+
+        .no-events {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .no-events h3 {
+            color: var(--text-light);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .no-events p {
+            color: var(--text-light);
+            opacity: 0.8;
+        }
+
+        /* Responsive Design für kleinere Bildschirme */
+        @media (max-width: 1200px) {
+            #events-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            #events-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="events-container">
+        <!-- Events werden hier dynamisch eingefügt -->
+    </div>
+</body>
+</html>
