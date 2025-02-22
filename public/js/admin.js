@@ -250,10 +250,75 @@ function displayCategories(categories) {
     });
 }
 
+let additiveSelectionModal;
+let currentDrinkId = null;
+let currentDrinkAdditives = [];
+let allAdditives = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    additiveModal = new bootstrap.Modal(document.getElementById('additiveModal'));
+    additiveSelectionModal = new bootstrap.Modal(document.getElementById('additiveSelectionModal'));
+    
+    // Event-Listener für die Zusatzstoff-Suche
+    const searchInput = document.getElementById('additiveSearchInput');
+    const clearButton = document.getElementById('clearAdditiveSearch');
+    
+    searchInput.addEventListener('input', function() {
+        filterAdditiveOptions(this.value);
+    });
+    
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        filterAdditiveOptions('');
+    });
+
+    // Event-Listener für die Getränke-Suche
+    const drinkSearchInput = document.getElementById('drinkSearchInput');
+    const clearDrinkSearch = document.getElementById('clearDrinkSearch');
+    
+    drinkSearchInput.addEventListener('input', function() {
+        filterDrinks(this.value);
+    });
+    
+    clearDrinkSearch.addEventListener('click', function() {
+        drinkSearchInput.value = '';
+        filterDrinks('');
+    });
+});
+
+// Funktion zum Filtern der Zusatzstoff-Optionen
+function filterAdditiveOptions(searchTerm) {
+    const options = document.querySelectorAll('.additive-option');
+    searchTerm = searchTerm.toLowerCase();
+    
+    options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        option.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+// Funktion zum Filtern der Getränke
+function filterDrinks(searchTerm) {
+    const rows = document.querySelectorAll('#drinksTableBody tr');
+    searchTerm = searchTerm.toLowerCase();
+    
+    rows.forEach(row => {
+        const name = row.querySelector('td:first-child').textContent.toLowerCase();
+        const category = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        const additives = row.querySelector('.additive-badges').textContent.toLowerCase();
+        
+        const matches = name.includes(searchTerm) || 
+                       category.includes(searchTerm) || 
+                       additives.includes(searchTerm);
+        
+        row.style.display = matches ? '' : 'none';
+    });
+}
+
 // Funktion zum Anzeigen der Getränke
 async function displayDrinks(drinks) {
     drinksTableBody.innerHTML = '';
-    const additives = await fetch('/api/additives').then(res => res.json());
+    allAdditives = await fetch('/api/additives').then(res => res.json());
     
     for (const drink of drinks) {
         const drinkAdditives = await fetchDrinkAdditives(drink.id);
@@ -281,16 +346,15 @@ async function displayDrinks(drinks) {
                 </div>
             </td>
             <td>
-                <select class="form-select form-select-sm additives-select" 
-                        multiple
-                        onchange="updateDrinkAdditives(${drink.id}, this)">
-                    ${additives.map(additive => `
-                        <option value="${additive.id}" 
-                                ${drinkAdditives.some(a => a.id === additive.id) ? 'selected' : ''}>
-                            ${additive.code}) ${additive.name}
-                        </option>
-                    `).join('')}
-                </select>
+                <div class="d-flex flex-column">
+                    <button class="btn btn-outline-secondary edit-additives-btn mb-1" 
+                            onclick="showAdditiveSelection(${drink.id})">
+                        Bearbeiten <span class="additive-count">${drinkAdditives.length}</span>
+                    </button>
+                    <div class="additive-badges" style="font-size: 0.8rem;">
+                        ${drinkAdditives.map(a => `<span class="additive-badge">${a.code}</span>`).join('')}
+                    </div>
+                </div>
             </td>
         `;
         drinksTableBody.appendChild(row);
@@ -342,10 +406,6 @@ function displayAds(ads) {
 // Zusatzstoff-Verwaltung
 let additiveModal;
 let currentAdditiveId = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-    additiveModal = new bootstrap.Modal(document.getElementById('additiveModal'));
-});
 
 function showAddAdditiveModal() {
     currentAdditiveId = null;
@@ -699,13 +759,42 @@ async function toggleLogoColumnBreak(force_column_break) {
     }
 }
 
-// Funktion zum Aktualisieren der Zusatzstoffe eines Getränks
-async function updateDrinkAdditives(drinkId, selectElement) {
-    const selectedOptions = Array.from(selectElement.selectedOptions);
-    const additiveIds = selectedOptions.map(option => parseInt(option.value));
+// Funktion zum Anzeigen der Zusatzstoff-Auswahl
+async function showAdditiveSelection(drinkId) {
+    currentDrinkId = drinkId;
+    currentDrinkAdditives = await fetchDrinkAdditives(drinkId);
+    
+    const optionsContainer = document.querySelector('.additive-options');
+    optionsContainer.innerHTML = allAdditives.map(additive => `
+        <div class="additive-option ${currentDrinkAdditives.some(a => a.id === additive.id) ? 'selected' : ''}"
+             onclick="toggleAdditiveSelection(this, ${additive.id})">
+            <input type="checkbox" 
+                   ${currentDrinkAdditives.some(a => a.id === additive.id) ? 'checked' : ''}>
+            <span>${additive.code}) ${additive.name}</span>
+        </div>
+    `).join('');
+    
+    document.getElementById('additiveSearchInput').value = '';
+    additiveSelectionModal.show();
+}
+
+// Funktion zum Umschalten der Zusatzstoff-Auswahl
+function toggleAdditiveSelection(element, additiveId) {
+    const checkbox = element.querySelector('input[type="checkbox"]');
+    checkbox.checked = !checkbox.checked;
+    element.classList.toggle('selected');
+}
+
+// Funktion zum Speichern der ausgewählten Zusatzstoffe
+async function saveAdditiveSelection() {
+    const selectedOptions = document.querySelectorAll('.additive-option.selected');
+    const additiveIds = Array.from(selectedOptions).map(option => {
+        const additiveId = parseInt(option.getAttribute('onclick').match(/\d+/)[0]);
+        return additiveId;
+    });
     
     try {
-        const response = await fetch(`/api/drink-additives/${drinkId}`, {
+        const response = await fetch(`/api/drink-additives/${currentDrinkId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -716,9 +805,11 @@ async function updateDrinkAdditives(drinkId, selectElement) {
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
         }
+        
+        additiveSelectionModal.hide();
+        fetchDrinks(); // Aktualisiere die Getränkeliste
     } catch (error) {
-        console.error('Fehler beim Aktualisieren der Zusatzstoffe:', error);
-        // Bei Fehler die Getränke neu laden
-        fetchDrinks();
+        console.error('Fehler beim Speichern der Zusatzstoffe:', error);
+        alert('Fehler beim Speichern der Zusatzstoffe');
     }
 } 

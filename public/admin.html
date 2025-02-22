@@ -13,7 +13,7 @@
     <div class="container admin-container">
         <h1>Getränkekarte Admin</h1>
         <div class="version-info">
-            <small>Version 2.2.7</small>
+            <small>Version 2.2.8</small>
         </div>
 
         <!-- Karten-Auswahl als Tabs -->
@@ -125,6 +125,14 @@
         <!-- Getränke-Sektion -->
         <div>
             <h2>Getränke</h2>
+            <div class="mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="drinkSearchInput" placeholder="Getränke suchen...">
+                    <button class="btn btn-outline-secondary" type="button" id="clearDrinkSearch">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -134,7 +142,7 @@
                             <th>Kategorie</th>
                             <th>Aktiv</th>
                             <th>Preis anzeigen</th>
-                            <th>Zusatzstoffe</th>
+                            <th style="width: 150px;">Zusatzstoffe</th>
                         </tr>
                     </thead>
                     <tbody id="drinksTableBody">
@@ -196,6 +204,36 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal für Zusatzstoff-Auswahl -->
+        <div class="modal fade" id="additiveSelectionModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Zusatzstoffe auswählen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="additiveSearchInput" placeholder="Zusatzstoffe suchen...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearAdditiveSearch">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="additive-options">
+                            <!-- Zusatzstoff-Optionen werden hier dynamisch eingefügt -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                        <button type="button" class="btn btn-primary" onclick="saveAdditiveSelection()">Speichern</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="/socket.io/socket.io.js"></script>

@@ -556,6 +556,69 @@ body.haupttheke .logo-image {
     border-color: #dee2e6 #dee2e6 #fff;
 }
 
+/* Zusatzstoff-Auswahl Styling */
+.additive-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.1rem;
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.additive-options {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.additive-option {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.additive-option:hover {
+    background-color: #f8f9fa;
+}
+
+.additive-option.selected {
+    background-color: #e7f1ff;
+    border-color: #b8daff;
+}
+
+.additive-option input[type="checkbox"] {
+    margin-right: 1rem;
+}
+
+.additive-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.edit-additives-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    width: 100%;
+}
+
 /* Jugendkarten-spezifische Styles */
 body.jugendliche .content-area {
     display: flex;
