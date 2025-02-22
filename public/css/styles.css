@@ -585,10 +585,12 @@ body.jugendliche .social-app-container {
     flex-direction: column;
     justify-content: space-evenly;
     align-items: center;
-    padding: 2rem;
+    padding: 1rem;
     background: linear-gradient(to bottom, #0a0a0a, #000000);
     position: relative;
     overflow: hidden;
+    min-width: 300px;
+    max-width: 400px;
 }
 
 /* Entferne den Glow-Effekt */
@@ -599,20 +601,21 @@ body.jugendliche .social-app-container::after {
 body.jugendliche .social-media {
     display: flex;
     align-items: center;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
     background: rgba(10, 10, 10, 0.95);
     border: 1px solid rgba(165, 7, 117, 0.3);
     border-radius: 4px;
     position: relative;
     z-index: 1;
     box-shadow: 0 0 30px rgba(165, 7, 117, 0.1);
+    width: 90%;
 }
 
 body.jugendliche .social-media img {
-    width: 60px;
-    height: 60px;
-    margin-right: 2rem;
+    width: 40px;
+    height: 40px;
+    margin-right: 1rem;
     object-fit: contain;
     animation: socialPulse 5s ease-in-out infinite;
 }
@@ -631,7 +634,7 @@ body.jugendliche .social-media img {
 
 body.jugendliche .social-media .handle {
     color: #ffffff;
-    font-size: 2rem;
+    font-size: 1.4rem;
     font-weight: 500;
     white-space: nowrap;
     position: relative;
@@ -651,21 +654,22 @@ body.jugendliche .social-media .handle::after {
 body.jugendliche .app-store-badges {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     align-items: center;
-    padding: 2rem;
+    padding: 1rem;
     background: rgba(10, 10, 10, 0.95);
     border: 1px solid rgba(165, 7, 117, 0.3);
     border-radius: 4px;
     position: relative;
     z-index: 1;
     box-shadow: 0 0 30px rgba(165, 7, 117, 0.1);
+    width: 90%;
 }
 
 body.jugendliche .app-store-badges h3 {
     color: #ffffff;
-    font-size: 1.8rem;
-    margin: 0 0 1rem 0;
+    font-size: 1.4rem;
+    margin: 0 0 0.5rem 0;
     text-align: center;
     font-weight: 500;
     position: relative;
@@ -683,7 +687,7 @@ body.jugendliche .app-store-badges h3::after {
 }
 
 body.jugendliche .app-store-badges img {
-    height: 60px;
+    height: 40px;
     width: auto;
     object-fit: contain;
     filter: brightness(1.1);
