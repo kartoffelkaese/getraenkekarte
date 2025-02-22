@@ -586,11 +586,10 @@ body.jugendliche .social-app-container {
     justify-content: space-evenly;
     align-items: center;
     padding: 1rem;
-    background: linear-gradient(to bottom, #0a0a0a, #000000);
     position: relative;
     overflow: hidden;
-    min-width: 300px;
-    max-width: 400px;
+    min-width: 500px;
+    max-width: 500px;
 }
 
 /* Entferne den Glow-Effekt */
@@ -601,7 +600,7 @@ body.jugendliche .social-app-container::after {
 body.jugendliche .social-media {
     display: flex;
     align-items: center;
-    margin-bottom: 1rem;
+    justify-content: center;
     padding: 1rem;
     background: rgba(10, 10, 10, 0.95);
     border: 1px solid rgba(165, 7, 117, 0.3);
@@ -610,6 +609,7 @@ body.jugendliche .social-media {
     z-index: 1;
     box-shadow: 0 0 30px rgba(165, 7, 117, 0.1);
     width: 90%;
+    margin: 0 auto;
 }
 
 body.jugendliche .social-media img {
@@ -639,6 +639,7 @@ body.jugendliche .social-media .handle {
     white-space: nowrap;
     position: relative;
     padding-bottom: 3px;
+    text-align: center;
 }
 
 body.jugendliche .social-media .handle::after {

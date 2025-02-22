@@ -200,6 +200,11 @@ docker run -p 3000:8080 --env-file .env getraenkekarte
 
 ## 📝 Changelog
 
+### Version 2.2.7
+- Optimierte Darstellung der Instagram-Verlinkung
+- Verbesserte Zentrierung der Social Media Elemente
+- Anpassung der Event-Container Darstellung
+
 ### Version 2.2.6 (Aktuell)
 - Optimierte Social Media Integration
   - Verbesserte Darstellung des Social-App-Containers
