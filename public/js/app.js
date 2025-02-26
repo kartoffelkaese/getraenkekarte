@@ -223,7 +223,21 @@ function displayDrinks(drinks) {
             
             let priceHtml = '';
             if (drink.category_show_prices && drink.show_price) {
-                priceHtml = `<span class="float-end">${preis.toFixed(2)} €</span>`;
+                if (drink.has_small_size === 1) {
+                    const smallPrice = parseFloat(drink.small_price) || 0;
+                    priceHtml = `<span class="float-end">
+                        ${preis.toFixed(2)} €
+                        <small class="additives-info">(${drink.volume_normal})</small>
+                        &nbsp;/&nbsp;
+                        ${smallPrice.toFixed(2)} €
+                        <small class="additives-info">(${drink.volume_small})</small>
+                    </span>`;
+                } else {
+                    priceHtml = `<span class="float-end">
+                        ${preis.toFixed(2)} €
+                        ${drink.volume_normal ? `<small class="additives-info">(${drink.volume_normal})</small>` : ''}
+                    </span>`;
+                }
             }
 
             drinkElement.innerHTML = `
