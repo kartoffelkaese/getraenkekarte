@@ -1,5 +1,12 @@
 # 📝 Changelog
 
+### Version 2.3.1
+- Optimierte Darstellung der Getränkekarten
+  - Verbesserte vertikale Verteilung der Kategorien
+  - Gleichmäßige Ausrichtung der Spalteninhalte
+  - Optimierte Nutzung des verfügbaren Platzes
+  - Verbessertes responsives Verhalten
+
 ### Version 2.3.0
 - Verbesserte Darstellung der Getränkekarten
   - Hinzufügung von Volumenangaben bei allen Getränken

@@ -52,6 +52,7 @@ body.drinks-page {
     flex: 1;
     overflow: hidden;
     display: flex;
+    height: 100%;
 }
 
 .drinks-row {
@@ -59,6 +60,7 @@ body.drinks-page {
     height: 100%;
     margin: 0;
     display: flex;
+    align-items: stretch;
 }
 
 .category-column {
@@ -67,6 +69,7 @@ body.drinks-page {
     padding: 0 0.5rem;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
 }
 
 /* Platzhalter für zusätzlichen Content */
@@ -146,6 +149,9 @@ body.drinks-page {
 
 .category-container {
     margin-bottom: 0.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .category-header {
