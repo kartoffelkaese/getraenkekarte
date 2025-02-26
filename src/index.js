@@ -56,6 +56,7 @@ app.get('/api/drinks/:location', async (req, res) => {
     const location = req.params.location;
     const query = `
         SELECT d.id, d.name, d.preis, d.category_id,
+               d.has_small_size, d.small_price, d.volume_normal, d.volume_small,
                c.name as category_name,
                COALESCE(ds_drink.is_active, d.is_active) as is_active,
                COALESCE(ds_drink.show_price, d.show_price) as show_price,
