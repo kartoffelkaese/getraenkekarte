@@ -160,7 +160,6 @@ body.drinks-page {
     background-color: var(--bg-dark);
     padding: 0.25rem 0;
     z-index: 1;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .category-header h2 {
@@ -1105,7 +1104,7 @@ body.jugendliche .card {
     background-color: #000;
     border: none;
     border-left: 1px solid #a50775;
-    border-radius: 0;
+    /* border-radius: 0; */
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
