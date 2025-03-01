@@ -866,6 +866,20 @@ body.jugendliche .drink-ad .drink-price {
     font-size: 2rem;
 }
 
+body.jugendliche .card {
+    transition: all 0.3s ease;
+    margin-bottom: 0.15rem;
+    background-color: #000;
+    border: none;
+    border-left: 1px solid #a50775;
+    /* border-radius: 0; */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+body.jugendliche .additives-info {
+    font-size: 0.75rem;
+}
+
 /* Events Styles */
 .events-section {
     margin-top: 2rem;
@@ -1066,7 +1080,7 @@ body.jugendliche .category-header h2 {
 }
 
 body.jugendliche .card-title {
-    font-size: clamp(1.2rem, 2.2vh, 1.5rem);
+    font-size: 1.6rem;
 }
 
 body.jugendliche .additives-info {
@@ -1096,18 +1110,3 @@ body.jugendliche .additives-info {
     flex: 1;
     min-width: 200px;
 } 
-
-/* Jugendkarten-spezifische Card Styles */
-body.jugendliche .card {
-    transition: all 0.3s ease;
-    margin-bottom: 0.15rem;
-    background-color: #000;
-    border: none;
-    border-left: 1px solid #a50775;
-    /* border-radius: 0; */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-body.jugendliche .additives-info {
-    font-size: 0.75rem;
-}
