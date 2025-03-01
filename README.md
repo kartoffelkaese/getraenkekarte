@@ -215,14 +215,3 @@ Eine detaillierte Auflistung aller Änderungen finden Sie in der [CHANGELOG.md](
 Dieses Projekt ist unter der GNU General Public License v3.0 (GPL-3.0) lizenziert.
 
 Die vollständige Lizenz finden Sie in der [LICENSE](LICENSE) Datei oder unter https://www.gnu.org/licenses/gpl-3.0.html
-
-© 2024 Martin Urban
-
-## Aktuelle Version
-Version 2.3.6
-
-### Neue Features in 2.3.6
-- Überarbeitetes Design der Jugendkarte
-- Verbesserte Lesbarkeit durch angepasste Schriftgrößen
-- Optimierte Darstellung auf verschiedenen Bildschirmgrößen
-- Moderneres Layout mit Akzentfarben 
