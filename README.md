@@ -1,4 +1,4 @@
-# Digitale Getränkekarte (Version 2.3.1)
+# Digitale Getränkekarte (Version 2.3.6)
 
 Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien, Events, Werbeanzeigen und Zusatzstoffen in Echtzeit.
 
@@ -216,4 +216,13 @@ Dieses Projekt ist unter der GNU General Public License v3.0 (GPL-3.0) lizenzier
 
 Die vollständige Lizenz finden Sie in der [LICENSE](LICENSE) Datei oder unter https://www.gnu.org/licenses/gpl-3.0.html
 
-© 2024 Martin Urban 
+© 2024 Martin Urban
+
+## Aktuelle Version
+Version 2.3.6
+
+### Neue Features in 2.3.6
+- Überarbeitetes Design der Jugendkarte
+- Verbesserte Lesbarkeit durch angepasste Schriftgrößen
+- Optimierte Darstellung auf verschiedenen Bildschirmgrößen
+- Moderneres Layout mit Akzentfarben 

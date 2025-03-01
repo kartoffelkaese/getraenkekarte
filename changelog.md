@@ -1,5 +1,15 @@
 # 📝 Changelog
 
+## [2.3.6]
+
+### Changed
+- Überarbeitetes Design der Jugendkarte
+  - Angepasste Schriftgrößen
+  - Neue Card-Styles mit pinker Akzentfarbe (#a50775)
+  - Verbesserte Darstellung der Events
+  - Optimierte responsive Layouts
+  - Überarbeitete Social-Media und App-Store Bereiche 
+  
 ### Version 2.3.1
 - Optimierte Darstellung der Getränkekarten
   - Verbesserte vertikale Verteilung der Kategorien
@@ -107,4 +117,4 @@
 ### Version 1.1.0
 - Initiale Version
 - Grundlegende Funktionen
-- Admin-Panel 
+- Admin-Panel
