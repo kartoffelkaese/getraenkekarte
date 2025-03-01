@@ -190,12 +190,6 @@ body.drinks-page {
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(255,255,255,0.1);
-    background-color: var(--hover-color);
-}
-
 .card-title {
     display: flex;
     justify-content: space-between;
@@ -1103,3 +1097,18 @@ body.jugendliche .additives-info {
     flex: 1;
     min-width: 200px;
 } 
+
+/* Jugendkarten-spezifische Card Styles */
+body.jugendliche .card {
+    transition: all 0.3s ease;
+    margin-bottom: 0.15rem;
+    background-color: #000;
+    border: none;
+    border-left: 1px solid #a50775;
+    border-radius: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+body.jugendliche .additives-info {
+    font-size: 0.75rem;
+}
