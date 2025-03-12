@@ -452,15 +452,13 @@ app.get('/api/additives/:id', async (req, res) => {
 });
 
 app.post('/api/additives', async (req, res) => {
-    const { code, name } = req.body;
-    const query = 'INSERT INTO additives (code, name) VALUES (?, ?)';
-    
+    const { code, name, show_in_footer = true } = req.body;
     try {
-        await db.query(query, [code, name]);
+        const query = 'INSERT INTO additives (code, name, show_in_footer) VALUES (?, ?, ?)';
+        const [result] = await db.query(query, [code, name, show_in_footer]);
         io.emit('additivesChanged');
-        res.json({ success: true });
+        res.json({ id: result.insertId });
     } catch (err) {
-        console.error('Fehler beim Erstellen des Zusatzstoffs:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -496,17 +494,31 @@ app.delete('/api/additives/:id', async (req, res) => {
 
 // API-Endpunkt für die Zusatzstoff-Liste
 app.get('/api/additives-list', async (req, res) => {
-    const query = `
-        SELECT code, name 
-        FROM additives 
-        ORDER BY CAST(code AS SIGNED)
-    `;
-    
     try {
-        const [rows] = await db.query(query);
-        res.json(rows || []);
+        const [rows] = await db.query(`
+            SELECT * 
+            FROM additives
+            WHERE show_in_footer = TRUE
+            ORDER BY code ASC
+        `);
+        res.json(rows);
     } catch (err) {
         console.error('Additives List API Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Neue Route für das Aktualisieren der Footer-Sichtbarkeit
+app.put('/api/additives/:id/toggle-footer', async (req, res) => {
+    const id = req.params.id;
+    const { show_in_footer } = req.body;
+    
+    try {
+        await db.query('UPDATE additives SET show_in_footer = ? WHERE id = ?', [show_in_footer, id]);
+        io.emit('additivesChanged');
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Toggle Footer Visibility Error:', err);
         res.status(500).json({ error: err.message });
     }
 });

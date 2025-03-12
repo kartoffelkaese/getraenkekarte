@@ -409,27 +409,27 @@ let currentAdditiveId = null;
 
 function showAddAdditiveModal() {
     currentAdditiveId = null;
-    document.getElementById('additiveModalTitle').textContent = 'Zusatzstoff hinzufügen';
+    document.querySelector('#additiveModal .modal-title').textContent = 'Zusatzstoff hinzufügen';
     document.getElementById('additiveForm').reset();
     additiveModal.show();
 }
 
-function editAdditive(id) {
-    currentAdditiveId = id;
-    document.getElementById('additiveModalTitle').textContent = 'Zusatzstoff bearbeiten';
-    
-    // Lade die Daten des ausgewählten Zusatzstoffs
-    fetch(`/api/additives/${id}`)
-        .then(response => response.json())
-        .then(additive => {
-            document.getElementById('additiveCode').value = additive.code;
-            document.getElementById('additiveName').value = additive.name;
-            additiveModal.show();
-        })
-        .catch(error => {
-            console.error('Fehler beim Laden des Zusatzstoffs:', error);
-            alert('Fehler beim Laden des Zusatzstoffs');
-        });
+async function editAdditive(id) {
+    try {
+        const response = await fetch(`/api/additives/${id}`);
+        const additive = await response.json();
+
+        document.getElementById('additiveCode').value = additive.code;
+        document.getElementById('additiveName').value = additive.name;
+        document.getElementById('additiveShowInFooter').checked = additive.show_in_footer;
+        
+        currentAdditiveId = id;
+        document.querySelector('#additiveModal .modal-title').textContent = 'Zusatzstoff bearbeiten';
+        additiveModal.show();
+    } catch (error) {
+        console.error('Fehler beim Laden des Zusatzstoffs:', error);
+        alert('Fehler beim Laden des Zusatzstoffs');
+    }
 }
 
 function deleteAdditive(id) {
@@ -452,33 +452,30 @@ function deleteAdditive(id) {
     }
 }
 
-function saveAdditive() {
+async function saveAdditive() {
     const code = document.getElementById('additiveCode').value;
     const name = document.getElementById('additiveName').value;
-    
-    const method = currentAdditiveId ? 'PUT' : 'POST';
-    const url = currentAdditiveId ? `/api/additives/${currentAdditiveId}` : '/api/additives';
-    
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code, name })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            additiveModal.hide();
-            fetchAdditives();
-        } else {
-            alert('Fehler beim Speichern des Zusatzstoffs');
-        }
-    })
-    .catch(error => {
+    const showInFooter = document.getElementById('additiveShowInFooter').checked;
+    const id = currentAdditiveId;
+
+    const url = id ? `/api/additives/${id}` : '/api/additives';
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, name, show_in_footer: showInFooter })
+        });
+
+        if (!response.ok) throw new Error('Netzwerk-Antwort war nicht ok');
+
+        additiveModal.hide();
+        fetchAdditives();
+    } catch (error) {
         console.error('Fehler beim Speichern des Zusatzstoffs:', error);
         alert('Fehler beim Speichern des Zusatzstoffs');
-    });
+    }
 }
 
 // Funktion zum Anzeigen der Zusatzstoffe
@@ -492,7 +489,14 @@ function displayAdditives(additives) {
             <td>${additive.code}</td>
             <td>${additive.name}</td>
             <td>
-                <button class="btn btn-sm btn-outline-primary me-2" onclick="editAdditive(${additive.id})">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" 
+                           ${additive.show_in_footer ? 'checked' : ''}
+                           onchange="toggleFooterVisibility(${additive.id}, this.checked)">
+                </div>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editAdditive(${additive.id})">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteAdditive(${additive.id})">
@@ -502,6 +506,24 @@ function displayAdditives(additives) {
         `;
         additivesTableBody.appendChild(row);
     });
+}
+
+async function toggleFooterVisibility(id, showInFooter) {
+    try {
+        const response = await fetch(`/api/additives/${id}/toggle-footer`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ show_in_footer: showInFooter })
+        });
+        
+        if (!response.ok) throw new Error('Netzwerk-Antwort war nicht ok');
+        
+        // Aktualisiere die Anzeige
+        fetchAdditives();
+    } catch (error) {
+        console.error('Fehler beim Ändern der Footer-Sichtbarkeit:', error);
+        alert('Fehler beim Ändern der Footer-Sichtbarkeit');
+    }
 }
 
 // Funktion zum Umschalten des Getränkestatus
@@ -769,6 +791,7 @@ async function showAdditiveSelection(drinkId) {
         <div class="additive-option ${currentDrinkAdditives.some(a => a.id === additive.id) ? 'selected' : ''}"
              onclick="toggleAdditiveSelection(this, ${additive.id})">
             <input type="checkbox" 
+                   style="margin-right: 8px; visibility: visible; pointer-events: none;"
                    ${currentDrinkAdditives.some(a => a.id === additive.id) ? 'checked' : ''}>
             <span>${additive.code}) ${additive.name}</span>
         </div>
@@ -787,29 +810,28 @@ function toggleAdditiveSelection(element, additiveId) {
 
 // Funktion zum Speichern der ausgewählten Zusatzstoffe
 async function saveAdditiveSelection() {
-    const selectedOptions = document.querySelectorAll('.additive-option.selected');
-    const additiveIds = Array.from(selectedOptions).map(option => {
-        const additiveId = parseInt(option.getAttribute('onclick').match(/\d+/)[0]);
-        return additiveId;
-    });
-    
     try {
+        const selectedOptions = document.querySelectorAll('.additive-option.selected');
+        const additiveIds = Array.from(selectedOptions).map(option => {
+            return parseInt(option.getAttribute('onclick').match(/\d+/)[0]);
+        });
+
         const response = await fetch(`/api/drink-additives/${currentDrinkId}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ additiveIds })
         });
-        
+
         if (!response.ok) {
-            throw new Error('Netzwerk-Antwort war nicht ok');
+            throw new Error('Fehler beim Speichern der Zusatzstoffe');
         }
-        
+
         additiveSelectionModal.hide();
-        fetchDrinks(); // Aktualisiere die Getränkeliste
+        // fetchDrinks wird durch das Socket.io-Event ausgelöst
     } catch (error) {
-        console.error('Fehler beim Speichern der Zusatzstoffe:', error);
+        console.error('Fehler:', error);
         alert('Fehler beim Speichern der Zusatzstoffe');
     }
 } 
