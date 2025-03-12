@@ -189,6 +189,20 @@ body.drinks-page {
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
+/* Spezielle Card-Styles für Haupttheke und Jugendkarte */
+body.haupttheke .card,
+body.jugendliche .card {
+    background-color: #000;
+    border: none;
+    border-left: 1px solid #a50775;
+}
+
+/* Spezielle Additives-Info Styles für Haupttheke und Jugendkarte */
+body.haupttheke .additives-info,
+body.jugendliche .additives-info {
+    font-size: 0.75rem;
+}
+
 .card-title {
     display: flex;
     justify-content: space-between;
@@ -264,11 +278,7 @@ h2 {
 /* Anpassung der Preisanzeige */
 .card-title .float-end {
     white-space: nowrap;
-    font-size: 0.9em;
-    line-height: 1.2;
-    display: flex;
-    align-items: baseline;
-    gap: 0.25rem;
+    font-size: 0.95em;
 }
 
 .additives-info {
@@ -498,6 +508,15 @@ body.haupttheke .category-column {
     flex-direction: column;
     padding: 0.5rem;
     overflow: hidden;
+    justify-content: space-between;
+}
+
+body.haupttheke .category-column > *:not(:last-child) {
+    margin-bottom: auto;
+}
+
+body.haupttheke .category-column > *:last-child {
+    margin-top: 1rem;
 }
 
 body.haupttheke .middle-column {
@@ -518,7 +537,7 @@ body.haupttheke .additional-content {
 
 body.haupttheke .drink-ad {
     position: absolute;
-    top: 7rem;
+    top: 8rem;
     left: 0;
     width: 100%;
     height: 75%;
@@ -596,8 +615,7 @@ body.haupttheke .logo-container {
 }
 
 body.haupttheke .logo-image {
-    /* max-height: 13.4vh; */
-    max-height: 17.6vh;
+    max-height: 15vh;
 }
 
 /* Admin Tabs Styling */
@@ -1102,39 +1120,20 @@ body.jugendliche .additives-info {
     font-size: 0.8rem;
 }
 
-/* Styles für die Preisanzeige */
-.card-title .float-end {
-    white-space: nowrap;
-    font-size: 0.95em;
-}
-
 /* Anpassung der Kartenbreite für längere Preistexte */
 .card-body {
     padding: 0.35rem 0.5rem;
 }
 
-.card-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 1rem;
-    flex-wrap: wrap;
+/* Spezifische Schriftgrößen für Haupttheke */
+body.haupttheke .drinks-list {
+    gap: 0.1rem;  /* Reduziert von 0.15rem */
 }
 
-.drink-name {
-    flex: 1;
-    min-width: 200px;
+body.haupttheke .category-header h2 {
+    font-size: 1.7rem;
 }
 
-body.haupttheke .card {
-    transition: all 0.3s ease;
-    margin-bottom: 0.15rem;
-    background-color: #000;
-    border: none;
-    border-left: 1px solid #a50775;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-body.haupttheke .additives-info {
-    font-size: 0.75rem;
+body.haupttheke .card-title {
+    font-size: 1.45rem;
 } 
