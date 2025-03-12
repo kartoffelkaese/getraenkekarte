@@ -462,6 +462,21 @@ body.theke-hinten .middle-column::after {
 }
 
 /* Haupttheken-spezifische Styles */
+body.haupttheke {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    --bg-dark: #000000;
+    --bg-card: #1A1A1A;
+    --bg-header: #000000;
+    --text-primary: #FFFFFF;
+    --text-secondary: #CCCCCC;
+    --border-color: #333333;
+    --hover-color: #2A2A2A;
+    --category-bg: #000000;
+    --category-border: #333333;
+    --category-text: #FFFFFF;
+}
+
 body.haupttheke .content-area {
     flex-direction: column;
 }
@@ -1109,4 +1124,17 @@ body.jugendliche .additives-info {
 .drink-name {
     flex: 1;
     min-width: 200px;
+}
+
+body.haupttheke .card {
+    transition: all 0.3s ease;
+    margin-bottom: 0.15rem;
+    background-color: #000;
+    border: none;
+    border-left: 1px solid #a50775;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+body.haupttheke .additives-info {
+    font-size: 0.75rem;
 } 

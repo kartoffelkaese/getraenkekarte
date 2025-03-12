@@ -1,5 +1,8 @@
 # 📝 Changelog
 
+## [2.3.7]
+- Haupttheke Design angepasst.
+
 ## [2.3.6]
 
 ### Changed
