@@ -4,7 +4,7 @@ module.exports = {
     script: 'src/index.js',
     version: '2.4.1',
     max_memory_restart: '128M',
-    exec_mode: 'cluster',
+    exec_mode: 'fork',
     instances: 1,
     autorestart: true,
     watch: false,
