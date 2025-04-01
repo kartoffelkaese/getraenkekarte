@@ -43,7 +43,7 @@ export async function initEvents(containerId) {
     
     const q1 = query(
         collection(db, "books", "2023-03", "events"),
-        limit(12)
+        // limit(12)
     );
     
     const querySnapshot = await getDocs(q1);
@@ -57,9 +57,10 @@ export async function initEvents(containerId) {
         let date = doc.data().date.toDate();
         let desc = doc.data().desc;
         let eintritt = doc.data().eintritt;
+        let showInApp = doc.data().showInApp || false; // Standardwert false, falls nicht definiert
 
-        // Filtern nach Datum und selection
-        if (date.getTime() >= now.getTime() && selection === "Für Jugendliche") {
+        // Filtern nach Datum, selection und showInApp
+        if (date.getTime() >= now.getTime() && selection === "Für Jugendliche" && showInApp === true) {
             let item = new EventItem(
                 date,
                 start,
@@ -78,8 +79,8 @@ export async function initEvents(containerId) {
     // Sortiere Events nach Datum (aufsteigend)
     events.sort((a, b) => a.date.getTime() - b.date.getTime());
     
-    // Beschränke auf die ersten 4 Events
-    events = events.slice(0, 4);
+    // Beschränke auf die ersten 2 Events
+    events = events.slice(0, 2);
 
     displayEvents(containerId);
 }
