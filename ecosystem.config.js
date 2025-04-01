@@ -10,10 +10,19 @@ module.exports = {
     watch: false,
     max_restarts: 10,
     env: {
-      NODE_ENV: 'production'
+      NODE_ENV: 'production',
+      PORT: 3000
     },
     env_production: {
-      NODE_ENV: 'production'
-    }
+      NODE_ENV: 'production',
+      PORT: 3000
+    },
+    wait_ready: true,
+    listen_timeout: 50000,
+    kill_timeout: 5000,
+    merge_logs: true,
+    error_file: 'logs/err.log',
+    out_file: 'logs/out.log',
+    log_date_format: 'YYYY-MM-DD HH:mm:ss'
   }]
 }; 
