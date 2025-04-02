@@ -284,6 +284,17 @@ document.addEventListener('DOMContentLoaded', function() {
         drinkSearchInput.value = '';
         filterDrinks('');
     });
+
+    // Initialisiere das Bild-Upload-Modal
+    imageUploadModal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
+    
+    // Event-Listener für den Button zum Öffnen des Modals
+    document.getElementById('showImageUploadModalBtn').addEventListener('click', function() {
+        imageUploadModal.show();
+    });
+    
+    // Event-Listener für den Upload-Button
+    document.getElementById('uploadImageBtn').addEventListener('click', uploadImage);
 });
 
 // Funktion zum Filtern der Zusatzstoff-Optionen
@@ -382,8 +393,8 @@ function displayAds(ads) {
         const preis = parseFloat(ad.price) || 0;
         row.innerHTML = `
             <td>${ad.name}</td>
-            <td><img src="${ad.image_path}" alt="${ad.name}" style="height: 50px;"></td>
             <td>${preis.toFixed(2)} €</td>
+            <td>${ad.card_type || 'Standard'}</td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 
@@ -397,6 +408,12 @@ function displayAds(ads) {
                        style="width: 80px"
                        value="${ad.sort_order || 0}"
                        onchange="updateAdOrder(${ad.id}, this.value)">
+            </td>
+            <td><img src="${ad.image_path}" alt="${ad.name}" style="height: 50px;"></td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteAd(${ad.id})">
+                    <i class="bi bi-trash"></i> Löschen
+                </button>
             </td>
         `;
         adsTableBody.appendChild(row);
@@ -833,5 +850,125 @@ async function saveAdditiveSelection() {
     } catch (error) {
         console.error('Fehler:', error);
         alert('Fehler beim Speichern der Zusatzstoffe');
+    }
+}
+
+// Bild-Upload Funktionalität
+let imageUploadModal;
+
+// Funktion zum Hochladen eines Bildes
+async function uploadImage() {
+    const name = document.getElementById('imageName').value;
+    const price = document.getElementById('imagePrice').value;
+    const fileInput = document.getElementById('imageFile');
+    const cardType = document.getElementById('cardType').value;
+    const isActive = document.getElementById('imageActive').checked;
+    const sortOrder = document.getElementById('imageSortOrder').value;
+    
+    if (!name || !price || !fileInput.files[0]) {
+        alert('Bitte füllen Sie alle erforderlichen Felder aus.');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('price', price);
+    formData.append('image', file);
+    formData.append('cardType', cardType);
+    formData.append('isActive', isActive);
+    formData.append('sortOrder', sortOrder);
+    
+    try {
+        const response = await fetch('/api/upload-image', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Fehler beim Hochladen des Bildes');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Bild erfolgreich hochgeladen!');
+            imageUploadModal.hide();
+            document.getElementById('imageUploadForm').reset();
+            fetchAds(); // Aktualisiere die Werbeanzeigen-Tabelle
+        } else {
+            alert('Fehler beim Hochladen: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Fehler beim Hochladen des Bildes:', error);
+        alert('Fehler beim Hochladen des Bildes: ' + error.message);
+    }
+}
+
+// Funktion zum Löschen einer Werbung
+async function deleteAd(adId) {
+    if (!confirm('Möchten Sie diese Werbung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/ads/${adId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Aktualisiere die Tabelle
+            loadAds();
+            showNotification('Werbung erfolgreich gelöscht', 'success');
+        } else {
+            showNotification(`Fehler beim Löschen der Werbung: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Fehler beim Löschen der Werbung:', error);
+        showNotification('Fehler beim Löschen der Werbung', 'error');
+    }
+}
+
+// Funktion zum Laden der Werbungen
+async function loadAds() {
+    try {
+        const response = await fetch('/api/ads');
+        const ads = await response.json();
+        
+        const adsTableBody = document.getElementById('adsTableBody');
+        adsTableBody.innerHTML = '';
+        
+        ads.forEach(ad => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${ad.name}</td>
+                <td>${ad.price ? ad.price + ' €' : '-'}</td>
+                <td>${ad.card_type || 'Standard'}</td>
+                <td>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="adActive${ad.id}" 
+                               ${ad.is_active ? 'checked' : ''} onchange="toggleAdStatus(${ad.id}, this.checked)">
+                    </div>
+                </td>
+                <td>${ad.sort_order}</td>
+                <td>
+                    <img src="${ad.image_path}" alt="${ad.name}" style="max-width: 100px; max-height: 100px;">
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAd(${ad.id})">
+                        <i class="bi bi-trash"></i> Löschen
+                    </button>
+                </td>
+            `;
+            adsTableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Fehler beim Laden der Werbungen:', error);
+        showNotification('Fehler beim Laden der Werbungen', 'error');
     }
 } 

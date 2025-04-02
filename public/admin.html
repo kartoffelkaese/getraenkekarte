@@ -13,7 +13,7 @@
     <div class="container admin-container">
         <h1>Getränkekarte Admin</h1>
         <div class="version-info">
-            <small>Version 2.4.2</small>
+            <small>Version 2.5.0</small>
         </div>
 
         <!-- Karten-Auswahl als Tabs -->
@@ -104,15 +104,22 @@
         <!-- Werbung-Sektion -->
         <div class="mb-4">
             <h2>Werbung</h2>
+            <div class="mb-3">
+                <button class="btn btn-primary" id="showImageUploadModalBtn">
+                    <i class="bi bi-upload"></i> Neues Werbebild hochladen
+                </button>
+            </div>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Bild</th>
                             <th>Preis</th>
+                            <th>Kartentyp</th>
                             <th>Aktiv</th>
                             <th>Reihenfolge</th>
+                            <th>Bild</th>
+                            <th>Aktionen</th>
                         </tr>
                     </thead>
                     <tbody id="adsTableBody">
@@ -243,5 +250,56 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/admin.js"></script>
+
+    <!-- Modal für Bild-Upload -->
+    <div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageUploadModalLabel">Werbebild hochladen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="imageUploadForm">
+                        <div class="mb-3">
+                            <label for="imageName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="imageName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imagePrice" class="form-label">Preis</label>
+                            <input type="number" class="form-control" id="imagePrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imageFile" class="form-label">Bild auswählen</label>
+                            <input type="file" class="form-control" id="imageFile" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cardType" class="form-label">Kartentyp</label>
+                            <select class="form-select" id="cardType">
+                                <option value="default">Standard</option>
+                                <option value="jugendliche">Jugendkarte</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="imageActive" checked>
+                                <label class="form-check-label" for="imageActive">
+                                    Aktiv
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imageSortOrder" class="form-label">Sortierreihenfolge</label>
+                            <input type="number" class="form-control" id="imageSortOrder" value="0">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" id="uploadImageBtn">Hochladen</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

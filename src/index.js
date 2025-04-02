@@ -4,6 +4,9 @@ const socketIo = require('socket.io');
 const mysql = require('mysql2');
 const cors = require('cors');
 const auth = require('./middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -50,6 +53,35 @@ const db = mysql.createConnection({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME
 }).promise();
+
+// Konfiguration für Multer (Datei-Upload)
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        const uploadDir = './public/images/ads';
+        // Erstelle das Verzeichnis, falls es nicht existiert
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function(req, file, cb) {
+        // Generiere einen eindeutigen Dateinamen
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB Limit
+    fileFilter: function(req, file, cb) {
+        // Erlaube nur Bilder
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+            return cb(new Error('Nur Bilddateien sind erlaubt!'), false);
+        }
+        cb(null, true);
+    }
+});
 
 // API-Endpunkte mit Location-Parameter
 app.get('/api/drinks/:location', async (req, res) => {
@@ -520,6 +552,84 @@ app.put('/api/additives/:id/toggle-footer', async (req, res) => {
     } catch (err) {
         console.error('Toggle Footer Visibility Error:', err);
         res.status(500).json({ error: err.message });
+    }
+});
+
+// API-Endpunkt für Bild-Upload
+app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, error: 'Keine Datei hochgeladen' });
+    }
+    
+    const name = req.body.name;
+    const price = req.body.price;
+    const cardType = req.body.cardType || 'default';
+    const isActive = req.body.isActive === 'true';
+    const sortOrder = parseInt(req.body.sortOrder) || 0;
+    
+    // Relativer Pfad zur Datei (für die Datenbank)
+    const imagePath = `/images/ads/${req.file.filename}`;
+    
+    try {
+        // Speichere die Informationen in der Datenbank
+        const query = `
+            INSERT INTO ads (name, image_path, price, is_active, sort_order, card_type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        
+        await db.query(query, [name, imagePath, price, isActive, sortOrder, cardType]);
+        
+        // Sende Erfolgsantwort
+        res.json({ 
+            success: true, 
+            message: 'Bild erfolgreich hochgeladen',
+            imagePath: imagePath
+        });
+        
+        // Benachrichtige alle Clients über die Änderung
+        io.emit('adsChanged');
+    } catch (err) {
+        console.error('Fehler beim Speichern des Bildes:', err);
+        
+        // Lösche die hochgeladene Datei im Fehlerfall
+        fs.unlink(req.file.path, (unlinkErr) => {
+            if (unlinkErr) console.error('Fehler beim Löschen der Datei:', unlinkErr);
+        });
+        
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// API-Endpunkt zum Löschen einer Werbung
+app.delete('/api/ads/:id', auth, async (req, res) => {
+    const adId = req.params.id;
+    
+    try {
+        // Hole zuerst den Bildpfad aus der Datenbank
+        const [rows] = await db.query('SELECT image_path FROM ads WHERE id = ?', [adId]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Werbung nicht gefunden' });
+        }
+        
+        const imagePath = rows[0].image_path;
+        const fullImagePath = path.join(__dirname, '..', 'public', imagePath);
+        
+        // Lösche den Datenbankeintrag
+        await db.query('DELETE FROM ads WHERE id = ?', [adId]);
+        
+        // Lösche das Bild, falls es existiert
+        if (fs.existsSync(fullImagePath)) {
+            fs.unlinkSync(fullImagePath);
+        }
+        
+        // Benachrichtige alle Clients über die Änderung
+        io.emit('adsChanged');
+        
+        res.json({ success: true, message: 'Werbung erfolgreich gelöscht' });
+    } catch (err) {
+        console.error('Fehler beim Löschen der Werbung:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

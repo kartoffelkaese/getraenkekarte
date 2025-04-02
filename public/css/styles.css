@@ -191,7 +191,8 @@ body.drinks-page {
 
 /* Spezielle Card-Styles für Haupttheke und Jugendkarte */
 body.haupttheke .card,
-body.jugendliche .card {
+body.jugendliche .card,
+body.theke-hinten .card {
     background-color: #000;
     border: none;
     border-left: 1px solid #a50775;
@@ -199,7 +200,8 @@ body.jugendliche .card {
 
 /* Spezielle Additives-Info Styles für Haupttheke und Jugendkarte */
 body.haupttheke .additives-info,
-body.jugendliche .additives-info {
+body.jugendliche .additives-info,
+body.theke-hinten .additives-info {
     font-size: 0.75rem;
 }
 
@@ -442,23 +444,6 @@ h2 {
     position: relative;
 }
 
-/* Logo nur für die hintere Theke */
-body.theke-hinten .middle-column::after {
-    content: '';
-    position: absolute;
-    bottom: 1rem;
-    left: 0.5rem;
-    right: 0.5rem;
-    height: 20vh;
-    background-image: url('https://tanzstudio-schlegl.de/wp-content/themes/tanzstudio-schlegl/img/schlegl__logo.svg');
-    background-repeat: no-repeat;
-    background-position: center bottom;
-    background-size: contain;
-    opacity: 0.8;
-    pointer-events: none;
-    z-index: 10;
-}
-
 @keyframes pulse {
     0% {
         transform: scale(1);
@@ -554,6 +539,23 @@ body.haupttheke .drink-ad .drink-name {
 
 body.haupttheke .drink-ad .drink-price {
     font-size: 1.8rem;
+}
+
+/* Theke-hinten spezifische Styles */
+body.theke-hinten .category-header h2 {
+    font-size: 1.7rem;
+}
+
+body.theke-hinten .card-title {
+    font-size: 1.45rem;
+}
+
+body.theke-hinten .drinks-row {
+    align-items: flex-start;
+}
+
+body.theke-hinten .category-container {
+    margin-bottom: 1.5rem;
 }
 
 /* Zusatzstoffe Container Styles - Allgemein */
@@ -1135,4 +1137,21 @@ body.haupttheke .category-header h2 {
 
 body.haupttheke .card-title {
     font-size: 1.45rem;
+}
+
+/* Modal-Styling */
+.modal-content {
+    color: #333;
+}
+
+.modal-title {
+    color: #333;
+}
+
+.modal-body label {
+    color: #333;
+}
+
+.modal-body input, .modal-body select {
+    color: #333;
 } 

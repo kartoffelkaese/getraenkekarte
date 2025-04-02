@@ -223,7 +223,13 @@ function displayDrinks(drinks) {
             
             let priceHtml = '';
             if (drink.category_show_prices && drink.show_price) {
-                if (drink.has_small_size === 1) {
+                if (currentLocation === 'theke-hinten') {
+                    // Für Theke-hinten: Nur den Hauptpreis ohne Volumen anzeigen
+                    priceHtml = `<span class="float-end">
+                        ${preis.toFixed(2)} €
+                    </span>`;
+                } else if (drink.has_small_size === 1) {
+                    // Für andere Karten: Beide Preise anzeigen, wenn verfügbar
                     const smallPrice = parseFloat(drink.small_price) || 0;
                     priceHtml = `<span class="float-end">
                         ${preis.toFixed(2)} €
