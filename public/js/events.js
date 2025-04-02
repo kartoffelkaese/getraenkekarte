@@ -57,10 +57,12 @@ export async function initEvents(containerId) {
         let date = doc.data().date.toDate();
         let desc = doc.data().desc;
         let eintritt = doc.data().eintritt;
-        let showInApp = doc.data().showInApp || false; // Standardwert false, falls nicht definiert
+        let showInApp = doc.data().showInApp; // Standardwert false, falls nicht definiert
 
-        // Filtern nach Datum, selection und showInApp
-        if (date.getTime() >= now.getTime() && selection === "Für Jugendliche" && showInApp === true) {
+        // Filtern nach Datum, selection (Für Jugendliche ODER Für Alle) und showInApp
+        if (date.getTime() >= now.getTime() && 
+            selection === "Für Jugendliche" && 
+            showInApp === true) {
             let item = new EventItem(
                 date,
                 start,
