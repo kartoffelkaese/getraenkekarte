@@ -57,8 +57,8 @@ const db = mysql.createConnection({
 // Konfiguration für Multer (Datei-Upload)
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        const uploadDir = './public/images/ads';
-        // Erstelle das Verzeichnis, falls es nicht existiert
+        const uploadDir = './public/images';
+        // Stelle sicher, dass das Verzeichnis existiert
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -555,20 +555,22 @@ app.put('/api/additives/:id/toggle-footer', async (req, res) => {
     }
 });
 
-// API-Endpunkt für Bild-Upload
+// API-Endpunkt zum Hochladen von Bildern
 app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, error: 'Keine Datei hochgeladen' });
     }
     
-    const name = req.body.name;
-    const price = req.body.price;
-    const cardType = req.body.cardType || 'default';
-    const isActive = req.body.isActive === 'true';
-    const sortOrder = parseInt(req.body.sortOrder) || 0;
+    const { name, price, cardType, isActive, sortOrder } = req.body;
+    
+    if (!name || !price) {
+        // Lösche die hochgeladene Datei, wenn die Validierung fehlschlägt
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ success: false, error: 'Name und Preis sind erforderlich' });
+    }
     
     // Relativer Pfad zur Datei (für die Datenbank)
-    const imagePath = `/images/ads/${req.file.filename}`;
+    const imagePath = `/images/${req.file.filename}`;
     
     try {
         // Speichere die Informationen in der Datenbank
@@ -589,13 +591,9 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
         // Benachrichtige alle Clients über die Änderung
         io.emit('adsChanged');
     } catch (err) {
-        console.error('Fehler beim Speichern des Bildes:', err);
-        
-        // Lösche die hochgeladene Datei im Fehlerfall
-        fs.unlink(req.file.path, (unlinkErr) => {
-            if (unlinkErr) console.error('Fehler beim Löschen der Datei:', unlinkErr);
-        });
-        
+        // Lösche die hochgeladene Datei, wenn die Datenbankoperation fehlschlägt
+        fs.unlinkSync(req.file.path);
+        console.error('Fehler beim Speichern der Bildinformationen:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
