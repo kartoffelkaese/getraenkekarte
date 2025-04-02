@@ -305,7 +305,7 @@ app.post('/api/ads/toggle/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, id, is_active, is_active]);
-        io.emit('adsChanged', { location });
+        io.emit('adsChanged');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -325,7 +325,7 @@ app.post('/api/ads/update-order/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, id, sort_order, sort_order]);
-        io.emit('adsChanged', { location });
+        io.emit('adsChanged');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -362,7 +362,7 @@ app.post('/api/logo/update-order/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, sort_order, sort_order]);
-        io.emit('logoChanged', { location });
+        io.emit('logoChanged');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -382,7 +382,7 @@ app.post('/api/logo/toggle/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, is_active, is_active]);
-        io.emit('logoChanged', { location });
+        io.emit('logoChanged');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -402,7 +402,7 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, force_column_break, force_column_break]);
-        io.emit('logoChanged', { location });
+        io.emit('logoChanged');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

@@ -90,16 +90,12 @@ socket.on('categoryColumnBreakChanged', ({ location }) => {
     }
 });
 
-socket.on('adsChanged', ({ location }) => {
-    if (location === currentLocation) {
-        fetchAds();
-    }
+socket.on('adsChanged', () => {
+    fetchAds();
 });
 
-socket.on('logoChanged', ({ location }) => {
-    if (location === currentLocation) {
-        fetchLogo();
-    }
+socket.on('logoChanged', () => {
+    fetchLogo();
 });
 
 socket.on('drinkAdditivesChanged', ({ drinkId }) => {
@@ -288,6 +284,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialisiere das Bild-Upload-Modal
     imageUploadModal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
     
+    // Initialisiere das Löschbestätigungs-Modal
+    deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    
     // Event-Listener für den Button zum Öffnen des Modals
     document.getElementById('showImageUploadModalBtn').addEventListener('click', function() {
         imageUploadModal.show();
@@ -295,6 +294,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event-Listener für den Upload-Button
     document.getElementById('uploadImageBtn').addEventListener('click', uploadImage);
+    
+    // Event-Listener für den Löschbestätigungs-Button
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (adToDelete) {
+            performDelete(adToDelete);
+            deleteConfirmModal.hide();
+        }
+    });
 });
 
 // Funktion zum Filtern der Zusatzstoff-Optionen
@@ -855,6 +862,8 @@ async function saveAdditiveSelection() {
 
 // Bild-Upload Funktionalität
 let imageUploadModal;
+let deleteConfirmModal;
+let adToDelete = null;
 
 // Funktion zum Hochladen eines Bildes
 async function uploadImage() {
@@ -866,7 +875,7 @@ async function uploadImage() {
     const sortOrder = document.getElementById('imageSortOrder').value;
     
     if (!name || !price || !fileInput.files[0]) {
-        alert('Bitte füllen Sie alle erforderlichen Felder aus.');
+        showNotification('Bitte füllen Sie alle erforderlichen Felder aus.', 'warning');
         return;
     }
     
@@ -892,25 +901,27 @@ async function uploadImage() {
         const result = await response.json();
         
         if (result.success) {
-            alert('Bild erfolgreich hochgeladen!');
+            showNotification('Bild erfolgreich hochgeladen!', 'success');
             imageUploadModal.hide();
             document.getElementById('imageUploadForm').reset();
             fetchAds(); // Aktualisiere die Werbeanzeigen-Tabelle
         } else {
-            alert('Fehler beim Hochladen: ' + result.error);
+            showNotification('Fehler beim Hochladen: ' + result.error, 'error');
         }
     } catch (error) {
         console.error('Fehler beim Hochladen des Bildes:', error);
-        alert('Fehler beim Hochladen des Bildes: ' + error.message);
+        showNotification('Fehler beim Hochladen des Bildes: ' + error.message, 'error');
     }
 }
 
 // Funktion zum Löschen einer Werbung
-async function deleteAd(adId) {
-    if (!confirm('Möchten Sie diese Werbung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
-        return;
-    }
-    
+function deleteAd(adId) {
+    adToDelete = adId;
+    deleteConfirmModal.show();
+}
+
+// Funktion zum Ausführen des Löschvorgangs
+async function performDelete(adId) {
     try {
         const response = await fetch(`/api/ads/${adId}`, {
             method: 'DELETE',
@@ -923,7 +934,7 @@ async function deleteAd(adId) {
         
         if (data.success) {
             // Aktualisiere die Tabelle
-            loadAds();
+            fetchAds();
             showNotification('Werbung erfolgreich gelöscht', 'success');
         } else {
             showNotification(`Fehler beim Löschen der Werbung: ${data.error}`, 'error');
@@ -934,41 +945,35 @@ async function deleteAd(adId) {
     }
 }
 
-// Funktion zum Laden der Werbungen
-async function loadAds() {
-    try {
-        const response = await fetch('/api/ads');
-        const ads = await response.json();
-        
-        const adsTableBody = document.getElementById('adsTableBody');
-        adsTableBody.innerHTML = '';
-        
-        ads.forEach(ad => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${ad.name}</td>
-                <td>${ad.price ? ad.price + ' €' : '-'}</td>
-                <td>${ad.card_type || 'Standard'}</td>
-                <td>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="adActive${ad.id}" 
-                               ${ad.is_active ? 'checked' : ''} onchange="toggleAdStatus(${ad.id}, this.checked)">
-                    </div>
-                </td>
-                <td>${ad.sort_order}</td>
-                <td>
-                    <img src="${ad.image_path}" alt="${ad.name}" style="max-width: 100px; max-height: 100px;">
-                </td>
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="deleteAd(${ad.id})">
-                        <i class="bi bi-trash"></i> Löschen
-                    </button>
-                </td>
-            `;
-            adsTableBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Fehler beim Laden der Werbungen:', error);
-        showNotification('Fehler beim Laden der Werbungen', 'error');
-    }
+// Funktion zum Anzeigen von Benachrichtigungen
+function showNotification(message, type = 'info') {
+    const notificationContainer = document.getElementById('notificationContainer') || createNotificationContainer();
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+    `;
+    
+    notificationContainer.appendChild(notification);
+    
+    // Automatisch nach 5 Sekunden ausblenden
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 150);
+    }, 5000);
+}
+
+// Funktion zum Erstellen des Benachrichtigungscontainers
+function createNotificationContainer() {
+    const container = document.createElement('div');
+    container.id = 'notificationContainer';
+    container.style.position = 'fixed';
+    container.style.top = '20px';
+    container.style.right = '20px';
+    container.style.zIndex = '9999';
+    container.style.maxWidth = '350px';
+    document.body.appendChild(container);
+    return container;
 } 
