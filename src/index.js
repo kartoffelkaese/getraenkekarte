@@ -77,12 +77,7 @@ db.query(`
 // Konfiguration für Multer (Datei-Upload)
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        let uploadDir = './public/images';
-        
-        // Bestimme den Upload-Ordner basierend auf dem Endpunkt
-        if (req.path.includes('/api/dishes')) {
-            uploadDir = './public/images/dishes';
-        }
+        const uploadDir = './public/images';
         
         // Stelle sicher, dass das Verzeichnis existiert
         if (!fs.existsSync(uploadDir)) {
@@ -91,9 +86,11 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function(req, file, cb) {
-        // Generiere einen eindeutigen Dateinamen
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        // Behalte den originalen Dateinamen bei und füge nur einen Zeitstempel als Suffix hinzu
+        const timestamp = Date.now();
+        const originalName = path.parse(file.originalname).name;
+        const extension = path.extname(file.originalname);
+        cb(null, `${originalName}-${timestamp}${extension}`);
     }
 });
 
@@ -693,7 +690,7 @@ app.post('/api/dishes', upload.single('dishImage'), async (req, res) => {
         let image_path = null;
 
         if (req.file) {
-            image_path = `/images/dishes/${req.file.filename}`;
+            image_path = `/images/${req.file.filename}`;
         }
 
         const [result] = await db.query(
@@ -714,7 +711,7 @@ app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
         let image_path = null;
 
         if (req.file) {
-            image_path = `/images/dishes/${req.file.filename}`;
+            image_path = `/images/${req.file.filename}`;
         }
 
         const query = image_path 
