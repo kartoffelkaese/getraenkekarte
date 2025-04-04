@@ -43,6 +43,11 @@ app.get('/', (req, res) => {
     res.redirect('/haupttheke');
 });
 
+// Route für die Speisekarte
+app.get('/speisekarte', (req, res) => {
+    res.sendFile('speisekarte.html', { root: './public' });
+});
+
 // Statische Dateien
 app.use(express.static('public'));
 
@@ -54,10 +59,31 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME
 }).promise();
 
+// Erstelle die dishes-Tabelle, falls sie nicht existiert
+db.query(`
+    CREATE TABLE IF NOT EXISTS dishes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        description TEXT,
+        image_path VARCHAR(255),
+        sort_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE
+    )
+`).catch(error => {
+    console.error('Fehler beim Erstellen der dishes-Tabelle:', error);
+});
+
 // Konfiguration für Multer (Datei-Upload)
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        const uploadDir = './public/images';
+        let uploadDir = './public/images';
+        
+        // Bestimme den Upload-Ordner basierend auf dem Endpunkt
+        if (req.path.includes('/api/dishes')) {
+            uploadDir = './public/images/dishes';
+        }
+        
         // Stelle sicher, dass das Verzeichnis existiert
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
@@ -628,6 +654,115 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
     } catch (err) {
         console.error('Fehler beim Löschen der Werbung:', err);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// API-Endpunkt für alle Gerichte
+app.get('/api/dishes', async (req, res) => {
+    const query = `
+        SELECT * FROM dishes
+        ORDER BY sort_order ASC, name ASC
+    `;
+    
+    try {
+        const [rows] = await db.query(query);
+        res.json(rows || []);
+    } catch (err) {
+        console.error('Dishes API Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Speisekarten-API Endpunkte
+app.get('/api/dishes/:id', async (req, res) => {
+    try {
+        const [dishes] = await db.query('SELECT * FROM dishes WHERE id = ?', [req.params.id]);
+        if (dishes.length === 0) {
+            return res.status(404).json({ error: 'Gericht nicht gefunden' });
+        }
+        res.json(dishes[0]);
+    } catch (error) {
+        console.error('Fehler beim Laden des Gerichts:', error);
+        res.status(500).json({ error: 'Fehler beim Laden des Gerichts' });
+    }
+});
+
+app.post('/api/dishes', upload.single('dishImage'), async (req, res) => {
+    try {
+        const { name, price, description, sort_order, is_active } = req.body;
+        let image_path = null;
+
+        if (req.file) {
+            image_path = `/images/dishes/${req.file.filename}`;
+        }
+
+        const [result] = await db.query(
+            'INSERT INTO dishes (name, price, description, image_path, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, price, description, image_path, sort_order || 0, is_active === 'true']
+        );
+
+        res.json({ id: result.insertId, success: true });
+    } catch (error) {
+        console.error('Fehler beim Erstellen des Gerichts:', error);
+        res.status(500).json({ error: 'Fehler beim Erstellen des Gerichts' });
+    }
+});
+
+app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
+    try {
+        const { name, price, description, sort_order, is_active } = req.body;
+        let image_path = null;
+
+        if (req.file) {
+            image_path = `/images/dishes/${req.file.filename}`;
+        }
+
+        const query = image_path 
+            ? 'UPDATE dishes SET name = ?, price = ?, description = ?, image_path = ?, sort_order = ?, is_active = ? WHERE id = ?'
+            : 'UPDATE dishes SET name = ?, price = ?, description = ?, sort_order = ?, is_active = ? WHERE id = ?';
+
+        const params = image_path 
+            ? [name, price, description, image_path, sort_order || 0, is_active === 'true', req.params.id]
+            : [name, price, description, sort_order || 0, is_active === 'true', req.params.id];
+
+        await db.query(query, params);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren des Gerichts:', error);
+        res.status(500).json({ error: 'Fehler beim Aktualisieren des Gerichts' });
+    }
+});
+
+app.delete('/api/dishes/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM dishes WHERE id = ?', [req.params.id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Fehler beim Löschen des Gerichts:', error);
+        res.status(500).json({ error: 'Fehler beim Löschen des Gerichts' });
+    }
+});
+
+app.put('/api/dishes/:id/status', async (req, res) => {
+    try {
+        const { is_active } = req.body;
+        await db.query('UPDATE dishes SET is_active = ? WHERE id = ?', [is_active, req.params.id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren des Gericht-Status:', error);
+        res.status(500).json({ error: 'Fehler beim Aktualisieren des Gericht-Status' });
+    }
+});
+
+app.put('/api/dishes/:id/order', async (req, res) => {
+    try {
+        const { sort_order } = req.body;
+        await db.query('UPDATE dishes SET sort_order = ? WHERE id = ?', [sort_order, req.params.id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren der Reihenfolge:', error);
+        res.status(500).json({ error: 'Fehler beim Aktualisieren der Reihenfolge' });
     }
 });
 
