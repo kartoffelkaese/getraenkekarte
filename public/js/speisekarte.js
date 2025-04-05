@@ -217,7 +217,7 @@ function createDishCard(dish) {
     }
     
     // Formatiere den Preis
-    const price = parseFloat(dish.price).toFixed(2);
+    const price = formatPrice(dish.price);
     
     card.innerHTML = `
         ${imageHtml}

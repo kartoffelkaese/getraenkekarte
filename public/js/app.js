@@ -239,21 +239,21 @@ function displayDrinks(drinks) {
                 if (currentLocation === 'theke-hinten') {
                     // Für Theke-hinten: Nur den Hauptpreis ohne Volumen anzeigen
                     priceHtml = `<span class="float-end">
-                        ${preis.toFixed(2)} €
+                        ${formatPrice(preis)} €
                     </span>`;
                 } else if (drink.has_small_size === 1) {
                     // Für andere Karten: Beide Preise anzeigen, wenn verfügbar
                     const smallPrice = parseFloat(drink.small_price) || 0;
                     priceHtml = `<span class="float-end">
-                        ${preis.toFixed(2)} €
+                        ${formatPrice(preis)} €
                         <small class="additives-info">(${drink.volume_normal})</small>
                         &nbsp;/&nbsp;
-                        ${smallPrice.toFixed(2)} €
+                        ${formatPrice(smallPrice)} €
                         <small class="additives-info">(${drink.volume_small})</small>
                     </span>`;
                 } else {
                     priceHtml = `<span class="float-end">
-                        ${preis.toFixed(2)} €
+                        ${formatPrice(preis)} €
                         ${drink.volume_normal ? `<small class="additives-info">(${drink.volume_normal})</small>` : ''}
                     </span>`;
                 }
@@ -312,7 +312,7 @@ function displayAds(ads) {
         adElement.innerHTML = `
             <img src="${ad.image_path}" alt="${ad.name}">
             <div class="drink-name">${ad.name}</div>
-            <div class="drink-price">${preis.toFixed(2)} €</div>
+            <div class="drink-price">${formatPrice(preis)} €</div>
         `;
         additionalContent.appendChild(adElement);
     });
