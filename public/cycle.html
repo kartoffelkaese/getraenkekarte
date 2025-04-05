@@ -76,19 +76,19 @@
                 }
             }, 15000);
 
-            // Wechsle nach 21 Sekunden von der Speisekarte zur Haupttheke
+            // Wechsle nach 25 Sekunden von der Speisekarte zur Haupttheke
             setTimeout(() => {
                 if (currentFrame === 'speisekarte') {
                     switchFrame();
                 }
-            }, 21000);
+            }, 25000);
         }
 
         // Starte den Zyklus
         startCycle();
 
-        // Wiederhole den Zyklus alle 21 Sekunden
-        setInterval(startCycle, 21000);
+        // Wiederhole den Zyklus alle 25 Sekunden
+        setInterval(startCycle, 25000);
     </script>
 </body>
 </html> 
