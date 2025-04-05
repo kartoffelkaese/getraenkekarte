@@ -63,7 +63,14 @@ function updateSectionVisibility() {
     // Sektionen basierend auf der Location anzeigen
     if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
+    } else if (currentLocation === 'jugendliche') {
+        // Für die Jugendkarte: Logo, Kategorien, Getränke und Zusatzstoffe anzeigen
+        if (sections.logo) sections.logo.style.display = 'block';
+        if (sections.categories) sections.categories.style.display = 'block';
+        if (sections.drinks) sections.drinks.style.display = 'block';
+        if (sections.additives) sections.additives.style.display = 'block';
     } else {
+        // Für alle anderen Locations: Alle Sektionen anzeigen
         if (sections.logo) sections.logo.style.display = 'block';
         if (sections.categories) sections.categories.style.display = 'block';
         if (sections.ads) sections.ads.style.display = 'block';
@@ -138,7 +145,7 @@ socket.on('drinkPriceChanged', ({ id, show_price, location }) => {
 
 socket.on('categoryPricesChanged', ({ id, show_prices, location }) => {
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#category-switch-${id}`);
+        const switchElement = document.querySelector(`#category-price-switch-${id}`);
         if (switchElement) {
             switchElement.checked = show_prices;
         }
@@ -146,12 +153,25 @@ socket.on('categoryPricesChanged', ({ id, show_prices, location }) => {
 });
 
 socket.on('categoryVisibilityChanged', ({ id, is_visible, location }) => {
+    console.log('=== Socket.IO Kategorie-Sichtbarkeit Event empfangen ===');
+    console.log('Event Daten:', { id, is_visible, location, currentLocation });
+    
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#visibility-switch-${id}`);
+        const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
+        console.log('Switch Element gefunden:', !!switchElement);
+        
         if (switchElement) {
+            console.log('Alter Switch-Status:', switchElement.checked);
             switchElement.checked = is_visible;
+            console.log('Neuer Switch-Status:', switchElement.checked);
+        } else {
+            console.warn('Switch Element nicht gefunden für ID:', id);
         }
+    } else {
+        console.log('Event ignoriert - falsche Location');
     }
+    
+    console.log('=== Socket.IO Event Handler Ende ===');
 });
 
 socket.on('categorySortChanged', ({ location }) => {
@@ -160,9 +180,12 @@ socket.on('categorySortChanged', ({ location }) => {
     }
 });
 
-socket.on('categoryColumnBreakChanged', ({ location }) => {
+socket.on('categoryColumnBreakChanged', ({ id, force_column_break, location }) => {
     if (location === currentLocation) {
-        fetchCategories();
+        const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
+        if (switchElement) {
+            switchElement.checked = force_column_break;
+        }
     }
 });
 
@@ -170,8 +193,10 @@ socket.on('adsChanged', () => {
     fetchAds();
 });
 
-socket.on('logoChanged', () => {
-    fetchLogo();
+socket.on('logoChanged', ({ location }) => {
+    if (location === currentLocation) {
+        fetchLogo();
+    }
 });
 
 socket.on('drinkAdditivesChanged', ({ drinkId }) => {
@@ -288,44 +313,61 @@ async function fetchDrinkAdditives(drinkId) {
 
 // Funktion zum Anzeigen der Kategorien
 function displayCategories(categories) {
-    categoriesTableBody.innerHTML = '';
+    console.log('=== Kategorien Anzeigen Start ===');
+    console.log('Eingangskategorien:', categories);
+    
+    const tbody = document.getElementById('categoriesTableBody');
+    console.log('TBody Element gefunden:', !!tbody);
+    
+    if (!tbody) {
+        console.error('Kategorien-TBody nicht gefunden!');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
     categories.forEach(category => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
+        console.log('Verarbeite Kategorie:', category);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
             <td>${category.name}</td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 
-                           id="category-switch-${category.id}" 
-                           ${category.show_prices ? 'checked' : ''}
-                           onchange="toggleCategoryPrices(${category.id}, this.checked)">
+                           id="category-price-switch-${category.id}"
+                           onchange="toggleCategoryPrices(${category.id}, this.checked)"
+                           ${category.show_prices ? 'checked' : ''}>
                 </div>
             </td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 
-                           id="visibility-switch-${category.id}" 
-                           ${category.is_visible ? 'checked' : ''}
-                           onchange="toggleCategoryVisibility(${category.id}, this.checked)">
+                           id="category-visibility-switch-${category.id}"
+                           onchange="toggleCategoryVisibility(${category.id}, this.checked)"
+                           ${category.is_visible ? 'checked' : ''}>
                 </div>
             </td>
             <td>
                 <input type="number" class="form-control form-control-sm" 
                        style="width: 80px"
-                       value="${category.sort_order || 0}"
-                       onchange="updateCategoryOrder(${category.id}, this.value)">
+                       id="category-order-${category.id}"
+                       onchange="updateCategoryOrder(${category.id}, this.value)"
+                       value="${category.sort_order || 0}">
             </td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 
-                           id="column-break-switch-${category.id}" 
-                           ${category.force_column_break ? 'checked' : ''}
-                           onchange="toggleColumnBreak(${category.id}, this.checked)">
+                           id="category-column-break-switch-${category.id}"
+                           onchange="toggleCategoryColumnBreak(${category.id}, this.checked)"
+                           ${category.force_column_break ? 'checked' : ''}>
                 </div>
             </td>
         `;
-        categoriesTableBody.appendChild(row);
+        tbody.appendChild(tr);
+        console.log('Kategorie hinzugefügt:', category.id);
     });
+    
+    console.log('=== Kategorien Anzeigen Ende ===');
 }
 
 let additiveSelectionModal;
@@ -680,50 +722,94 @@ async function toggleDrinkPrice(id, show_price) {
     }
 }
 
-// Funktion zum Umschalten der Preisanzeige für Kategorien
-async function toggleCategoryPrices(id, show_prices) {
+// Funktion zum Aktualisieren des Status einer Kategorie
+async function toggleCategoryVisibility(id, isVisible) {
     try {
-        const response = await fetch(`/api/categories/toggle-prices/${currentLocation}`, {
+        console.log('=== Kategorie-Sichtbarkeit Toggle Start ===');
+        console.log('Parameter:', { id, isVisible, currentLocation });
+        
+        const response = await fetch(`/api/categories/toggle-visibility/${currentLocation}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id, show_prices })
+            body: JSON.stringify({ id, is_visible: isVisible })
         });
         
+        console.log('Server-Antwort Status:', response.status);
+        
         if (!response.ok) {
-            throw new Error('Netzwerk-Antwort war nicht ok');
+            throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
         }
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren der Preisanzeige:', error);
-        // Bei Fehler Switch zurücksetzen
-        const switchElement = document.querySelector(`#category-switch-${id}`);
+        
+        const result = await response.json();
+        console.log('Server-Antwort Daten:', result);
+        
+        // Sende das Event mit der Location
+        console.log('Sende Socket.IO Event:', { id, isVisible, location: currentLocation });
+        socket.emit('categoryVisibilityChanged', { id, is_visible: isVisible, location: currentLocation });
+        
+        // Überprüfe den Switch-Status
+        const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
+        console.log('Switch Element gefunden:', !!switchElement);
         if (switchElement) {
-            switchElement.checked = !show_prices;
+            console.log('Aktueller Switch-Status:', switchElement.checked);
+        }
+        
+        console.log('=== Kategorie-Sichtbarkeit Toggle Ende ===');
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren der Kategorie-Sichtbarkeit:', error);
+        // Bei Fehler Switch zurücksetzen
+        const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
+        if (switchElement) {
+            console.log('Setze Switch zurück auf:', !isVisible);
+            switchElement.checked = !isVisible;
         }
     }
 }
 
-// Funktion zum Umschalten der Kategorie-Sichtbarkeit
-async function toggleCategoryVisibility(id, is_visible) {
+// Funktion zum Aktualisieren der Preisanzeige einer Kategorie
+async function toggleCategoryPrices(id, showPrices) {
     try {
-        const response = await fetch(`/api/categories/toggle-visibility/${currentLocation}`, {
+        console.log('=== Kategorie-Preisanzeige Toggle Start ===');
+        console.log('Parameter:', { id, showPrices, currentLocation });
+        
+        const response = await fetch(`/api/categories/toggle-prices/${currentLocation}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id, is_visible })
+            body: JSON.stringify({ id, show_prices: showPrices })
         });
         
+        console.log('Server-Antwort Status:', response.status);
+        
         if (!response.ok) {
-            throw new Error('Netzwerk-Antwort war nicht ok');
+            throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
         }
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren der Kategorie-Sichtbarkeit:', error);
-        // Bei Fehler Switch zurücksetzen
-        const switchElement = document.querySelector(`#visibility-switch-${id}`);
+        
+        const result = await response.json();
+        console.log('Server-Antwort Daten:', result);
+        
+        // Sende das Event mit der Location
+        console.log('Sende Socket.IO Event:', { id, showPrices, location: currentLocation });
+        socket.emit('categoryPricesChanged', { id, show_prices: showPrices, location: currentLocation });
+        
+        // Überprüfe den Switch-Status
+        const switchElement = document.querySelector(`#category-price-switch-${id}`);
+        console.log('Switch Element gefunden:', !!switchElement);
         if (switchElement) {
-            switchElement.checked = !is_visible;
+            console.log('Aktueller Switch-Status:', switchElement.checked);
+        }
+        
+        console.log('=== Kategorie-Preisanzeige Toggle Ende ===');
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren der Kategorie-Preisanzeige:', error);
+        // Bei Fehler Switch zurücksetzen
+        const switchElement = document.querySelector(`#category-price-switch-${id}`);
+        if (switchElement) {
+            console.log('Setze Switch zurück auf:', !showPrices);
+            switchElement.checked = !showPrices;
         }
     }
 }
@@ -749,25 +835,47 @@ async function updateCategoryOrder(id, sort_order) {
     }
 }
 
-// Funktion zum Umschalten des Spaltenumbruchs
-async function toggleColumnBreak(id, force_column_break) {
+// Funktion zum Umschalten des Spaltenumbruchs einer Kategorie
+async function toggleCategoryColumnBreak(id, force_column_break) {
     try {
+        console.log('=== Kategorie-Spaltenumbruch Toggle Start ===');
+        console.log('Parameter:', { id, force_column_break, currentLocation });
+        
         const response = await fetch(`/api/categories/toggle-column-break/${currentLocation}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ id, force_column_break })
         });
         
+        console.log('Server-Antwort Status:', response.status);
+        
         if (!response.ok) {
-            throw new Error('Netzwerk-Antwort war nicht ok');
+            throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
         }
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren des Spaltenumbruchs:', error);
-        // Bei Fehler Switch zurücksetzen
-        const switchElement = document.querySelector(`#column-break-switch-${id}`);
+        
+        const result = await response.json();
+        console.log('Server-Antwort Daten:', result);
+        
+        // Sende das Event mit der Location
+        console.log('Sende Socket.IO Event:', { id, force_column_break, location: currentLocation });
+        socket.emit('categoryColumnBreakChanged', { id, force_column_break, location: currentLocation });
+        
+        // Überprüfe den Switch-Status
+        const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
+        console.log('Switch Element gefunden:', !!switchElement);
         if (switchElement) {
+            console.log('Aktueller Switch-Status:', switchElement.checked);
+        }
+        
+        console.log('=== Kategorie-Spaltenumbruch Toggle Ende ===');
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren des Kategorie-Spaltenumbruchs:', error);
+        // Bei Fehler Switch zurücksetzen
+        const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
+        if (switchElement) {
+            console.log('Setze Switch zurück auf:', !force_column_break);
             switchElement.checked = !force_column_break;
         }
     }
@@ -787,6 +895,9 @@ async function toggleAdStatus(id, is_active) {
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
         }
+        
+        // Sende das Event mit der Location
+        socket.emit('adsChanged', { location: currentLocation });
     } catch (error) {
         console.error('Fehler beim Aktualisieren des Status:', error);
         // Bei Fehler Switch zurücksetzen
@@ -811,6 +922,9 @@ async function updateAdOrder(id, sort_order) {
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
         }
+        
+        // Sende das Event mit der Location
+        socket.emit('adsChanged', { location: currentLocation });
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Reihenfolge:', error);
         // Bei Fehler die Werbungen neu laden
@@ -818,9 +932,10 @@ async function updateAdOrder(id, sort_order) {
     }
 }
 
-// Funktion zum Umschalten der Logo-Sichtbarkeit
+// Funktion zum Umschalten des Logo-Status
 async function toggleLogoVisibility(is_active) {
     try {
+        console.log('Sende Logo-Status-Update:', { is_active, currentLocation });
         const response = await fetch(`/api/logo/toggle/${currentLocation}`, {
             method: 'POST',
             headers: {
@@ -832,8 +947,15 @@ async function toggleLogoVisibility(is_active) {
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
         }
+        
+        const result = await response.json();
+        console.log('Server-Antwort:', result);
+        
+        // Sende das Event
+        socket.emit('logoChanged', { location: currentLocation });
+        console.log('Logo-Change Event gesendet');
     } catch (error) {
-        console.error('Fehler beim Aktualisieren der Logo-Sichtbarkeit:', error);
+        console.error('Fehler beim Aktualisieren des Status:', error);
         // Bei Fehler Switch zurücksetzen
         const switchElement = document.querySelector('#logo-visibility-switch');
         if (switchElement) {
@@ -1226,7 +1348,7 @@ async function deleteDish(id) {
     }
 }
 
-// Funktion zum Aktivieren/Deaktivieren eines Gerichts
+// Funktion zum Aktualisieren des Status eines Gerichts
 async function toggleDishStatus(id, isActive) {
     try {
         const response = await fetch(`/api/dishes/${id}/status`, {
@@ -1239,27 +1361,48 @@ async function toggleDishStatus(id, isActive) {
         
         if (response.ok) {
             socket.emit('dishesChanged');
+            showNotification('Status erfolgreich aktualisiert', 'success');
+        } else {
+            throw new Error('Fehler beim Aktualisieren des Status');
         }
     } catch (error) {
-        console.error('Fehler beim Ändern des Gericht-Status:', error);
+        console.error('Fehler beim Aktualisieren des Status:', error);
+        showNotification('Fehler beim Aktualisieren des Status', 'error');
     }
 }
 
 // Funktion zum Aktualisieren der Reihenfolge eines Gerichts
-async function updateDishOrder(id, order) {
+async function updateDishOrder(id, sortOrder) {
     try {
         const response = await fetch(`/api/dishes/${id}/order`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ sort_order: parseInt(order) })
+            body: JSON.stringify({ sort_order: parseInt(sortOrder) })
         });
         
         if (response.ok) {
             socket.emit('dishesChanged');
+            showNotification('Reihenfolge erfolgreich aktualisiert', 'success');
+        } else {
+            throw new Error('Fehler beim Aktualisieren der Reihenfolge');
         }
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Reihenfolge:', error);
+        showNotification('Fehler beim Aktualisieren der Reihenfolge', 'error');
     }
-} 
+}
+
+// Debug-Ausgaben für Socket.IO
+socket.on('connect', () => {
+    console.log('Socket.IO verbunden');
+});
+
+socket.on('disconnect', () => {
+    console.log('Socket.IO getrennt');
+});
+
+socket.on('error', (error) => {
+    console.error('Socket.IO Fehler:', error);
+}); 

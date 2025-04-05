@@ -16,8 +16,21 @@
             display: flex;
             flex-direction: column;
             font-family: 'Helvetica Neue', Arial, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        #sparklesCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
         .menu-container {
+            position: relative;
+            z-index: 1;
             flex: 1;
             padding: 40px 20px;
             max-width: 1400px;
@@ -64,7 +77,6 @@
             border-radius: 12px;
             margin-bottom: 30px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border: none;
             border-left: 3px solid #a50775;
             display: flex;
@@ -75,68 +87,11 @@
             width: 100%;
             position: relative;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-5px);
-            }
-            100% {
-                transform: translateY(0px);
-            }
-        }
-        .dish-card:nth-child(1) { animation-delay: 0.0s; }
-        .dish-card:nth-child(2) { animation-delay: 0.2s; }
-        .dish-card:nth-child(3) { animation-delay: 0.4s; }
-        .dish-card:nth-child(4) { animation-delay: 0.6s; }
-        .dish-card:nth-child(5) { animation-delay: 0.8s; }
-        .dish-card:nth-child(6) { animation-delay: 1.0s; }
-        .dish-card:nth-child(7) { animation-delay: 1.2s; }
-        .dish-card:nth-child(8) { animation-delay: 1.4s; }
-        .dish-card:nth-child(9) { animation-delay: 1.6s; }
-        .dish-card:nth-child(10) { animation-delay: 1.8s; }
-        .dish-card:nth-child(11) { animation-delay: 2.0s; }
-        .dish-card:nth-child(12) { animation-delay: 2.2s; }
-        .dish-card:nth-child(13) { animation-delay: 2.4s; }
-        .dish-card:nth-child(14) { animation-delay: 2.6s; }
-        .dish-card:nth-child(15) { animation-delay: 2.8s; }
-        .dish-card:nth-child(16) { animation-delay: 3.0s; }
-        .dish-card:nth-child(17) { animation-delay: 3.2s; }
-        .dish-card:nth-child(18) { animation-delay: 3.4s; }
-        .dish-card:nth-child(19) { animation-delay: 3.6s; }
-        .dish-card:nth-child(20) { animation-delay: 3.8s; }
-        .dish-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            background: #1a1a1a;
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
-            border-left: 3px solid #ff0b8b;
-            animation: none;
-        }
-        .dish-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent, rgba(165, 7, 117, 0.1));
-            transition: all 0.4s ease;
-            z-index: 1;
-        }
-        .dish-card:hover::before {
-            background: linear-gradient(45deg, transparent, rgba(255, 11, 139, 0.2));
         }
         .dish-image {
             width: 100%;
             height: 300px;
             object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-        .dish-card:hover .dish-image {
-            transform: scale(1.05);
         }
         .dish-content {
             padding: 30px;
@@ -200,6 +155,7 @@
     </style>
 </head>
 <body>
+    <canvas id="sparklesCanvas"></canvas>
     <div class="menu-container">
         <div class="logo-container">
             <img src="images/logo.png" alt="Logo">

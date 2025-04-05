@@ -107,12 +107,18 @@
             </div>
         </div>
 
-        <!-- Werbung-Sektion -->
+        <!-- Werbung -->
         <div class="mb-4">
             <h2>Werbung</h2>
-            <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="input-group" style="max-width: 300px;">
+                    <input type="text" class="form-control" id="adSearchInput" placeholder="Werbung suchen...">
+                    <button class="btn btn-outline-secondary" type="button" id="clearAdSearch">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
                 <button class="btn btn-primary" id="showImageUploadModalBtn">
-                    <i class="bi bi-upload"></i> Neues Werbebild hochladen
+                    <i class="bi bi-plus"></i> Neue Werbung
                 </button>
             </div>
             <div class="table-responsive">
@@ -124,7 +130,7 @@
                             <th>Kartentyp</th>
                             <th>Aktiv</th>
                             <th>Reihenfolge</th>
-                            <th>Bild</th>
+                            <th>Vorschau</th>
                             <th>Aktionen</th>
                         </tr>
                     </thead>

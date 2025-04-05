@@ -50,15 +50,28 @@ socket.on('categoryColumnBreakChanged', (data) => {
 
 // Socket.io Events für Werbungen
 socket.on('adsChanged', (data) => {
-    if (data.location === currentLocation) {
+    if (data && data.location === currentLocation) {
         fetchAds();
     }
 });
 
 socket.on('logoChanged', (data) => {
-    if (data.location === currentLocation) {
+    if (data && data.location === currentLocation) {
         fetchLogo();
     }
+});
+
+// Socket.IO Event-Handler
+socket.on('drinksChanged', () => {
+    fetchDrinks();
+});
+
+socket.on('categoriesChanged', () => {
+    fetchDrinks();
+});
+
+socket.on('displaySettingsChanged', () => {
+    fetchDrinks();
 });
 
 // Funktion zum Laden der Zusatzstoffe

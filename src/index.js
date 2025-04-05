@@ -395,7 +395,7 @@ app.post('/api/logo/update-order/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, sort_order, sort_order]);
-        io.emit('logoChanged');
+        io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -415,7 +415,7 @@ app.post('/api/logo/toggle/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, is_active, is_active]);
-        io.emit('logoChanged');
+        io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -435,7 +435,7 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, force_column_break, force_column_break]);
-        io.emit('logoChanged');
+        io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -734,6 +734,9 @@ app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
 
         await db.query(query, params);
 
+        // Emittiere das Event mit der Location
+        io.emit('dishesChanged', { location: 'speisekarte' });
+
         res.json({ success: true });
     } catch (error) {
         console.error('Fehler beim Aktualisieren des Gerichts:', error);
@@ -755,6 +758,10 @@ app.put('/api/dishes/:id/status', async (req, res) => {
     try {
         const { is_active } = req.body;
         await db.query('UPDATE dishes SET is_active = ? WHERE id = ?', [is_active, req.params.id]);
+        
+        // Emittiere das Event mit der Location
+        io.emit('dishesChanged', { location: 'speisekarte' });
+        
         res.json({ success: true });
     } catch (error) {
         console.error('Fehler beim Aktualisieren des Gericht-Status:', error);
@@ -766,6 +773,10 @@ app.put('/api/dishes/:id/order', async (req, res) => {
     try {
         const { sort_order } = req.body;
         await db.query('UPDATE dishes SET sort_order = ? WHERE id = ?', [sort_order, req.params.id]);
+        
+        // Emittiere das Event mit der Location
+        io.emit('dishesChanged', { location: 'speisekarte' });
+        
         res.json({ success: true });
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Reihenfolge:', error);
