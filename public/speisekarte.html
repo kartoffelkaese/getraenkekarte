@@ -61,7 +61,7 @@
         }
         .dish-card {
             background: #111111;
-            border-radius: 0;
+            border-radius: 12px;
             margin-bottom: 30px;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -75,22 +75,39 @@
             width: 100%;
             position: relative;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            animation: pulse 4s ease-in-out infinite;
+            animation: float 3s ease-in-out infinite;
         }
-        @keyframes pulse {
+        @keyframes float {
             0% {
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                border-left: 3px solid #a50775;
+                transform: translateY(0px);
             }
             50% {
-                box-shadow: 0 4px 15px rgba(165, 7, 117, 0.2);
-                border-left: 3px solid #ff0b8b;
+                transform: translateY(-5px);
             }
             100% {
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                border-left: 3px solid #a50775;
+                transform: translateY(0px);
             }
         }
+        .dish-card:nth-child(1) { animation-delay: 0.0s; }
+        .dish-card:nth-child(2) { animation-delay: 0.2s; }
+        .dish-card:nth-child(3) { animation-delay: 0.4s; }
+        .dish-card:nth-child(4) { animation-delay: 0.6s; }
+        .dish-card:nth-child(5) { animation-delay: 0.8s; }
+        .dish-card:nth-child(6) { animation-delay: 1.0s; }
+        .dish-card:nth-child(7) { animation-delay: 1.2s; }
+        .dish-card:nth-child(8) { animation-delay: 1.4s; }
+        .dish-card:nth-child(9) { animation-delay: 1.6s; }
+        .dish-card:nth-child(10) { animation-delay: 1.8s; }
+        .dish-card:nth-child(11) { animation-delay: 2.0s; }
+        .dish-card:nth-child(12) { animation-delay: 2.2s; }
+        .dish-card:nth-child(13) { animation-delay: 2.4s; }
+        .dish-card:nth-child(14) { animation-delay: 2.6s; }
+        .dish-card:nth-child(15) { animation-delay: 2.8s; }
+        .dish-card:nth-child(16) { animation-delay: 3.0s; }
+        .dish-card:nth-child(17) { animation-delay: 3.2s; }
+        .dish-card:nth-child(18) { animation-delay: 3.4s; }
+        .dish-card:nth-child(19) { animation-delay: 3.6s; }
+        .dish-card:nth-child(20) { animation-delay: 3.8s; }
         .dish-card:hover {
             transform: translateY(-8px) scale(1.02);
             background: #1a1a1a;

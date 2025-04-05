@@ -48,6 +48,16 @@ app.get('/speisekarte', (req, res) => {
     res.sendFile('speisekarte.html', { root: './public' });
 });
 
+// Route für den automatischen Wechsel
+app.get('/cycle', (req, res) => {
+    res.sendFile('cycle.html', { root: './public' });
+});
+
+// Route für den automatischen Wechsel (Jugend)
+app.get('/cycle-jugend', (req, res) => {
+    res.sendFile('cycle-jugend.html', { root: './public' });
+});
+
 // Statische Dateien
 app.use(express.static('public'));
 
