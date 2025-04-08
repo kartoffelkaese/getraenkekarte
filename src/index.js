@@ -338,7 +338,7 @@ app.post('/api/ads/toggle/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, id, is_active, is_active]);
-        io.emit('adsChanged');
+        io.emit('adsChanged', { location });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -358,7 +358,7 @@ app.post('/api/ads/update-order/:location', async (req, res) => {
     
     try {
         await db.query(query, [location, id, sort_order, sort_order]);
-        io.emit('adsChanged');
+        io.emit('adsChanged', { location });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -622,7 +622,7 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
         });
         
         // Benachrichtige alle Clients über die Änderung
-        io.emit('adsChanged');
+        io.emit('adsChanged', { location: 'all' });
     } catch (err) {
         // Lösche die hochgeladene Datei, wenn die Datenbankoperation fehlschlägt
         fs.unlinkSync(req.file.path);
@@ -655,7 +655,7 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
         }
         
         // Benachrichtige alle Clients über die Änderung
-        io.emit('adsChanged');
+        io.emit('adsChanged', { location: 'all' });
         
         res.json({ success: true, message: 'Werbung erfolgreich gelöscht' });
     } catch (err) {

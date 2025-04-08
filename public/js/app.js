@@ -297,12 +297,30 @@ async function fetchAds() {
 // Funktion zum Anzeigen der Werbungen
 function displayAds(ads) {
     const additionalContent = document.querySelector('.additional-content');
+    if (!additionalContent) {
+        console.error('Element .additional-content nicht gefunden');
+        return;
+    }
+    
+    // Leere den Container
     additionalContent.innerHTML = '';
+    
+    if (!Array.isArray(ads) || ads.length === 0) {
+        console.log('Keine Werbungen verfügbar');
+        return;
+    }
     
     // Filtere aktive Werbungen und sortiere sie nach sort_order
     const activeAds = ads
-        .filter(ad => ad.is_active)
+        .filter(ad => ad.is_active && ad.image_path)
         .sort((a, b) => a.sort_order - b.sort_order);
+    
+    if (activeAds.length === 0) {
+        console.log('Keine aktiven Werbungen verfügbar');
+        return;
+    }
+    
+    console.log(`${activeAds.length} aktive Werbungen gefunden`);
     
     activeAds.forEach(ad => {
         const adElement = document.createElement('div');
@@ -310,7 +328,7 @@ function displayAds(ads) {
         adElement.id = `ad-${ad.id}`;
         const preis = parseFloat(ad.price) || 0;
         adElement.innerHTML = `
-            <img src="${ad.image_path}" alt="${ad.name}">
+            <img src="${ad.image_path}" alt="${ad.name}" loading="lazy">
             <div class="drink-name">${ad.name}</div>
             <div class="drink-price">${formatPrice(preis)} €</div>
         `;
@@ -318,9 +336,7 @@ function displayAds(ads) {
     });
 
     // Starte die Animation nur wenn es aktive Werbungen gibt
-    if (activeAds.length > 0) {
-        initAdRotation(activeAds);
-    }
+    initAdRotation(activeAds);
 }
 
 // Funktion für die Werberotation
