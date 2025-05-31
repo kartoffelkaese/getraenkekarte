@@ -786,9 +786,24 @@ app.put('/api/dishes/:id/order', async (req, res) => {
 
 // Socket.io Verbindung
 io.on('connection', (socket) => {
-    socket.on('disconnect', () => {});
-    socket.on('additivesChanged', () => {
-        socket.broadcast.emit('additivesChanged');
+    console.log('Neue Socket.IO Verbindung:', socket.id);
+    
+    socket.on('disconnect', (reason) => {
+        console.log('Socket.IO Verbindung getrennt:', socket.id, 'Grund:', reason);
+    });
+
+    socket.on('error', (error) => {
+        console.error('Socket.IO Fehler:', error);
+    });
+
+    socket.on('updateDrink', async (data) => {
+        console.log('Update Drink Event empfangen:', {
+            socketId: socket.id,
+            location: data.location,
+            drinkId: data.id,
+            isActive: data.is_active
+        });
+        // ... existing code ...
     });
 });
 

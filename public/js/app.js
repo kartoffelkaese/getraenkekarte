@@ -1,4 +1,8 @@
-const socket = io();
+const socket = io({
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+});
 const drinksList = document.getElementById('drinksList');
 const currentLocation = document.body.dataset.location;
 
@@ -12,6 +16,22 @@ loadAdditives();
 fetchAds();
 
 // Socket.io Events
+socket.on('connect', () => {
+    console.log('Socket.IO verbunden:', socket.id);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Socket.IO Verbindung getrennt:', reason);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Socket.IO Verbindungsfehler:', error);
+});
+
+socket.on('error', (error) => {
+    console.error('Socket.IO Fehler:', error);
+});
+
 socket.on('drinkStatusChanged', (data) => {
     if (data.location === currentLocation) {
         fetchDrinks();
