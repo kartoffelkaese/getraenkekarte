@@ -48,15 +48,17 @@ function startImageStack(images) {
             img.style.opacity = '1';
             img.style.zIndex = i + 1;
             img.style.transition = 'all 0.7s cubic-bezier(.4,0,.2,1)';
-            // Dynamische Größe je nach Format
+            // Standard: Landscape-Größe setzen
+            img.style.width = '520px';
+            img.style.maxWidth = '100vw';
+            img.style.maxHeight = '85vh';
+            // Dynamische Größe je nach Format nach dem Laden
             const tempImage = new window.Image();
             tempImage.onload = function() {
                 if (tempImage.width > tempImage.height) {
-                    // Landscape: noch größer anzeigen
-                    img.style.width = '520px';
-                    img.style.maxWidth = '100vw';
-                    img.style.maxHeight = '85vh';
+                    // Landscape: bleibt wie gesetzt
                 } else {
+                    // Portrait oder quadratisch: kleiner anzeigen
                     img.style.width = '340px';
                     img.style.maxWidth = '90vw';
                     img.style.maxHeight = '60vh';
