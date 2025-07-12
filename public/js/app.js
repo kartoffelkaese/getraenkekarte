@@ -6,14 +6,23 @@ const socket = io({
 const drinksList = document.getElementById('drinksList');
 const currentLocation = document.body.dataset.location;
 
+// Hilfsfunktion: Ist dies die Bilderseite?
+function isBilderSeite() {
+    return window.location.pathname.includes('theke-hinten-bilder');
+}
+
 // Lade die Daten beim Start
 fetchDrinks();
-fetchAds();
+if (!isBilderSeite()) {
+    fetchAds();
+}
 fetchLogo();
 loadAdditives();
 
 // Lade die Werbungen beim Start
-fetchAds();
+if (!isBilderSeite()) {
+    fetchAds();
+}
 
 // Socket.io Events
 socket.on('connect', () => {
@@ -316,6 +325,7 @@ async function fetchAds() {
 
 // Funktion zum Anzeigen der Werbungen
 function displayAds(ads) {
+    if (isBilderSeite()) return;
     const additionalContent = document.querySelector('.additional-content');
     if (!additionalContent) {
         console.error('Element .additional-content nicht gefunden');

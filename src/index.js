@@ -116,6 +116,87 @@ const upload = multer({
     }
 });
 
+// === Bilder-API ===
+const uploadDir = path.join(__dirname, '../public/uploads');
+
+// Multer-Konfiguration für uploads/
+const imageStorage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function(req, file, cb) {
+        const timestamp = Date.now();
+        const originalName = path.parse(file.originalname).name;
+        const extension = path.extname(file.originalname);
+        cb(null, `${originalName}-${timestamp}${extension}`);
+    }
+});
+const imageUpload = multer({ 
+    storage: imageStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: function(req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            return cb(new Error('Nur Bilddateien sind erlaubt!'), false);
+        }
+        cb(null, true);
+    }
+});
+
+// POST /api/images – Einzelnes Bild hochladen
+app.post('/api/images', imageUpload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Keine Datei hochgeladen.' });
+    }
+    res.json({ success: true, filename: req.file.filename });
+});
+
+// GET /api/images – Liste aller Bilder
+app.get('/api/images', (req, res) => {
+    fs.readdir(uploadDir, (err, files) => {
+        if (err) return res.status(500).json({ error: 'Fehler beim Lesen des Upload-Ordners.' });
+        const images = files.filter(f => f.match(/\.(jpg|jpeg|png|gif)$/i)).map(filename => ({
+            id: filename,
+            filename,
+            url: `/uploads/${filename}`
+        }));
+        res.json(images);
+    });
+});
+
+// DELETE /api/images/all – Alle Bilder löschen
+app.delete('/api/images/all', (req, res) => {
+    fs.readdir(uploadDir, (err, files) => {
+        if (err) return res.status(500).json({ error: 'Fehler beim Lesen des Upload-Ordners.' });
+        let errorCount = 0;
+        files.forEach(file => {
+            if (file.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                try {
+                    fs.unlinkSync(path.join(uploadDir, file));
+                } catch (e) {
+                    errorCount++;
+                }
+            }
+        });
+        if (errorCount > 0) {
+            return res.status(500).json({ error: `${errorCount} Dateien konnten nicht gelöscht werden.` });
+        }
+        res.json({ success: true });
+    });
+});
+
+// DELETE /api/images/:id – Einzelnes Bild löschen
+app.delete('/api/images/:id', (req, res) => {
+    const file = req.params.id;
+    const filePath = path.join(uploadDir, file);
+    fs.unlink(filePath, err => {
+        if (err) return res.status(404).json({ error: 'Datei nicht gefunden.' });
+        res.json({ success: true });
+    });
+});
+
 // API-Endpunkte mit Location-Parameter
 app.get('/api/drinks/:location', async (req, res) => {
     const location = req.params.location;

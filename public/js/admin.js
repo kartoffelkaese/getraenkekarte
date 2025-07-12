@@ -52,7 +52,8 @@ function updateSectionVisibility() {
         'ads': findSectionByHeading('Werbung'),
         'drinks': findSectionByHeading('Getränke'),
         'speisekarte': document.getElementById('speisekarteSection'),
-        'additives': findSectionByHeading('Zusatzstoffe verwalten')
+        'additives': findSectionByHeading('Zusatzstoffe verwalten'),
+        'bilder': document.getElementById('bilderSection') // Hinzufügen des Bilder-Abschnitts
     };
 
     // Alle Sektionen verstecken
@@ -69,6 +70,10 @@ function updateSectionVisibility() {
         if (sections.categories) sections.categories.style.display = 'block';
         if (sections.drinks) sections.drinks.style.display = 'block';
         if (sections.additives) sections.additives.style.display = 'block';
+    } else if (currentLocation === 'bilder') {
+        const bilderSection = document.getElementById('bilderSection');
+        if (bilderSection) bilderSection.style.display = 'block';
+        fetchImages(); // Bilder anzeigen, wenn die Sektion sichtbar ist
     } else {
         // Für alle anderen Locations: Alle Sektionen anzeigen
         if (sections.logo) sections.logo.style.display = 'block';
@@ -1391,6 +1396,143 @@ async function updateDishOrder(id, sortOrder) {
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Reihenfolge:', error);
         showNotification('Fehler beim Aktualisieren der Reihenfolge', 'error');
+    }
+}
+
+// === Bilder-Tab Logik ===
+
+// Sichtbarkeit der Bilder-Sektion steuern
+function updateSectionVisibility() {
+    // Finde die Sektionen anhand ihrer IDs oder spezifischen Strukturen
+    const sections = {
+        'logo': findSectionByHeading('Logo'),
+        'categories': findSectionByHeading('Kategorien'),
+        'ads': findSectionByHeading('Werbung'),
+        'drinks': findSectionByHeading('Getränke'),
+        'speisekarte': document.getElementById('speisekarteSection'),
+        'additives': findSectionByHeading('Zusatzstoffe verwalten'),
+        'bilder': document.getElementById('bilderSection') // Hinzufügen des Bilder-Abschnitts
+    };
+
+    // Alle Sektionen verstecken
+    Object.values(sections).forEach(section => {
+        if (section) section.style.display = 'none';
+    });
+
+    // Sektionen basierend auf der Location anzeigen
+    if (currentLocation === 'speisekarte') {
+        if (sections.speisekarte) sections.speisekarte.style.display = 'block';
+    } else if (currentLocation === 'jugendliche') {
+        // Für die Jugendkarte: Logo, Kategorien, Getränke und Zusatzstoffe anzeigen
+        if (sections.logo) sections.logo.style.display = 'block';
+        if (sections.categories) sections.categories.style.display = 'block';
+        if (sections.drinks) sections.drinks.style.display = 'block';
+        if (sections.additives) sections.additives.style.display = 'block';
+    } else if (currentLocation === 'bilder') {
+        const bilderSection = document.getElementById('bilderSection');
+        if (bilderSection) bilderSection.style.display = 'block';
+        fetchImages(); // Bilder anzeigen, wenn die Sektion sichtbar ist
+    } else {
+        // Für alle anderen Locations: Alle Sektionen anzeigen
+        if (sections.logo) sections.logo.style.display = 'block';
+        if (sections.categories) sections.categories.style.display = 'block';
+        if (sections.ads) sections.ads.style.display = 'block';
+        if (sections.drinks) sections.drinks.style.display = 'block';
+        if (sections.additives) sections.additives.style.display = 'block';
+    }
+}
+
+// Event-Listener für das Bilder-Upload-Formular
+const imageUploadForm = document.getElementById('imageUploadForm');
+if (imageUploadForm) {
+    imageUploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('imageFile');
+        if (!fileInput.files.length) return;
+        const files = Array.from(fileInput.files);
+        let uploadSuccess = true;
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const response = await fetch('/api/images', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) throw new Error('Fehler beim Hochladen des Bildes');
+            } catch (err) {
+                uploadSuccess = false;
+            }
+        }
+        imageUploadForm.reset();
+        fetchImages();
+        if (uploadSuccess) {
+            showNotification('Bilder erfolgreich hochgeladen', 'success');
+        } else {
+            showNotification('Einige Bilder konnten nicht hochgeladen werden', 'error');
+        }
+    });
+}
+
+// Alle Bilder löschen
+const deleteAllImagesBtn = document.getElementById('deleteAllImagesBtn');
+if (deleteAllImagesBtn) {
+    deleteAllImagesBtn.addEventListener('click', async function() {
+        if (!confirm('Möchten Sie wirklich alle Bilder unwiderruflich löschen?')) return;
+        try {
+            const response = await fetch('/api/images/all', { method: 'DELETE' });
+            if (!response.ok) throw new Error('Fehler beim Löschen aller Bilder');
+            fetchImages();
+            showNotification('Alle Bilder wurden gelöscht', 'success');
+        } catch (err) {
+            showNotification('Fehler beim Löschen aller Bilder', 'error');
+        }
+    });
+}
+
+// Bilder abrufen und anzeigen
+async function fetchImages() {
+    try {
+        const response = await fetch('/api/images');
+        const images = await response.json();
+        displayImages(images);
+    } catch (err) {
+        showNotification('Fehler beim Laden der Bilder', 'error');
+    }
+}
+
+function displayImages(images) {
+    const tbody = document.getElementById('imagesTableBody');
+    tbody.innerHTML = '';
+    if (!Array.isArray(images) || images.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Keine Bilder vorhanden</td></tr>';
+        return;
+    }
+    images.forEach(img => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><img src="${img.url}" alt="Bild" style="max-width: 100px;"></td>
+            <td>${img.filename}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteImage('${img.id}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Bild manuell löschen
+async function deleteImage(id) {
+    if (!confirm('Möchten Sie dieses Bild wirklich löschen?')) return;
+    try {
+        const response = await fetch(`/api/images/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Fehler beim Löschen');
+        fetchImages();
+        showNotification('Bild gelöscht', 'success');
+    } catch (err) {
+        showNotification('Fehler beim Löschen des Bildes', 'error');
     }
 }
 

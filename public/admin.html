@@ -13,7 +13,7 @@
     <div class="container admin-container">
         <h1>Getränkekarte Admin</h1>
         <div class="version-info">
-            <small>Version 2.9.1</small>
+            <small>Version 3.0.0</small>
         </div>
 
         <!-- Karten-Auswahl als Tabs -->
@@ -40,6 +40,12 @@
                 <button class="nav-link" id="speisekarte-tab" data-bs-toggle="tab" 
                         data-location="speisekarte" type="button" role="tab">
                     Speisekarte
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bilder-tab" data-bs-toggle="tab" 
+                        data-location="bilder" type="button" role="tab">
+                    Bilder
                 </button>
             </li>
         </ul>
@@ -334,6 +340,35 @@
                         <button type="button" class="btn btn-primary" onclick="saveAdditiveSelection()">Speichern</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Bilder-Sektion -->
+        <div id="bilderSection" style="display: none;">
+            <h2>Bilder verwalten</h2>
+            <form id="imageUploadForm" class="mb-3">
+                <div class="mb-2">
+                    <label for="imageFile" class="form-label">Bild auswählen</label>
+                    <input type="file" class="form-control" id="imageFile" accept="image/*" required multiple>
+                </div>
+                <button type="submit" class="btn btn-primary">Bilder hochladen</button>
+            </form>
+            <div class="mb-2">
+                <button class="btn btn-danger" id="deleteAllImagesBtn"><i class="bi bi-trash"></i> Alle Bilder löschen</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Vorschau</th>
+                            <th>Dateiname</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="imagesTableBody">
+                        <!-- Bilder werden hier dynamisch eingefügt -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
