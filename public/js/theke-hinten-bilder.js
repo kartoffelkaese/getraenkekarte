@@ -93,14 +93,6 @@ function startImageStack(images) {
         stack = [];
         showStack();
 
-        imageStackInterval = setInterval(() => {
-            const nextImage = imagesWithSize[currentIndex];
-            stack.push({ ...nextImage, rotation: getRandomRotation() });
-            if (stack.length > maxStack) stack.shift();
-            showStack();
-            currentIndex = (currentIndex + 1) % imagesWithSize.length;
-        }, 6000);
-
         // Initiales Befüllen: Stapel wächst von 0 auf maxStack
         let initialFill = 0;
         function initialStackGrow() {
@@ -111,6 +103,8 @@ function startImageStack(images) {
                 initialFill++;
                 setTimeout(initialStackGrow, 1200);
             } else if (imagesWithSize.length > maxStack) {
+                // Vor dem Setzen Intervall immer clearen!
+                if (imageStackInterval) clearInterval(imageStackInterval);
                 imageStackInterval = setInterval(() => {
                     const nextImage = imagesWithSize[currentIndex];
                     stack.push({ ...nextImage, rotation: getRandomRotation() });
