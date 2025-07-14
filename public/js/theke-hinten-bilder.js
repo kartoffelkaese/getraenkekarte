@@ -20,13 +20,37 @@ let imageStackInterval;
 function startImageStack(images) {
     if (imageStackInterval) clearInterval(imageStackInterval);
     let stack = [];
-    const maxStack = 3;
+    const maxStack = 4;
     let currentIndex = 0;
     const possibleRotations = [-8, 4, 0, -5, 7, 2, -3, 5];
 
     function getRandomRotation() {
         // Zufälligen Wert aus der Liste nehmen
         return possibleRotations[Math.floor(Math.random() * possibleRotations.length)];
+    }
+
+    // Hilfsfunktion: Lade alle Bildgrößen vorab
+    function preloadImageSizes(images, callback) {
+        let loaded = 0;
+        const imagesWithSize = images.map(img => ({ ...img }));
+        imagesWithSize.forEach((img, idx) => {
+            const temp = new window.Image();
+            temp.onload = function() {
+                img._isLandscape = temp.width > temp.height;
+                loaded++;
+                if (loaded === imagesWithSize.length) {
+                    callback(imagesWithSize);
+                }
+            };
+            temp.onerror = function() {
+                img._isLandscape = true; // Fallback: Landscape
+                loaded++;
+                if (loaded === imagesWithSize.length) {
+                    callback(imagesWithSize);
+                }
+            };
+            temp.src = img.url;
+        });
     }
 
     function showStack() {
@@ -47,64 +71,59 @@ function startImageStack(images) {
             img.style.borderRadius = '16px';
             img.style.opacity = '1';
             img.style.zIndex = i + 1;
-            img.style.transition = 'all 0.7s cubic-bezier(.4,0,.2,1)';
-            // Standard: Landscape-Größe setzen
-            img.style.width = '520px';
-            img.style.maxWidth = '100vw';
-            img.style.maxHeight = '85vh';
-            // Dynamische Größe je nach Format nach dem Laden
-            const tempImage = new window.Image();
-            tempImage.onload = function() {
-                if (tempImage.width > tempImage.height) {
-                    // Landscape: bleibt wie gesetzt
-                } else {
-                    // Portrait oder quadratisch: kleiner anzeigen
-                    img.style.width = '340px';
-                    img.style.maxWidth = '90vw';
-                    img.style.maxHeight = '60vh';
-                }
-            };
-            tempImage.src = stackItem.url;
+            img.style.transition = 'none';
+            // Größe direkt setzen
+            if (stackItem._isLandscape) {
+                img.style.width = '620px';
+                img.style.maxWidth = '100vw';
+                img.style.maxHeight = '95vh';
+            } else {
+                img.style.width = '420px';
+                img.style.maxWidth = '98vw';
+                img.style.maxHeight = '80vh';
+            }
             container.appendChild(img);
         });
         additionalContent.appendChild(container);
     }
 
-    // Start: Stapel ist leer, dann wächst er bis maxStack
-    stack = [];
-    showStack();
-
-    imageStackInterval = setInterval(() => {
-        // Neues Bild oben auf den Stapel
-        const nextImage = images[currentIndex];
-        stack.push({ ...nextImage, rotation: getRandomRotation() });
-        if (stack.length > maxStack) stack.shift();
+    // Nach dem Preload der Bildgrößen starten
+    preloadImageSizes(images, function(imagesWithSize) {
+        // Start: Stapel ist leer, dann wächst er bis maxStack
+        stack = [];
         showStack();
-        currentIndex = (currentIndex + 1) % images.length;
-    }, 6000); // 6 Sekunden
 
-    // Initiales Befüllen: Stapel wächst von 0 auf maxStack
-    let initialFill = 0;
-    function initialStackGrow() {
-        if (initialFill < Math.min(images.length, maxStack)) {
-            const nextImage = images[initialFill];
+        imageStackInterval = setInterval(() => {
+            const nextImage = imagesWithSize[currentIndex];
             stack.push({ ...nextImage, rotation: getRandomRotation() });
+            if (stack.length > maxStack) stack.shift();
             showStack();
-            initialFill++;
-            setTimeout(initialStackGrow, 1200); // 1,2 Sekunden
-        } else if (images.length > maxStack) {
-            imageStackInterval = setInterval(() => {
-                const nextImage = images[currentIndex];
+            currentIndex = (currentIndex + 1) % imagesWithSize.length;
+        }, 6000);
+
+        // Initiales Befüllen: Stapel wächst von 0 auf maxStack
+        let initialFill = 0;
+        function initialStackGrow() {
+            if (initialFill < Math.min(imagesWithSize.length, maxStack)) {
+                const nextImage = imagesWithSize[initialFill];
                 stack.push({ ...nextImage, rotation: getRandomRotation() });
-                if (stack.length > maxStack) stack.shift();
                 showStack();
-                currentIndex = (currentIndex + 1) % images.length;
-            }, 6000); // 6 Sekunden
+                initialFill++;
+                setTimeout(initialStackGrow, 1200);
+            } else if (imagesWithSize.length > maxStack) {
+                imageStackInterval = setInterval(() => {
+                    const nextImage = imagesWithSize[currentIndex];
+                    stack.push({ ...nextImage, rotation: getRandomRotation() });
+                    if (stack.length > maxStack) stack.shift();
+                    showStack();
+                    currentIndex = (currentIndex + 1) % imagesWithSize.length;
+                }, 6000);
+            }
         }
-    }
-    if (images.length > 0) {
-        initialStackGrow();
-    }
+        if (imagesWithSize.length > 0) {
+            initialStackGrow();
+        }
+    });
 }
 
 // CSS für Stapel-Effekt dynamisch einfügen
@@ -121,7 +140,7 @@ function startImageStack(images) {
             box-shadow: 0 4px 16px rgba(0,0,0,0.13);
             border-radius: 16px;
             background: #fff;
-            transition: all 0.7s cubic-bezier(.4,0,.2,1);
+            transition: none !important;
         }
     `;
     document.head.appendChild(style);
