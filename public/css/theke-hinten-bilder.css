@@ -1,0 +1,42 @@
+/* CSS für theke-hinten-bilder.html - 2-Spalten-Layout und Bilderstapel */
+
+.drinks-row {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.category-column.left-column {
+  flex: min-content;
+  max-width: 430px;
+  margin-right: 1rem;
+}
+.category-column.right-column {
+  flex: min-content;
+  max-width: 430px;
+  margin-left: 1rem;
+}
+.category-column {
+  min-width: 220px;
+}
+.additional-content {
+  flex: 7;
+}
+.additives-container {
+  flex: 3;
+}
+
+/* Bilderstapel-Styles */
+.bilder-stack-container {
+  width: 370px;
+  height: 260px;
+  max-width: 95vw;
+  max-height: 65vh;
+}
+.bilder-stack-img {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+  border-radius: 16px;
+  background: #fff;
+  transition: none !important;
+} 

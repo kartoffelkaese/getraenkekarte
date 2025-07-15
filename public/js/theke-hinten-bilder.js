@@ -74,11 +74,11 @@ function startImageStack(images) {
             img.style.transition = 'none';
             // Größe direkt setzen
             if (stackItem._isLandscape) {
-                img.style.width = '620px';
+                img.style.width = '720px';
                 img.style.maxWidth = '100vw';
                 img.style.maxHeight = '95vh';
             } else {
-                img.style.width = '420px';
+                img.style.width = '520px';
                 img.style.maxWidth = '98vw';
                 img.style.maxHeight = '80vh';
             }
@@ -119,26 +119,6 @@ function startImageStack(images) {
         }
     });
 }
-
-// CSS für Stapel-Effekt dynamisch einfügen
-(function addBilderStackStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .bilder-stack-container {
-            width: 370px;
-            height: 260px;
-            max-width: 95vw;
-            max-height: 65vh;
-        }
-        .bilder-stack-img {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-            border-radius: 16px;
-            background: #fff;
-            transition: none !important;
-        }
-    `;
-    document.head.appendChild(style);
-})();
 
 // Initial laden
 if (additionalContent) {

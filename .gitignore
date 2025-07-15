@@ -23,6 +23,9 @@ pids
 dist/
 build/
 
+# Verzeichnis für Bilder-Uploads
+public/uploads/*
+
 # Coverage Verzeichnis
 coverage/
 

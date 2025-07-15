@@ -14,14 +14,14 @@ function isBilderSeite() {
 // Lade die Daten beim Start
 fetchDrinks();
 if (!isBilderSeite()) {
-    fetchAds();
+fetchAds();
 }
 fetchLogo();
 loadAdditives();
 
 // Lade die Werbungen beim Start
 if (!isBilderSeite()) {
-    fetchAds();
+fetchAds();
 }
 
 // Socket.io Events

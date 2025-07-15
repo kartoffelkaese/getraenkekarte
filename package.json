@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "ext": "nodemon src/index.js --host 192.168.1.126 -p 8080"
+    "ext": "nodemon src/index.js --host 10.10.250.76 -p 3000"
   },
   "keywords": [],
   "author": "",
