@@ -89,6 +89,7 @@ function startImageStack(images) {
 
     // Nach dem Preload der Bildgrößen starten
     preloadImageSizes(images, function(imagesWithSize) {
+        console.log('Alle geladenen Bilder:', imagesWithSize.length, imagesWithSize.map(x => x.filename));
         // Start: Stapel ist leer, dann wächst er bis maxStack
         stack = [];
         showStack();
@@ -107,6 +108,7 @@ function startImageStack(images) {
                 if (imageStackInterval) clearInterval(imageStackInterval);
                 imageStackInterval = setInterval(() => {
                     const nextImage = imagesWithSize[currentIndex];
+                    console.log('Bildwechsel:', currentIndex, nextImage.filename);
                     stack.push({ ...nextImage, rotation: getRandomRotation() });
                     if (stack.length > maxStack) stack.shift();
                     showStack();
@@ -125,5 +127,5 @@ if (additionalContent) {
     // Entferne eventuell initial eingefügte Werbung
     additionalContent.innerHTML = '';
     fetchAndDisplayImages();
-    setInterval(fetchAndDisplayImages, 60000);
+    // setInterval(fetchAndDisplayImages, 60000); // Automatisches Nachladen entfernt
 } 
