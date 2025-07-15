@@ -1451,19 +1451,52 @@ if (imageUploadForm) {
         if (!fileInput.files.length) return;
         const files = Array.from(fileInput.files);
         let uploadSuccess = true;
-        for (const file of files) {
+        const progressDiv = document.getElementById('imageUploadProgress');
+        const progressBar = progressDiv ? progressDiv.querySelector('.progress-bar') : null;
+        if (progressDiv && progressBar) {
+            progressDiv.style.display = '';
+            progressBar.style.width = '0%';
+            progressBar.textContent = '';
+        }
+        let uploaded = 0;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             const formData = new FormData();
             formData.append('image', file);
-            try {
-                const response = await fetch('/api/images', {
-                    method: 'POST',
-                    body: formData
-                });
-                if (!response.ok) throw new Error('Fehler beim Hochladen des Bildes');
-            } catch (err) {
-                uploadSuccess = false;
-            }
+            await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/images');
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable && progressBar) {
+                        const percent = Math.round(((uploaded + event.loaded) / (files.reduce((a, f) => a + f.size, 0))) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressBar.textContent = percent + '%';
+                    }
+                };
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        uploaded += file.size;
+                        resolve();
+                    } else {
+                        uploadSuccess = false;
+                        resolve();
+                    }
+                };
+                xhr.onerror = function() {
+                    uploadSuccess = false;
+                    resolve();
+                };
+                xhr.send(formData);
+            });
         }
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+        }
+        setTimeout(() => {
+            if (progressDiv) progressDiv.style.display = 'none';
+            if (progressBar) progressBar.style.width = '0%';
+        }, 800);
         imageUploadForm.reset();
         fetchImages();
         if (uploadSuccess) {
@@ -1504,6 +1537,10 @@ async function fetchImages() {
 function displayImages(images) {
     const tbody = document.getElementById('imagesTableBody');
     tbody.innerHTML = '';
+    const countInfo = document.getElementById('imagesCountInfo');
+    if (countInfo) {
+        countInfo.textContent = `Insgesamt ${images.length} Bild${images.length === 1 ? '' : 'er'} hochgeladen.`;
+    }
     if (!Array.isArray(images) || images.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3">Keine Bilder vorhanden</td></tr>';
         return;
