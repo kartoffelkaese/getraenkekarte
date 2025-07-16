@@ -1112,7 +1112,7 @@ async function uploadImage() {
         if (result.success) {
             showNotification('Bild erfolgreich hochgeladen!', 'success');
             imageUploadModal.hide();
-            document.getElementById('imageUploadForm').reset();
+            document.getElementById('adUploadForm').reset();
             fetchAds(); // Aktualisiere die Werbeanzeigen-Tabelle
         } else {
             showNotification('Fehler beim Hochladen: ' + result.error, 'error');
