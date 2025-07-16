@@ -1076,12 +1076,12 @@ let adToDelete = null;
 
 // Funktion zum Hochladen eines Bildes
 async function uploadImage() {
-    const name = document.getElementById('imageName').value;
-    const price = document.getElementById('imagePrice').value;
-    const fileInput = document.getElementById('imageFile');
-    const cardType = document.getElementById('cardType').value;
-    const isActive = document.getElementById('imageActive').checked;
-    const sortOrder = document.getElementById('imageSortOrder').value;
+    const name = document.getElementById('adName').value;
+    const price = document.getElementById('adPrice').value;
+    const fileInput = document.getElementById('adFile');
+    const cardType = document.getElementById('adCardType').value;
+    const isActive = document.getElementById('adActive').checked;
+    const sortOrder = document.getElementById('adSortOrder').value;
     
     if (!name || !price || !fileInput.files[0]) {
         showNotification('Bitte füllen Sie alle erforderlichen Felder aus.', 'warning');
