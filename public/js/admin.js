@@ -528,8 +528,8 @@ function displayAds(ads) {
         const row = document.createElement('tr');
         const preis = parseFloat(ad.price) || 0;
         row.innerHTML = `
-            <td>${ad.name}</td>
-            <td>${preis.toFixed(2)} €</td>
+            <td>${ad.name || 'Kein Name'}</td>
+            <td>${ad.price ? preis.toFixed(2) + ' €' : 'Kein Preis'}</td>
             <td>${ad.card_type || 'Standard'}</td>
             <td>
                 <div class="form-check form-switch">
@@ -545,7 +545,7 @@ function displayAds(ads) {
                        value="${ad.sort_order || 0}"
                        onchange="updateAdOrder(${ad.id}, this.value)">
             </td>
-            <td><img src="${ad.image_path}" alt="${ad.name}" style="height: 50px;"></td>
+            <td><img src="${ad.image_path}" alt="${ad.name || 'Werbung'}" style="height: 50px;"></td>
             <td>
                 <button class="btn btn-danger btn-sm" onclick="deleteAd(${ad.id})">
                     <i class="bi bi-trash"></i> Löschen
@@ -1083,15 +1083,15 @@ async function uploadImage() {
     const isActive = document.getElementById('adActive').checked;
     const sortOrder = document.getElementById('adSortOrder').value;
     
-    if (!name || !price || !fileInput.files[0]) {
-        showNotification('Bitte füllen Sie alle erforderlichen Felder aus.', 'warning');
+    if (!fileInput.files[0]) {
+        showNotification('Bitte wählen Sie ein Bild aus.', 'warning');
         return;
     }
     
     const file = fileInput.files[0];
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('price', price);
+    formData.append('name', name || '');
+    formData.append('price', price || '');
     formData.append('image', file);
     formData.append('cardType', cardType);
     formData.append('isActive', isActive);
