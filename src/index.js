@@ -109,7 +109,7 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB Limit
     fileFilter: function(req, file, cb) {
         // Erlaube nur Bilder
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
             return cb(new Error('Nur Bilddateien sind erlaubt!'), false);
         }
         cb(null, true);
@@ -138,7 +138,7 @@ const imageUpload = multer({
     storage: imageStorage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     fileFilter: function(req, file, cb) {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
             return cb(new Error('Nur Bilddateien sind erlaubt!'), false);
         }
         cb(null, true);
@@ -157,7 +157,7 @@ app.post('/api/images', imageUpload.single('image'), (req, res) => {
 app.get('/api/images', (req, res) => {
     fs.readdir(uploadDir, (err, files) => {
         if (err) return res.status(500).json({ error: 'Fehler beim Lesen des Upload-Ordners.' });
-        const images = files.filter(f => f.match(/\.(jpg|jpeg|png|gif)$/i)).map(filename => ({
+        const images = files.filter(f => f.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)).map(filename => ({
             id: filename,
             filename,
             url: `/uploads/${filename}`
@@ -172,7 +172,7 @@ app.delete('/api/images/all', (req, res) => {
         if (err) return res.status(500).json({ error: 'Fehler beim Lesen des Upload-Ordners.' });
         let errorCount = 0;
         files.forEach(file => {
-            if (file.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            if (file.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
                 try {
                     fs.unlinkSync(path.join(uploadDir, file));
                 } catch (e) {
@@ -677,12 +677,6 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
     
     const { name, price, cardType, isActive, sortOrder } = req.body;
     
-    if (!name || !price) {
-        // Lösche die hochgeladene Datei, wenn die Validierung fehlschlägt
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ success: false, error: 'Name und Preis sind erforderlich' });
-    }
-    
     // Relativer Pfad zur Datei (für die Datenbank)
     const imagePath = `/images/${req.file.filename}`;
     
@@ -693,7 +687,7 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         
-        await db.query(query, [name, imagePath, price, isActive, sortOrder, cardType]);
+        await db.query(query, [name || '', imagePath, price || '', isActive, sortOrder, cardType]);
         
         // Sende Erfolgsantwort
         res.json({ 
