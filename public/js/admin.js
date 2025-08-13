@@ -529,7 +529,7 @@ function displayAds(ads) {
         const preis = parseFloat(ad.price) || 0;
         row.innerHTML = `
             <td>${ad.name || 'Kein Name'}</td>
-            <td>${ad.price ? preis.toFixed(2) + ' €' : 'Kein Preis'}</td>
+            <td>${ad.price ? preis.toFixed(2) + ' €' : ''}</td>
             <td>${ad.card_type || 'Standard'}</td>
             <td>
                 <div class="form-check form-switch">
