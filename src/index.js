@@ -687,7 +687,7 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         
-        await db.query(query, [name || '', imagePath, price || '', isActive, sortOrder, cardType]);
+        await db.query(query, [name || '', imagePath, price || null, isActive, sortOrder, cardType]);
         
         // Sende Erfolgsantwort
         res.json({ 

@@ -360,7 +360,7 @@ function displayAds(ads) {
         adElement.innerHTML = `
             <img src="${ad.image_path}" alt="${ad.name}" loading="lazy">
             <div class="drink-name">${ad.name}</div>
-            <div class="drink-price">${formatPrice(preis)} €</div>
+            ${ad.price ? `<div class="drink-price">${formatPrice(preis)} €</div>` : ''}
         `;
         additionalContent.appendChild(adElement);
     });
