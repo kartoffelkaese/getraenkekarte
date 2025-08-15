@@ -1,0 +1,55 @@
+/* CSS für bilder.html - Vollbild-Bilderdarstellung */
+
+body.bilder .content-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0;
+}
+
+body.bilder .additional-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-dark);
+}
+
+/* Bilderstapel-Styles für Vollbild */
+.bilder-stack-container {
+    width: 100%;
+    height: 100%;
+    max-width: 95vw;
+    max-height: 85vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.bilder-stack-img {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    border-radius: 20px;
+    background: #fff;
+    transition: none !important;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .bilder-stack-container {
+        max-width: 98vw;
+        max-height: 90vh;
+    }
+    
+    .bilder-stack-img {
+        border-radius: 16px;
+    }
+}

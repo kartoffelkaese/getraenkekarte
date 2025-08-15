@@ -38,6 +38,10 @@ app.get('/theke-hinten-bilder', (req, res) => {
     res.sendFile('theke-hinten-bilder.html', { root: './public' });
 });
 
+app.get('/bilder', (req, res) => {
+    res.sendFile('bilder.html', { root: './public' });
+});
+
 app.get('/jugendliche', (req, res) => {
     res.sendFile('jugendliche.html', { root: './public' });
 });
