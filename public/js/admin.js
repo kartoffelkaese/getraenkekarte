@@ -53,7 +53,8 @@ function updateSectionVisibility() {
         'drinks': findSectionByHeading('Getränke'),
         'speisekarte': document.getElementById('speisekarteSection'),
         'additives': findSectionByHeading('Zusatzstoffe verwalten'),
-        'bilder': document.getElementById('bilderSection') // Hinzufügen des Bilder-Abschnitts
+        'bilder': document.getElementById('bilderSection'), // Hinzufügen des Bilder-Abschnitts
+        'export': document.getElementById('exportSection') // Export-Sektion hinzufügen
     };
 
     // Alle Sektionen verstecken
@@ -74,6 +75,9 @@ function updateSectionVisibility() {
         const bilderSection = document.getElementById('bilderSection');
         if (bilderSection) bilderSection.style.display = 'block';
         fetchImages(); // Bilder anzeigen, wenn die Sektion sichtbar ist
+    } else if (currentLocation === 'export') {
+        const exportSection = document.getElementById('exportSection');
+        if (exportSection) exportSection.style.display = 'block';
     } else {
         // Für alle anderen Locations: Alle Sektionen anzeigen
         if (sections.logo) sections.logo.style.display = 'block';
