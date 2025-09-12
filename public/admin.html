@@ -50,6 +50,52 @@
             </li>
         </ul>
         
+        <!-- Export-Sektion -->
+        <div class="mb-4">
+            <h2>Karten Export</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Alle Karten exportieren</h5>
+                            <p class="card-text">Exportiert alle verfügbaren Karten als PNG (1920x1080px)</p>
+                            <button class="btn btn-success" onclick="exportAllCards()">
+                                <i class="bi bi-download"></i> Alle Karten exportieren
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Einzelne Karte exportieren</h5>
+                            <p class="card-text">Wählen Sie eine spezifische Karte zum Exportieren</p>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('haupttheke')">
+                                    <i class="bi bi-download"></i> Haupttheke
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('theke-hinten')">
+                                    <i class="bi bi-download"></i> Theke Hinten
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('theke-hinten-bilder')">
+                                    <i class="bi bi-download"></i> Theke Hinten Bilder
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('jugendliche')">
+                                    <i class="bi bi-download"></i> Jugendkarte
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('speisekarte')">
+                                    <i class="bi bi-download"></i> Speisekarte
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('bilder')">
+                                    <i class="bi bi-download"></i> Bilder
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Kategorien-Sektion -->
         <div class="mb-4">
             <h2>Logo</h2>

@@ -7,6 +7,7 @@ const auth = require('./middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 const app = express();
@@ -744,6 +745,103 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
     } catch (err) {
         console.error('Fehler beim Löschen der Werbung:', err);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// API-Endpunkt zum Exportieren einer Karte als PNG
+app.get('/api/export/:location', auth, async (req, res) => {
+    const location = req.params.location;
+    const validLocations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'jugendliche', 'speisekarte', 'bilder'];
+    
+    if (!validLocations.includes(location)) {
+        return res.status(400).json({ success: false, error: 'Ungültige Karten-Location' });
+    }
+    
+    let browser;
+    try {
+        // Puppeteer Browser starten
+        browser = await puppeteer.launch({
+            headless: 'new',
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        
+        const page = await browser.newPage();
+        
+        // Viewport auf 1920x1080 setzen
+        await page.setViewport({
+            width: 1920,
+            height: 1080,
+            deviceScaleFactor: 1
+        });
+        
+        // URL der Karte laden
+        const url = `http://localhost:${process.env.PORT || 3000}/${location}`;
+        // Für Jugendkarte: Andere Warte-Strategie wegen Firebase
+        const waitUntil = location === 'jugendliche' ? 'domcontentloaded' : 'networkidle0';
+        const timeout = location === 'jugendliche' ? 60000 : 30000;
+        
+        await page.goto(url, { 
+            waitUntil: waitUntil,
+            timeout: timeout 
+        });
+        
+        // Für Jugendkarte: Warten bis Events geladen sind
+        if (location === 'jugendliche') {
+            try {
+                // Warten bis Events-Container existiert
+                await page.waitForSelector('#events-container', { timeout: 10000 });
+                
+                // Warten bis Firebase Events geladen sind (oder Timeout)
+                await page.waitForFunction(() => {
+                    const container = document.getElementById('events-container');
+                    return container && (container.children.length > 0 || container.textContent.includes('Keine anstehenden Events'));
+                }, { timeout: 15000 });
+                
+                console.log('Events erfolgreich geladen für Jugendkarte');
+            } catch (error) {
+                console.log('Events-Loading Timeout, fahre trotzdem fort...');
+            }
+        }
+        
+        // Warten bis alle Inhalte geladen sind (länger für Jugendkarte wegen Events)
+        const waitTime = location === 'jugendliche' ? 5000 : 3000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        
+        // Screenshot erstellen
+        const screenshot = await page.screenshot({
+            type: 'png',
+            fullPage: false,
+            clip: {
+                x: 0,
+                y: 0,
+                width: 1920,
+                height: 1080
+            }
+        });
+        
+        // Browser schließen
+        await browser.close();
+        
+        // PNG als Response senden
+        res.set({
+            'Content-Type': 'image/png',
+            'Content-Disposition': `attachment; filename="${location}-export-${Date.now()}.png"`,
+            'Content-Length': screenshot.length
+        });
+        
+        res.send(screenshot);
+        
+    } catch (error) {
+        console.error('Fehler beim Exportieren der Karte:', error);
+        
+        if (browser) {
+            await browser.close();
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            error: 'Fehler beim Exportieren der Karte: ' + error.message 
+        });
     }
 });
 

@@ -1509,6 +1509,91 @@ if (imageUploadForm) {
 
 // Alle Bilder löschen
 const deleteAllImagesBtn = document.getElementById('deleteAllImagesBtn');
+
+// Export-Funktionalität
+async function exportCard(location) {
+    try {
+        showNotification(`Exportiere ${location}...`, 'info');
+        
+        const response = await fetch(`/api/export/${location}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Exportieren');
+        }
+        
+        // Blob aus Response erstellen
+        const blob = await response.blob();
+        
+        // Download-Link erstellen
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${location}-export-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showNotification(`${location} erfolgreich exportiert!`, 'success');
+        
+    } catch (error) {
+        console.error('Fehler beim Exportieren:', error);
+        showNotification(`Fehler beim Exportieren von ${location}: ${error.message}`, 'error');
+    }
+}
+
+async function exportAllCards() {
+    const locations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'jugendliche', 'speisekarte', 'bilder'];
+    
+    try {
+        showNotification('Starte Export aller Karten...', 'info');
+        
+        for (let i = 0; i < locations.length; i++) {
+            const location = locations[i];
+            showNotification(`Exportiere ${location} (${i + 1}/${locations.length})...`, 'info');
+            
+            const response = await fetch(`/api/export/${location}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Fehler bei ${location}: ${errorData.error || 'Unbekannter Fehler'}`);
+            }
+            
+            // Blob aus Response erstellen
+            const blob = await response.blob();
+            
+            // Download-Link erstellen
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${location}-export-${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            // Kurze Pause zwischen Downloads
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showNotification('Alle Karten erfolgreich exportiert!', 'success');
+        
+    } catch (error) {
+        console.error('Fehler beim Exportieren aller Karten:', error);
+        showNotification(`Fehler beim Exportieren: ${error.message}`, 'error');
+    }
+}
 if (deleteAllImagesBtn) {
     deleteAllImagesBtn.addEventListener('click', async function() {
         if (!confirm('Möchten Sie wirklich alle Bilder unwiderruflich löschen?')) return;
