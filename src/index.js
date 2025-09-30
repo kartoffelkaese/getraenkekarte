@@ -767,10 +767,10 @@ app.get('/api/export/:location', auth, async (req, res) => {
         
         const page = await browser.newPage();
         
-        // Viewport auf 1920x1080 setzen
+        // Viewport auf 4K (3840x2160) setzen
         await page.setViewport({
-            width: 1920,
-            height: 1080,
+            width: 3840,
+            height: 2160,
             deviceScaleFactor: 1
         });
         
@@ -814,8 +814,8 @@ app.get('/api/export/:location', auth, async (req, res) => {
             clip: {
                 x: 0,
                 y: 0,
-                width: 1920,
-                height: 1080
+                width: 3840,
+                height: 2160
             }
         });
         

@@ -53,7 +53,8 @@ function updateSectionVisibility() {
         'drinks': findSectionByHeading('Getränke'),
         'speisekarte': document.getElementById('speisekarteSection'),
         'additives': findSectionByHeading('Zusatzstoffe verwalten'),
-        'bilder': document.getElementById('bilderSection') // Hinzufügen des Bilder-Abschnitts
+        'bilder': document.getElementById('bilderSection'),
+        'export': document.getElementById('exportSection')
     };
 
     // Alle Sektionen verstecken
@@ -62,7 +63,10 @@ function updateSectionVisibility() {
     });
 
     // Sektionen basierend auf der Location anzeigen
-    if (currentLocation === 'speisekarte') {
+    if (currentLocation === 'export') {
+        // Nur Export-Sektion anzeigen
+        if (sections.export) sections.export.style.display = 'block';
+    } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
         // Für die Jugendkarte: Logo, Kategorien, Getränke und Zusatzstoffe anzeigen
@@ -1400,47 +1404,6 @@ async function updateDishOrder(id, sortOrder) {
 }
 
 // === Bilder-Tab Logik ===
-
-// Sichtbarkeit der Bilder-Sektion steuern
-function updateSectionVisibility() {
-    // Finde die Sektionen anhand ihrer IDs oder spezifischen Strukturen
-    const sections = {
-        'logo': findSectionByHeading('Logo'),
-        'categories': findSectionByHeading('Kategorien'),
-        'ads': findSectionByHeading('Werbung'),
-        'drinks': findSectionByHeading('Getränke'),
-        'speisekarte': document.getElementById('speisekarteSection'),
-        'additives': findSectionByHeading('Zusatzstoffe verwalten'),
-        'bilder': document.getElementById('bilderSection') // Hinzufügen des Bilder-Abschnitts
-    };
-
-    // Alle Sektionen verstecken
-    Object.values(sections).forEach(section => {
-        if (section) section.style.display = 'none';
-    });
-
-    // Sektionen basierend auf der Location anzeigen
-    if (currentLocation === 'speisekarte') {
-        if (sections.speisekarte) sections.speisekarte.style.display = 'block';
-    } else if (currentLocation === 'jugendliche') {
-        // Für die Jugendkarte: Logo, Kategorien, Getränke und Zusatzstoffe anzeigen
-        if (sections.logo) sections.logo.style.display = 'block';
-        if (sections.categories) sections.categories.style.display = 'block';
-        if (sections.drinks) sections.drinks.style.display = 'block';
-        if (sections.additives) sections.additives.style.display = 'block';
-    } else if (currentLocation === 'bilder') {
-        const bilderSection = document.getElementById('bilderSection');
-        if (bilderSection) bilderSection.style.display = 'block';
-        fetchImages(); // Bilder anzeigen, wenn die Sektion sichtbar ist
-    } else {
-        // Für alle anderen Locations: Alle Sektionen anzeigen
-        if (sections.logo) sections.logo.style.display = 'block';
-        if (sections.categories) sections.categories.style.display = 'block';
-        if (sections.ads) sections.ads.style.display = 'block';
-        if (sections.drinks) sections.drinks.style.display = 'block';
-        if (sections.additives) sections.additives.style.display = 'block';
-    }
-}
 
 // Event-Listener für das Bilder-Upload-Formular
 const imageUploadForm = document.getElementById('imageUploadForm');

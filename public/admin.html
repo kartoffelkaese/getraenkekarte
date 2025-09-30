@@ -48,17 +48,23 @@
                     Bilder
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="export-tab" data-bs-toggle="tab" 
+                        data-location="export" type="button" role="tab">
+                    Export
+                </button>
+            </li>
         </ul>
         
         <!-- Export-Sektion -->
-        <div class="mb-4">
+        <div id="exportSection" style="display: none;">
             <h2>Karten Export</h2>
             <div class="row">
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Alle Karten exportieren</h5>
-                            <p class="card-text">Exportiert alle verfügbaren Karten als PNG (1920x1080px)</p>
+                            <p class="card-text">Exportiert alle verfügbaren Karten als PNG (4K - 3840x2160px)</p>
                             <button class="btn btn-success" onclick="exportAllCards()">
                                 <i class="bi bi-download"></i> Alle Karten exportieren
                             </button>
