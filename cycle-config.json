@@ -1,0 +1,10 @@
+{
+  "jugend": {
+    "firstTime": 30,
+    "secondTime": 10
+  },
+  "standard": {
+    "firstTime": 30,
+    "secondTime": 10
+  }
+}

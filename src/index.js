@@ -81,6 +81,60 @@ app.get('/api/version', (req, res) => {
     }
 });
 
+// API-Endpunkte für Cycle-Konfiguration
+app.get('/api/cycle-config', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../cycle-config.json');
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            // Standard-Konfiguration
+            const defaultConfig = {
+                standard: { firstTime: 15, secondTime: 15 },
+                jugend: { firstTime: 15, secondTime: 10 }
+            };
+            res.json(defaultConfig);
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Cycle-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+app.post('/api/cycle-config', (req, res) => {
+    try {
+        const { type, firstTime, secondTime } = req.body;
+        
+        if (!type || !firstTime || !secondTime) {
+            return res.status(400).json({ error: 'Alle Felder sind erforderlich' });
+        }
+        
+        if (firstTime < 5 || firstTime > 300 || secondTime < 5 || secondTime > 300) {
+            return res.status(400).json({ error: 'Zeiten müssen zwischen 5 und 300 Sekunden liegen' });
+        }
+        
+        const configPath = path.join(__dirname, '../cycle-config.json');
+        let config = {};
+        
+        // Lade bestehende Konfiguration
+        if (fs.existsSync(configPath)) {
+            config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        // Aktualisiere Konfiguration
+        config[type] = { firstTime: parseInt(firstTime), secondTime: parseInt(secondTime) };
+        
+        // Speichere Konfiguration
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        res.json({ success: true, message: 'Cycle-Konfiguration gespeichert' });
+    } catch (error) {
+        console.error('Fehler beim Speichern der Cycle-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
+    }
+});
+
 // Datenbank-Verbindung
 const db = mysql.createConnection({
     host: process.env.DB_HOST,

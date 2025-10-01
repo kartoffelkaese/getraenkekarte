@@ -54,6 +54,7 @@ function updateSectionVisibility() {
         'speisekarte': document.getElementById('speisekarteSection'),
         'additives': findSectionByHeading('Zusatzstoffe verwalten'),
         'bilder': document.getElementById('bilderSection'),
+        'cycle': document.getElementById('cycleSection'),
         'export': document.getElementById('exportSection')
     };
 
@@ -66,6 +67,10 @@ function updateSectionVisibility() {
     if (currentLocation === 'export') {
         // Nur Export-Sektion anzeigen
         if (sections.export) sections.export.style.display = 'block';
+    } else if (currentLocation === 'cycle') {
+        // Nur Cycle-Sektion anzeigen
+        if (sections.cycle) sections.cycle.style.display = 'block';
+        fetchCycleConfig(); // Lade Cycle-Konfiguration
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
@@ -1632,4 +1637,64 @@ socket.on('disconnect', () => {
 
 socket.on('error', (error) => {
     console.error('Socket.IO Fehler:', error);
-}); 
+});
+
+// === Cycle-Verwaltung ===
+
+// Funktion zum Laden der Cycle-Konfiguration
+async function fetchCycleConfig() {
+    try {
+        const response = await fetch('/api/cycle-config');
+        const config = await response.json();
+        
+        // Fülle die Formulare mit den aktuellen Werten
+        document.getElementById('standardFirstTime').value = config.standard.firstTime;
+        document.getElementById('standardSecondTime').value = config.standard.secondTime;
+        document.getElementById('jugendFirstTime').value = config.jugend.firstTime;
+        document.getElementById('jugendSecondTime').value = config.jugend.secondTime;
+    } catch (error) {
+        console.error('Fehler beim Laden der Cycle-Konfiguration:', error);
+        showNotification('Fehler beim Laden der Cycle-Konfiguration', 'error');
+    }
+}
+
+// Funktion zum Speichern der Cycle-Konfiguration
+async function saveCycleConfig(type) {
+    try {
+        let firstTime, secondTime;
+        
+        if (type === 'standard') {
+            firstTime = document.getElementById('standardFirstTime').value;
+            secondTime = document.getElementById('standardSecondTime').value;
+        } else if (type === 'jugend') {
+            firstTime = document.getElementById('jugendFirstTime').value;
+            secondTime = document.getElementById('jugendSecondTime').value;
+        } else {
+            throw new Error('Ungültiger Cycle-Typ');
+        }
+        
+        const response = await fetch('/api/cycle-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: type,
+                firstTime: parseInt(firstTime),
+                secondTime: parseInt(secondTime)
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Speichern');
+        }
+        
+        const result = await response.json();
+        showNotification(result.message || 'Cycle-Konfiguration gespeichert', 'success');
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Cycle-Konfiguration:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+    }
+} 

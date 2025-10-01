@@ -50,8 +50,22 @@
 
     <script>
         let currentFrame = 'haupttheke';
+        let cycleConfig = { firstTime: 15, secondTime: 15 };
         const hauptthekeFrame = document.getElementById('hauptthekeFrame');
         const speisekarteFrame = document.getElementById('speisekarteFrame');
+
+        // Lade Cycle-Konfiguration
+        async function loadCycleConfig() {
+            try {
+                const response = await fetch('/api/cycle-config');
+                const config = await response.json();
+                cycleConfig = config.standard;
+            } catch (error) {
+                console.error('Fehler beim Laden der Cycle-Konfiguration:', error);
+                // Verwende Standard-Werte bei Fehler
+                cycleConfig = { firstTime: 15, secondTime: 15 };
+            }
+        }
 
         function switchFrame() {
             // Deaktiviere aktuellen Frame
@@ -69,26 +83,32 @@
 
         // Funktion für den Zyklus
         function startCycle() {
-            // Wechsle nach 15 Sekunden von der Haupttheke zur Speisekarte
+            // Wechsle nach der ersten Zeit von der Haupttheke zur Speisekarte
             setTimeout(() => {
                 if (currentFrame === 'haupttheke') {
                     switchFrame();
                 }
-            }, 15000);
+            }, cycleConfig.firstTime * 1000);
 
-            // Wechsle nach 25 Sekunden von der Speisekarte zur Haupttheke
+            // Wechsle nach der zweiten Zeit von der Speisekarte zur Haupttheke
             setTimeout(() => {
                 if (currentFrame === 'speisekarte') {
                     switchFrame();
                 }
-            }, 30000);
+            }, (cycleConfig.firstTime + cycleConfig.secondTime) * 1000);
+        }
+
+        // Initialisiere und starte den Zyklus
+        async function initCycle() {
+            await loadCycleConfig();
+            startCycle();
+            
+            // Wiederhole den Zyklus
+            setInterval(startCycle, (cycleConfig.firstTime + cycleConfig.secondTime) * 1000);
         }
 
         // Starte den Zyklus
-        startCycle();
-
-        // Wiederhole den Zyklus alle 25 Sekunden
-        setInterval(startCycle, 30000);
+        initCycle();
     </script>
 </body>
 </html> 
