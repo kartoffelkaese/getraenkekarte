@@ -70,6 +70,17 @@ app.get('/cycle-jugend', (req, res) => {
 // Statische Dateien
 app.use(express.static('public'));
 
+// API-Endpunkt für Version
+app.get('/api/version', (req, res) => {
+    try {
+        const versionData = require('../version.json');
+        res.json(versionData);
+    } catch (error) {
+        console.error('Fehler beim Laden der Version:', error);
+        res.json({ version: '3.1.0', buildDate: '2024-12-19', description: 'Getränkekarte Admin Interface' });
+    }
+});
+
 // Datenbank-Verbindung
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -767,10 +778,10 @@ app.get('/api/export/:location', auth, async (req, res) => {
         
         const page = await browser.newPage();
         
-        // Viewport auf 4K (3840x2160) setzen
+        // Viewport auf 1920x1080 setzen
         await page.setViewport({
-            width: 3840,
-            height: 2160,
+            width: 1920,
+            height: 1080,
             deviceScaleFactor: 1
         });
         
@@ -814,8 +825,8 @@ app.get('/api/export/:location', auth, async (req, res) => {
             clip: {
                 x: 0,
                 y: 0,
-                width: 3840,
-                height: 2160
+                width: 1920,
+                height: 1080
             }
         });
         
