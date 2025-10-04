@@ -48,11 +48,15 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         let currentFrame = 'jugend';
         let cycleConfig = { firstTime: 15, secondTime: 10 };
         const jugendFrame = document.getElementById('jugendFrame');
         const speisekarteFrame = document.getElementById('speisekarteFrame');
+        
+        // Socket.IO Verbindung
+        const socket = io();
 
         // Lade Cycle-Konfiguration
         async function loadCycleConfig() {
@@ -106,6 +110,26 @@
             // Wiederhole den Zyklus
             setInterval(startCycle, (cycleConfig.firstTime + cycleConfig.secondTime) * 1000);
         }
+
+        // Socket.IO Event-Listener
+        socket.on('cycleConfigChanged', (data) => {
+            console.log('Cycle-Konfiguration geändert:', data);
+            if (data.type === 'jugend') {
+                // Lade neue Konfiguration und starte Zyklus neu
+                loadCycleConfig().then(() => {
+                    // Stoppe aktuellen Zyklus und starte neu
+                    location.reload();
+                });
+            }
+        });
+        
+        socket.on('forceCycleReload', (data) => {
+            console.log('Reload-Signal empfangen:', data);
+            if (data.type === 'all' || data.type === 'jugend') {
+                console.log('Erzwinge Reload der Jugend Cycle-Seite');
+                location.reload();
+            }
+        });
 
         // Starte den Zyklus
         initCycle();

@@ -55,6 +55,7 @@ function updateSectionVisibility() {
         'additives': findSectionByHeading('Zusatzstoffe verwalten'),
         'bilder': document.getElementById('bilderSection'),
         'cycle': document.getElementById('cycleSection'),
+        'temp-prices': document.getElementById('tempPricesSection'),
         'export': document.getElementById('exportSection')
     };
 
@@ -71,6 +72,10 @@ function updateSectionVisibility() {
         // Nur Cycle-Sektion anzeigen
         if (sections.cycle) sections.cycle.style.display = 'block';
         fetchCycleConfig(); // Lade Cycle-Konfiguration
+    } else if (currentLocation === 'temp-prices') {
+        // Nur Temporäre Preise Sektion anzeigen
+        if (sections['temp-prices']) sections['temp-prices'].style.display = 'block';
+        fetchTempPrices(); // Lade temporäre Preise
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
@@ -1697,4 +1702,235 @@ async function saveCycleConfig(type) {
         console.error('Fehler beim Speichern der Cycle-Konfiguration:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
     }
-} 
+}
+
+// Funktionen für Cycle-Reload
+async function forceCycleReload() {
+    try {
+        // Sende Socket.IO Event für alle Cycle-Seiten
+        socket.emit('forceCycleReload', { type: 'all' });
+        showNotification('Reload-Signal an alle Cycle-Seiten gesendet', 'success');
+    } catch (error) {
+        console.error('Fehler beim Senden des Reload-Signals:', error);
+        showNotification('Fehler beim Senden des Reload-Signals', 'error');
+    }
+}
+
+async function forceStandardCycleReload() {
+    try {
+        socket.emit('forceCycleReload', { type: 'standard' });
+        showNotification('Reload-Signal an Standard Cycle gesendet', 'success');
+    } catch (error) {
+        console.error('Fehler beim Senden des Reload-Signals:', error);
+        showNotification('Fehler beim Senden des Reload-Signals', 'error');
+    }
+}
+
+async function forceJugendCycleReload() {
+    try {
+        socket.emit('forceCycleReload', { type: 'jugend' });
+        showNotification('Reload-Signal an Jugend Cycle gesendet', 'success');
+    } catch (error) {
+        console.error('Fehler beim Senden des Reload-Signals:', error);
+        showNotification('Fehler beim Senden des Reload-Signals', 'error');
+    }
+}
+
+// === Temporäre Preise ===
+
+let tempPricesData = { active: false, drinks: {} };
+let allDrinks = [];
+
+// Funktion zum Laden der temporären Preise
+async function fetchTempPrices() {
+    try {
+        // Lade aktuelle Override-Konfiguration
+        const response = await fetch('/api/price-overrides/theke-hinten');
+        tempPricesData = await response.json();
+        
+        // Lade alle Getränke für die Tabelle
+        const drinksResponse = await fetch('/api/drinks/theke-hinten');
+        allDrinks = await drinksResponse.json();
+        
+        // Aktualisiere UI
+        updateTempPricesUI();
+        
+    } catch (error) {
+        console.error('Fehler beim Laden der temporären Preise:', error);
+        showNotification('Fehler beim Laden der temporären Preise', 'error');
+    }
+}
+
+// Funktion zum Aktualisieren der UI
+function updateTempPricesUI() {
+    // Aktiviere Toggle
+    const activeToggle = document.getElementById('tempPricesActive');
+    if (activeToggle) {
+        activeToggle.checked = tempPricesData.active;
+    }
+    
+    // Fülle Tabelle
+    displayTempPricesTable();
+}
+
+// Funktion zum Anzeigen der Tabelle
+function displayTempPricesTable() {
+    const tbody = document.getElementById('tempPricesTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    allDrinks.forEach(drink => {
+        const row = document.createElement('tr');
+        const originalPrice = parseFloat(drink.preis) || 0;
+        const tempPrice = tempPricesData.drinks[drink.id]?.preis || '';
+        
+        row.innerHTML = `
+            <td>${drink.name}</td>
+            <td>${originalPrice.toFixed(2)} €</td>
+            <td>
+                <input type="number" class="form-control form-control-sm" 
+                       id="tempPrice-${drink.id}" 
+                       value="${tempPrice}" 
+                       step="0.01" 
+                       min="0"
+                       placeholder="Temporärer Preis">
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="setTempPrice(${drink.id})">
+                    <i class="bi bi-check"></i> Setzen
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="clearTempPrice(${drink.id})">
+                    <i class="bi bi-x"></i> Löschen
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Funktion zum Setzen eines temporären Preises
+function setTempPrice(drinkId) {
+    const input = document.getElementById(`tempPrice-${drinkId}`);
+    const price = parseFloat(input.value);
+    
+    if (isNaN(price) || price < 0) {
+        showNotification('Bitte geben Sie einen gültigen Preis ein', 'error');
+        return;
+    }
+    
+    if (!tempPricesData.drinks) {
+        tempPricesData.drinks = {};
+    }
+    
+    tempPricesData.drinks[drinkId] = { preis: price };
+    showNotification('Temporärer Preis gesetzt', 'success');
+}
+
+// Funktion zum Löschen eines temporären Preises
+function clearTempPrice(drinkId) {
+    if (tempPricesData.drinks && tempPricesData.drinks[drinkId]) {
+        delete tempPricesData.drinks[drinkId];
+    }
+    
+    const input = document.getElementById(`tempPrice-${drinkId}`);
+    if (input) {
+        input.value = '';
+    }
+    
+    showNotification('Temporärer Preis gelöscht', 'success');
+}
+
+// Funktion zum Toggle der Aktivierung
+async function toggleTempPricesActive(active) {
+    tempPricesData.active = active;
+}
+
+// Funktion zum Speichern der temporären Preise
+async function saveTempPrices() {
+    try {
+        const response = await fetch('/api/price-overrides/theke-hinten', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                active: tempPricesData.active,
+                drinks: tempPricesData.drinks
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Speichern');
+        }
+        
+        const result = await response.json();
+        showNotification(result.message || 'Temporäre Preise gespeichert', 'success');
+        
+        // Sende Socket.IO Event für Preis-Update
+        socket.emit('priceOverridesChanged', { 
+            location: 'theke-hinten', 
+            active: tempPricesData.active, 
+            drinks: tempPricesData.drinks 
+        });
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der temporären Preise:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+    }
+}
+
+// Funktion zum Zurücksetzen
+function resetTempPrices() {
+    if (confirm('Möchten Sie alle temporären Preise zurücksetzen?')) {
+        tempPricesData.drinks = {};
+        displayTempPricesTable();
+        showNotification('Temporäre Preise zurückgesetzt', 'success');
+    }
+}
+
+// Funktion zum Löschen aller temporären Preise
+async function clearTempPrices() {
+    if (confirm('Möchten Sie alle temporären Preise löschen?')) {
+        try {
+            const response = await fetch('/api/price-overrides/theke-hinten', {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Fehler beim Löschen');
+            }
+            
+            tempPricesData = { active: false, drinks: {} };
+            updateTempPricesUI();
+            showNotification('Alle temporären Preise gelöscht', 'success');
+            
+        } catch (error) {
+            console.error('Fehler beim Löschen der temporären Preise:', error);
+            showNotification('Fehler beim Löschen', 'error');
+        }
+    }
+}
+
+// Funktion für Forced-Reload der Theke-Hinten Karten
+async function forceReloadThekeHinten() {
+    try {
+        // Sende Socket.IO Event für Reload
+        socket.emit('forceThekeHintenReload');
+        showNotification('Reload-Signal an Theke-Hinten Karten gesendet', 'success');
+    } catch (error) {
+        console.error('Fehler beim Senden des Reload-Signals:', error);
+        showNotification('Fehler beim Senden des Reload-Signals', 'error');
+    }
+}
+
+// Socket.IO Event-Listener für temporäre Preise
+socket.on('priceOverridesChanged', (data) => {
+    if (data.location === 'theke-hinten') {
+        tempPricesData = { active: data.active, drinks: data.drinks || {} };
+        if (currentLocation === 'temp-prices') {
+            updateTempPricesUI();
+        }
+    }
+}); 

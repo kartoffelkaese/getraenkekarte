@@ -55,6 +55,12 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="temp-prices-tab" data-bs-toggle="tab" 
+                        data-location="temp-prices" type="button" role="tab">
+                    Temporäre Preise
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="export-tab" data-bs-toggle="tab" 
                         data-location="export" type="button" role="tab">
                     Export
@@ -117,6 +123,106 @@
                             <a href="/cycle-jugend" target="_blank" class="btn btn-outline-primary">
                                 <i class="bi bi-link-45deg"></i> /cycle-jugend
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Cycle-Reload</h5>
+                        <p class="card-text">Erzwinge einen Reload aller Cycle-Seiten (nützlich für Brightsign Player):</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-warning" onclick="forceCycleReload()">
+                                <i class="bi bi-arrow-clockwise"></i> Alle Cycle-Seiten neu laden
+                            </button>
+                            <button class="btn btn-info" onclick="forceStandardCycleReload()">
+                                <i class="bi bi-arrow-clockwise"></i> Standard Cycle neu laden
+                            </button>
+                            <button class="btn btn-info" onclick="forceJugendCycleReload()">
+                                <i class="bi bi-arrow-clockwise"></i> Jugend Cycle neu laden
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temporäre Preise Sektion -->
+        <div id="tempPricesSection" style="display: none;">
+            <h2>Temporäre Preise (Theke Hinten)</h2>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Hinweis:</strong> Diese Einstellungen gelten für beide Theke-Hinten Karten (mit und ohne Bilder).
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktivierung</h5>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="tempPricesActive" 
+                                       onchange="toggleTempPricesActive(this.checked)">
+                                <label class="form-check-label" for="tempPricesActive" style="color: white;">
+                                    Temporäre Preise aktivieren
+                                </label>
+                            </div>
+                            <p class="card-text" style="color: white;">
+                                Wenn aktiviert, werden die unten definierten Preise anstelle der Datenbank-Preise angezeigt.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktionen</h5>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-success" onclick="saveTempPrices()">
+                                    <i class="bi bi-save"></i> Speichern
+                                </button>
+                                <button class="btn btn-info" onclick="forceReloadThekeHinten()">
+                                    <i class="bi bi-arrow-clockwise"></i> Reload Karten
+                                </button>
+                                <button class="btn btn-warning" onclick="resetTempPrices()">
+                                    <i class="bi bi-arrow-clockwise"></i> Zurücksetzen
+                                </button>
+                                <button class="btn btn-danger" onclick="clearTempPrices()">
+                                    <i class="bi bi-trash"></i> Alle löschen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Preis-Überschreibungen</h5>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="drinkSearchTemp" placeholder="Getränke suchen...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearDrinkSearchTemp">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Getränk</th>
+                                        <th>Originalpreis</th>
+                                        <th>Temporärer Preis</th>
+                                        <th>Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tempPricesTableBody">
+                                    <!-- Temporäre Preise werden hier dynamisch eingefügt -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

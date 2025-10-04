@@ -129,9 +129,84 @@ app.post('/api/cycle-config', (req, res) => {
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
         
         res.json({ success: true, message: 'Cycle-Konfiguration gespeichert' });
+        
+        // Sende Socket.IO Event für Cycle-Reload
+        io.emit('cycleConfigChanged', { type, firstTime, secondTime });
     } catch (error) {
         console.error('Fehler beim Speichern der Cycle-Konfiguration:', error);
         res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
+    }
+});
+
+// API-Endpunkte für Preis-Overrides
+app.get('/api/price-overrides/:location', (req, res) => {
+    try {
+        const location = req.params.location;
+        const configPath = path.join(__dirname, '../price-overrides.json');
+        
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            // Standard-Konfiguration (inaktiv)
+            const defaultConfig = {
+                active: false,
+                drinks: {}
+            };
+            res.json(defaultConfig);
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Preis-Overrides:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Preis-Overrides' });
+    }
+});
+
+app.post('/api/price-overrides/:location', (req, res) => {
+    try {
+        const location = req.params.location;
+        const { active, drinks } = req.body;
+        
+        const configPath = path.join(__dirname, '../price-overrides.json');
+        let config = {};
+        
+        // Lade bestehende Konfiguration
+        if (fs.existsSync(configPath)) {
+            config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        // Aktualisiere Konfiguration
+        config.active = active;
+        config.drinks = drinks || {};
+        
+        // Speichere Konfiguration
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        res.json({ success: true, message: 'Preis-Overrides gespeichert' });
+        
+        // Sende Socket.IO Event für Preis-Overrides
+        io.emit('priceOverridesChanged', { location, active, drinks });
+    } catch (error) {
+        console.error('Fehler beim Speichern der Preis-Overrides:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Preis-Overrides' });
+    }
+});
+
+app.delete('/api/price-overrides/:location', (req, res) => {
+    try {
+        const location = req.params.location;
+        const configPath = path.join(__dirname, '../price-overrides.json');
+        
+        if (fs.existsSync(configPath)) {
+            fs.unlinkSync(configPath);
+        }
+        
+        res.json({ success: true, message: 'Preis-Overrides gelöscht' });
+        
+        // Sende Socket.IO Event
+        io.emit('priceOverridesChanged', { location, active: false, drinks: {} });
+    } catch (error) {
+        console.error('Fehler beim Löschen der Preis-Overrides:', error);
+        res.status(500).json({ error: 'Fehler beim Löschen der Preis-Overrides' });
     }
 });
 
@@ -301,8 +376,36 @@ app.get('/api/drinks/:location', async (req, res) => {
     
     try {
         const [rows] = await db.query(query, [location, location]);
-        console.log('Drinks API Response:', Array.isArray(rows), rows?.length);
-        res.json(rows || []);
+        
+        // Lade Preis-Overrides für theke-hinten und theke-hinten-bilder
+        let priceOverrides = {};
+        if (location === 'theke-hinten' || location === 'theke-hinten-bilder') {
+            try {
+                const configPath = path.join(__dirname, '../price-overrides.json');
+                if (fs.existsSync(configPath)) {
+                    const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                    if (configData.active && configData.drinks) {
+                        priceOverrides = configData.drinks;
+                    }
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Preis-Overrides:', error);
+            }
+        }
+        
+        // Wende Preis-Overrides an
+        const drinksWithOverrides = (rows || []).map(drink => {
+            if (priceOverrides[drink.id]) {
+                return {
+                    ...drink,
+                    preis: priceOverrides[drink.id].preis || drink.preis
+                };
+            }
+            return drink;
+        });
+        
+        console.log('Drinks API Response:', Array.isArray(drinksWithOverrides), drinksWithOverrides?.length);
+        res.json(drinksWithOverrides);
     } catch (err) {
         console.error('Drinks API Error:', err);
         res.status(500).json({ error: err.message });

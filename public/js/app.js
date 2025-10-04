@@ -127,6 +127,24 @@ socket.on('additivesChanged', () => {
     loadAdditives();
 });
 
+// Socket.IO Event für Preis-Overrides
+socket.on('priceOverridesChanged', (data) => {
+    console.log('Preis-Overrides geändert:', data);
+    if (data.location === 'theke-hinten' && currentLocation === 'theke-hinten') {
+        console.log('Lade Getränke neu wegen Preis-Overrides');
+        fetchDrinks();
+    }
+});
+
+// Socket.IO Event für Forced-Reload
+socket.on('forceThekeHintenReload', () => {
+    console.log('Forced-Reload für Theke-Hinten empfangen');
+    if (currentLocation === 'theke-hinten') {
+        console.log('Erzwinge Reload der Theke-Hinten Seite');
+        location.reload();
+    }
+});
+
 // Funktion zum Laden der Getränke
 async function fetchDrinks() {
     try {
