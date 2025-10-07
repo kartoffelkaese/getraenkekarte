@@ -1704,37 +1704,7 @@ async function saveCycleConfig(type) {
     }
 }
 
-// Funktionen für Cycle-Reload
-async function forceCycleReload() {
-    try {
-        // Sende Socket.IO Event für alle Cycle-Seiten
-        socket.emit('forceCycleReload', { type: 'all' });
-        showNotification('Reload-Signal an alle Cycle-Seiten gesendet', 'success');
-    } catch (error) {
-        console.error('Fehler beim Senden des Reload-Signals:', error);
-        showNotification('Fehler beim Senden des Reload-Signals', 'error');
-    }
-}
 
-async function forceStandardCycleReload() {
-    try {
-        socket.emit('forceCycleReload', { type: 'standard' });
-        showNotification('Reload-Signal an Standard Cycle gesendet', 'success');
-    } catch (error) {
-        console.error('Fehler beim Senden des Reload-Signals:', error);
-        showNotification('Fehler beim Senden des Reload-Signals', 'error');
-    }
-}
-
-async function forceJugendCycleReload() {
-    try {
-        socket.emit('forceCycleReload', { type: 'jugend' });
-        showNotification('Reload-Signal an Jugend Cycle gesendet', 'success');
-    } catch (error) {
-        console.error('Fehler beim Senden des Reload-Signals:', error);
-        showNotification('Fehler beim Senden des Reload-Signals', 'error');
-    }
-}
 
 // === Temporäre Preise ===
 
