@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview 1 - Getränkekarte</title>
+    <link rel="icon" type="image/png" href="images/schlegl-app-icon.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        .overview-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .overview-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .overview-frame.active {
+            opacity: 1;
+        }
+
+        .overview-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="overview-container">
+        <div class="overview-frame" id="hauptthekeFrame">
+            <iframe src="/haupttheke"></iframe>
+        </div>
+        <div class="overview-frame" id="theke-hintenFrame">
+            <iframe src="/theke-hinten"></iframe>
+        </div>
+        <div class="overview-frame" id="theke-hinten-bilderFrame">
+            <iframe src="/theke-hinten-bilder"></iframe>
+        </div>
+        <div class="overview-frame" id="jugendlicheFrame">
+            <iframe src="/jugendliche"></iframe>
+        </div>
+        <div class="overview-frame" id="speisekarteFrame">
+            <iframe src="/speisekarte"></iframe>
+        </div>
+        <div class="overview-frame" id="bilderFrame">
+            <iframe src="/bilder"></iframe>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let currentCard = '';
+        let overviewConfig = { card: 'haupttheke' };
+        const socket = io();
+        
+        // Lade Overview-Konfiguration
+        async function loadOverviewConfig() {
+            try {
+                const response = await fetch('/api/overview-config/overview-1');
+                overviewConfig = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Fehler beim Laden der Overview-Konfiguration:', error);
+                // Fallback auf Haupttheke
+                overviewConfig = { card: 'haupttheke' };
+                updateDisplay();
+            }
+        }
+        
+        // Aktualisiere die Anzeige
+        function updateDisplay() {
+            if (overviewConfig.card === currentCard) return;
+            
+            // Deaktiviere aktuellen Frame
+            if (currentCard) {
+                document.getElementById(`${currentCard}Frame`).classList.remove('active');
+            }
+            
+            currentCard = overviewConfig.card;
+            
+            // Aktiviere neuen Frame
+            if (currentCard) {
+                document.getElementById(`${currentCard}Frame`).classList.add('active');
+            }
+        }
+        
+        // Socket.IO Event-Listener
+        socket.on('overviewConfigChanged', (data) => {
+            if (data.overview === 'overview-1') {
+                console.log('Overview-1 Konfiguration geändert:', data);
+                overviewConfig = { card: data.card };
+                updateDisplay();
+            }
+        });
+        
+        socket.on('forceOverviewReload', (data) => {
+            if (data.overview === 'overview-1' || data.overview === 'all') {
+                console.log('Forced Reload für Overview-1');
+                location.reload();
+            }
+        });
+        
+        // Initialisiere
+        loadOverviewConfig();
+    </script>
+</body>
+</html>

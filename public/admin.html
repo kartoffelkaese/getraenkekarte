@@ -61,6 +61,12 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="overview-tab" data-bs-toggle="tab" 
+                        data-location="overview" type="button" role="tab">
+                    Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="export-tab" data-bs-toggle="tab" 
                         data-location="export" type="button" role="tab">
                     Export
@@ -75,14 +81,14 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
-                            <p class="card-text">Konfiguration für /cycle</p>
+                            <h5 class="card-title" style="color: #fff;">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle</p>
                             <div class="mb-3">
-                                <label for="standardFirstTime" class="form-label">Erste Anzeige (Sekunden)</label>
+                                <label for="standardFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
                                 <input type="number" class="form-control" id="standardFirstTime" value="15" min="5" max="300">
                             </div>
                             <div class="mb-3">
-                                <label for="standardSecondTime" class="form-label">Zweite Anzeige (Sekunden)</label>
+                                <label for="standardSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
                                 <input type="number" class="form-control" id="standardSecondTime" value="15" min="5" max="300">
                             </div>
                             <button class="btn btn-primary" onclick="saveCycleConfig('standard')">
@@ -94,14 +100,14 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
-                            <p class="card-text">Konfiguration für /cycle-jugend</p>
+                            <h5 class="card-title" style="color: #fff;">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle-jugend</p>
                             <div class="mb-3">
-                                <label for="jugendFirstTime" class="form-label">Erste Anzeige (Sekunden)</label>
+                                <label for="jugendFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
                                 <input type="number" class="form-control" id="jugendFirstTime" value="15" min="5" max="300">
                             </div>
                             <div class="mb-3">
-                                <label for="jugendSecondTime" class="form-label">Zweite Anzeige (Sekunden)</label>
+                                <label for="jugendSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
                                 <input type="number" class="form-control" id="jugendSecondTime" value="10" min="5" max="300">
                             </div>
                             <button class="btn btn-primary" onclick="saveCycleConfig('jugend')">
@@ -114,8 +120,8 @@
             <div class="mt-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Cycle-URLs</h5>
-                        <p class="card-text">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
+                        <h5 class="card-title" style="color: #fff;">Cycle-URLs</h5>
+                        <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
                         <div class="d-flex gap-2 flex-wrap">
                             <a href="/cycle" target="_blank" class="btn btn-outline-primary">
                                 <i class="bi bi-link-45deg"></i> /cycle
@@ -128,6 +134,83 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- Overview-Sektion -->
+        <div id="overviewSection" style="display: none;">
+            <h2>Overview-Konfiguration</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Overview 1</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-1</p>
+                            <div class="mb-3">
+                                <label for="overview1Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
+                                <select class="form-select" id="overview1Card">
+                                    <option value="haupttheke">Haupttheke</option>
+                                    <option value="theke-hinten">Theke Hinten</option>
+                                    <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                    <option value="jugendliche">Jugendkarte</option>
+                                    <option value="speisekarte">Speisekarte</option>
+                                    <option value="bilder">Bilder</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="saveOverviewConfig('overview-1')">
+                                    <i class="bi bi-save"></i> Speichern
+                                </button>
+                                <button class="btn btn-info" onclick="forceOverviewReload('overview-1')">
+                                    <i class="bi bi-arrow-clockwise"></i> Reload
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Overview 2</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-2</p>
+                            <div class="mb-3">
+                                <label for="overview2Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
+                                <select class="form-select" id="overview2Card">
+                                    <option value="haupttheke">Haupttheke</option>
+                                    <option value="theke-hinten">Theke Hinten</option>
+                                    <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                    <option value="jugendliche">Jugendkarte</option>
+                                    <option value="speisekarte">Speisekarte</option>
+                                    <option value="bilder">Bilder</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="saveOverviewConfig('overview-2')">
+                                    <i class="bi bi-save"></i> Speichern
+                                </button>
+                                <button class="btn btn-info" onclick="forceOverviewReload('overview-2')">
+                                    <i class="bi bi-arrow-clockwise"></i> Reload
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: #fff;">Overview-URLs</h5>
+                        <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die Overview-Karten:</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="/overview-1" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-link-45deg"></i> /overview-1
+                            </a>
+                            <a href="/overview-2" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-link-45deg"></i> /overview-2
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Temporäre Preise Sektion -->
@@ -218,8 +301,8 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Alle Karten exportieren</h5>
-                            <p class="card-text">Exportiert alle verfügbaren Karten als PNG (1920x1080px)</p>
+                            <h5 class="card-title" style="color: #fff;">Alle Karten exportieren</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Exportiert alle verfügbaren Karten als PNG (1920x1080px)</p>
                             <button class="btn btn-success" onclick="exportAllCards()">
                                 <i class="bi bi-download"></i> Alle Karten exportieren
                             </button>
@@ -229,8 +312,8 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Einzelne Karte exportieren</h5>
-                            <p class="card-text">Wählen Sie eine spezifische Karte zum Exportieren</p>
+                            <h5 class="card-title" style="color: #fff;">Einzelne Karte exportieren</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Wählen Sie eine spezifische Karte zum Exportieren</p>
                             <div class="d-flex gap-2 flex-wrap">
                                 <button class="btn btn-outline-primary btn-sm" onclick="exportCard('haupttheke')">
                                     <i class="bi bi-download"></i> Haupttheke

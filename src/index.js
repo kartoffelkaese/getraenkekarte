@@ -47,6 +47,14 @@ app.get('/jugendliche', (req, res) => {
     res.sendFile('jugendliche.html', { root: './public' });
 });
 
+app.get('/overview-1', (req, res) => {
+    res.sendFile('overview-1.html', { root: './public' });
+});
+
+app.get('/overview-2', (req, res) => {
+    res.sendFile('overview-2.html', { root: './public' });
+});
+
 // Umleitung von / auf /haupttheke
 app.get('/', (req, res) => {
     res.redirect('/haupttheke');
@@ -99,6 +107,64 @@ app.get('/api/cycle-config', (req, res) => {
     } catch (error) {
         console.error('Fehler beim Laden der Cycle-Konfiguration:', error);
         res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+// Overview-Konfiguration API
+app.get('/api/overview-config/:overview', (req, res) => {
+    try {
+        const overview = req.params.overview;
+        const configPath = path.join(__dirname, '../overview-config.json');
+        
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            if (configData[overview]) {
+                res.json(configData[overview]);
+            } else {
+                res.status(404).json({ error: 'Overview nicht gefunden' });
+            }
+        } else {
+            // Standard-Konfiguration
+            const defaultConfig = { card: 'haupttheke' };
+            res.json(defaultConfig);
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Overview-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+app.post('/api/overview-config/:overview', (req, res) => {
+    try {
+        const overview = req.params.overview;
+        const { card } = req.body;
+        
+        if (!card) {
+            return res.status(400).json({ error: 'Karte ist erforderlich' });
+        }
+        
+        const configPath = path.join(__dirname, '../overview-config.json');
+        let configData = {};
+        
+        // Lade existierende Konfiguration
+        if (fs.existsSync(configPath)) {
+            configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        // Aktualisiere die Konfiguration
+        configData[overview] = { card };
+        
+        // Speichere die Konfiguration
+        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+        
+        // Sende Socket.IO Event
+        io.emit('overviewConfigChanged', { overview, card });
+        
+        res.json({ message: 'Overview-Konfiguration gespeichert', card });
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Overview-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
     }
 });
 
