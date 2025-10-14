@@ -1,217 +1,220 @@
-# Digitale Getränkekarte (Version 2.3.6)
+# Getränkekarte System
 
-Eine moderne, digitale Getränkekarte mit Echtzeit-Updates für Bars und Restaurants. Das System ermöglicht die dynamische Verwaltung von Getränken, Kategorien, Events, Werbeanzeigen und Zusatzstoffen in Echtzeit.
+Ein modernes, webbasiertes Getränkekarten-System mit Echtzeit-Updates, Admin-Interface und Fernsteuerung für digitale Displays.
 
-## 🚀 Hauptfunktionen
+## 🚀 Features
 
-### 📱 Kartentypen
-- **Haupttheke**
-  - Dynamisches 3-Spalten-Layout
-  - Zentrale Werbeanzeigen
-  - Dynamische Zusatzstoff-Anzeige
-  - Optimierte Darstellung
-  
-- **Theke Hinten**
-  - Kompaktes 3-Spalten-Layout
-  - Integriertes Logo
-  - Optimiert für kleinere Displays
-  - Angepasste Zusatzstoff-Darstellung
+### 📱 Digitale Getränkekarten
+- **Haupttheke** - Vollständige Getränkekarte mit Kategorien
+- **Theke Hinten** - Spezielle Karte für hintere Theke
+- **Theke Hinten Bilder** - Bildergalerie für hintere Theke
+- **Jugendkarte** - Altersgerechte Getränkeauswahl
+- **Speisekarte** - Speisen und Menüs
+- **Bilder** - Historische Bildergalerie
 
-- **Jugendkarte**
-  - Spezielles Layout für alkoholfreie Getränke
-  - Event-Integration
-  - Social Media Features
-  - App Store & Play Store Integration
-  - Jugendgerechte Zusatzstoff-Anzeige
+### 🔄 Cycle-System
+- **Automatische Rotation** zwischen Haupttheke und Jugendkarte
+- **Konfigurierbare Zeiten** für Standard- und Jugend-Cycle
+- **Fernsteuerung** über Admin-Interface
+- **Brightsign Player** kompatibel mit Cache-Bypass
 
-### 💫 Allgemeine Features
-- Echtzeit-Updates via Socket.IO
-- Responsives Design
-- Animierte Werbeanzeigen
-- Dynamische Spaltenumbrüche
-- Flexible Preisanzeige
-- Dunkles Design für optimale Lesbarkeit
-- Dynamische Zusatzstoff-Verwaltung
+### 🎛️ Overview-Karten
+- **2 unabhängige Overview-Karten** (overview-1, overview-2)
+- **Fernsteuerung** der angezeigten Karte
+- **Dropdown-Auswahl** im Admin-Interface
+- **Echtzeit-Updates** ohne Seitenreload
 
-### ⚙️ Admin-Panel
-- Benutzerfreundliches Interface
-- Separate Tabs pro Karte
-- Umfassende Verwaltungsmöglichkeiten:
-  - Getränke & Kategorien
-  - Events & Werbung
-  - Logo & Layout
-  - Preisanzeigen
-  - Zusatzstoff-Management
+### 💰 Temporäre Preis-Overrides
+- **Dynamische Preisänderungen** ohne Datenbankzugriff
+- **Aktivierung/Deaktivierung** per Toggle
+- **Sofortige Anzeige** auf Theke-Hinten Karten
+- **JSON-basierte Konfiguration**
 
-## 🛠 Technologie-Stack
+### 🛠️ Admin-Interface
+- **Vollständige Getränkeverwaltung** (CRUD-Operationen)
+- **Kategorie-Management** mit Drag & Drop
+- **Bild-Upload** und -Verwaltung
+- **Karten-Export** als PNG (1920x1080px)
+- **Echtzeit-Monitoring** aller Displays
+- **Fernsteuerung** aller Funktionen
 
-### Backend
-- Node.js & Express.js
-- Socket.IO für Echtzeit-Updates
-- MySQL Datenbank
-- Firebase (Events)
+### 🔧 Technische Features
+- **Socket.IO** für Echtzeit-Kommunikation
+- **MySQL-Datenbank** für Getränkedaten
+- **Puppeteer** für Karten-Export
+- **Responsive Design** für alle Bildschirmgrößen
+- **Basic Auth** für Admin-Zugang
 
-### Frontend
-- HTML5 & CSS3
-- Bootstrap 5
-- Vanilla JavaScript
-- Socket.IO Client
-- Responsive Design
+## 📋 Systemanforderungen
 
-### Deployment
-- Docker-Support
-- Cloud-Ready
-- Skalierbare Architektur
+- **Node.js** >= 22.16.0
+- **npm** >= 11.4.2
+- **MySQL** Datenbank
+- **Chrome/Chromium** (für Puppeteer)
 
-## 📦 Installation
+## 🚀 Installation
 
-1. Repository klonen:
+### 1. Repository klonen
 ```bash
-git clone https://github.com/kartoffelkaese/getraenkekarte.git
+git clone <repository-url>
 cd getraenkekarte
 ```
 
-2. Abhängigkeiten installieren:
+### 2. Abhängigkeiten installieren
 ```bash
 npm install
 ```
 
-3. Umgebungsvariablen in `.env` konfigurieren:
+### 3. Umgebungsvariablen konfigurieren
+Erstellen Sie eine `.env` Datei:
 ```env
-DB_HOST=your-db-host
-DB_USER=your-db-user
-DB_PASSWORD=your-db-password
-DB_NAME=your-db-name
-PORT=3000
+DB_HOST=localhost
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_NAME=getraenkekarte
 ADMIN_USER=admin
-ADMIN_PASSWORD=secure_password_here
+ADMIN_PASSWORD=your_admin_password
+PORT=3000
 ```
 
-4. Datenbank-Tabellen erstellen:
-```sql
-CREATE TABLE categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    show_prices BOOLEAN DEFAULT TRUE,
-    is_visible BOOLEAN DEFAULT TRUE,
-    sort_order INT DEFAULT 0,
-    force_column_break BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE drinks2 (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    preis DECIMAL(10,2),
-    is_active BOOLEAN DEFAULT TRUE,
-    category_id INT,
-    show_price BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
-);
-
-CREATE TABLE ads (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    image_path VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2),
-    is_active BOOLEAN DEFAULT TRUE,
-    sort_order INT DEFAULT 0,
-    card_type ENUM('default', 'jugendliche') DEFAULT 'default'
-);
-
-CREATE TABLE logo_settings (
-    location VARCHAR(50) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    sort_order INT DEFAULT 0,
-    force_column_break BOOLEAN DEFAULT FALSE,
-    PRIMARY KEY (location)
-);
-
-CREATE TABLE display_settings (
-    location VARCHAR(50) NOT NULL,
-    element_type ENUM('drink', 'category', 'ad') NOT NULL,
-    element_id INT NOT NULL,
-    is_active BOOLEAN DEFAULT NULL,
-    show_price BOOLEAN DEFAULT NULL,
-    sort_order INT DEFAULT NULL,
-    force_column_break BOOLEAN DEFAULT NULL,
-    PRIMARY KEY (location, element_type, element_id)
-);
-
-CREATE TABLE additives (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(10) NOT NULL,
-    name VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE drink_additives (
-    drink_id INT NOT NULL,
-    additive_id INT NOT NULL,
-    PRIMARY KEY (drink_id, additive_id),
-    FOREIGN KEY (drink_id) REFERENCES drinks2(id) ON DELETE CASCADE,
-    FOREIGN KEY (additive_id) REFERENCES additives(id) ON DELETE CASCADE
-);
-
--- Füge Standardzusatzstoffe ein
-INSERT INTO additives (code, name) VALUES
-('1', 'mit Farbstoff'),
-('2', 'mit Konservierungsstoff'),
-('3', 'mit Antioxidationsmittel'),
-('4', 'mit Geschmacksverstärker'),
-('5', 'geschwefelt'),
-('6', 'geschwärzt'),
-('7', 'gewachst'),
-('8', 'mit Phosphat'),
-('9', 'mit Süßungsmitteln'),
-('10', 'enthält eine Phenylalaninquelle'),
-('11', 'mit Taurin'),
-('12', 'koffeinhaltig');
-```
-
-## 🚀 Entwicklung
-
-Entwicklungsserver starten:
+### 4. Server starten
 ```bash
+# Entwicklung
 npm run dev
-```
 
-Produktionsserver starten:
-```bash
+# Produktion
 npm start
+
+# Externe IP (für Brightsign Player)
+npm run ext
 ```
 
-## 🐳 Docker Deployment
+## 📱 Verfügbare Seiten
 
-1. Image bauen:
-```bash
-docker build -t getraenkekarte .
-```
+### Öffentliche Karten
+- `/` - Haupttheke
+- `/theke-hinten` - Theke Hinten
+- `/theke-hinten-bilder` - Theke Hinten Bilder
+- `/jugendliche` - Jugendkarte
+- `/speisekarte` - Speisekarte
+- `/bilder` - Bildergalerie
 
-2. Container starten:
-```bash
-docker run -p 3000:8080 --env-file .env getraenkekarte
-```
+### Cycle-Seiten
+- `/cycle` - Standard Cycle (Haupttheke ↔ Jugendkarte)
+- `/cycle-jugend` - Jugend Cycle (Jugendkarte ↔ Haupttheke)
 
-## 🔗 Zugriff
+### Overview-Karten
+- `/overview-1` - Fernsteuerbare Overview-Karte 1
+- `/overview-2` - Fernsteuerbare Overview-Karte 2
 
-- Haupttheke: `http://[domain]/haupttheke`
-- Hintere Theke: `http://[domain]/theke-hinten`
-- Jugendkarte: `http://[domain]/jugendliche`
-- Admin-Panel: `http://[domain]/admin.html`
+### Admin-Interface
+- `/admin` - Vollständiges Admin-Interface
 
-## 📝 Changelog
+## 🎛️ Admin-Interface Tabs
 
-Eine detaillierte Auflistung aller Änderungen finden Sie in der [CHANGELOG.md](CHANGELOG.md) Datei.
+### 🍺 Getränke
+- Getränke hinzufügen, bearbeiten, löschen
+- Kategorien verwalten
+- Preise und Beschreibungen anpassen
+- Bild-Upload für Getränke
 
-## 🔒 Sicherheit
+### 🏷️ Kategorien
+- Kategorien verwalten und bearbeiten
+- Neue Kategorien erstellen
+- Kategorien löschen
 
-- Sensible Daten in `.env` (gitignored)
-- Basic Authentication für Admin-Panel
-- Regelmäßige Backups empfohlen
-- Sichere Datenbank-Verbindung
-- XSS-Schutz implementiert
+### 🖼️ Bilder
+- Bild-Upload und -Verwaltung
+- Bildergalerie verwalten
 
-## ⚖️ Lizenz
+### 🔄 Cycle
+- **Standard Cycle**: Haupttheke ↔ Jugendkarte
+- **Jugend Cycle**: Jugendkarte ↔ Haupttheke
+- **Anzeigedauer** konfigurierbar (Sekunden)
+- **Fernsteuerung** für sofortige Updates
 
-Dieses Projekt ist unter der GNU General Public License v3.0 (GPL-3.0) lizenziert.
+### 💰 Temporäre Preise
+- **Preis-Overrides** für Theke-Hinten Karten
+- **Aktivierung/Deaktivierung** per Toggle
+- **Einzelne Getränke** überschreiben
+- **Sofortige Anzeige** ohne Datenbankänderung
 
-Die vollständige Lizenz finden Sie in der [LICENSE](LICENSE) Datei oder unter https://www.gnu.org/licenses/gpl-3.0.html
+### 🎯 Overview
+- **Overview-1** und **Overview-2** konfigurieren
+- **Kartenauswahl** per Dropdown
+- **Fernsteuerung** der angezeigten Karte
+- **Remote Reload** bei Änderungen
+
+### 📤 Export
+- **Alle Karten** als PNG exportieren
+- **Einzelne Karten** exportieren
+- **1920x1080px** Auflösung
+- **Automatischer Download**
+
+## 🔧 API-Endpunkte
+
+### Getränke
+- `GET /api/drinks/:location` - Getränke für Standort abrufen
+- `POST /api/drinks` - Neues Getränk erstellen
+- `PUT /api/drinks/:id` - Getränk aktualisieren
+- `DELETE /api/drinks/:id` - Getränk löschen
+
+### Kategorien
+- `GET /api/categories` - Alle Kategorien abrufen
+- `POST /api/categories` - Neue Kategorie erstellen
+- `PUT /api/categories/:id` - Kategorie aktualisieren
+- `DELETE /api/categories/:id` - Kategorie löschen
+- `PUT /api/categories/reorder` - Kategorie-Reihenfolge ändern
+
+### Cycle-Konfiguration
+- `GET /api/cycle-config` - Cycle-Zeiten abrufen
+- `POST /api/cycle-config` - Cycle-Zeiten speichern
+
+### Preis-Overrides
+- `GET /api/price-overrides/:location` - Preis-Overrides abrufen
+- `POST /api/price-overrides/:location` - Preis-Overrides speichern
+- `DELETE /api/price-overrides/:location` - Preis-Overrides löschen
+
+### Overview-Konfiguration
+- `GET /api/overview-config/:overview` - Overview-Konfiguration abrufen
+- `POST /api/overview-config/:overview` - Overview-Konfiguration speichern
+
+### Export
+- `POST /api/export/all` - Alle Karten exportieren
+- `POST /api/export/:card` - Einzelne Karte exportieren
+
+### Version
+- `GET /api/version` - Aktuelle Version abrufen
+
+## 🔄 Socket.IO Events
+
+### Server → Client
+- `drinksUpdated` - Getränke wurden aktualisiert
+- `categoriesUpdated` - Kategorien wurden aktualisiert
+- `cycleConfigChanged` - Cycle-Konfiguration geändert
+- `priceOverridesChanged` - Preis-Overrides geändert
+- `overviewConfigChanged` - Overview-Konfiguration geändert
+- `forceCycleReload` - Cycle-Seiten neu laden
+- `forceOverviewReload` - Overview-Seiten neu laden
+- `forceThekeHintenReload` - Theke-Hinten Seiten neu laden
+
+### Client → Server
+- `forceCycleReload` - Cycle-Reload anfordern
+- `forceOverviewReload` - Overview-Reload anfordern
+- `forceThekeHintenReload` - Theke-Hinten Reload anfordern
+
+
+## 🎯 Verwendung
+
+### Für Gastronomie
+1. **Getränke verwalten** über Admin-Interface
+2. **Kategorien organisieren** per Drag & Drop
+3. **Preise anpassen** in Echtzeit
+4. **Cycle-Zeiten** für automatische Rotation
+5. **Overview-Karten** für flexible Anzeige
+
+### Für Techniker
+1. **Brightsign Player** konfigurieren
+2. **Netzwerk-Einstellungen** anpassen
+3. **Cache-Probleme** mit Reload-Funktionen lösen
+4. **Monitoring** über Admin-Interface
