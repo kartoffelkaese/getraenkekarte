@@ -42,17 +42,18 @@
             max-width: 60%;
             max-height: 60%;
             z-index: 10;
-            animation: logoPulse 4s ease-in-out infinite;
+            animation: logoGlow 6s ease-in-out infinite; /* nur Glow, kein Puls des Logos */
+            filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.35)) drop-shadow(0 0 42px rgba(255, 255, 255, 0.18));
         }
 
-        @keyframes logoPulse {
+        /* Puls-Animation des Logos entfernt, Logo bleibt statisch */
+
+        @keyframes logoGlow {
             0%, 100% {
-                transform: scale(1);
-                opacity: 0.9;
+                filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.25)) drop-shadow(0 0 36px rgba(255, 255, 255, 0.12));
             }
             50% {
-                transform: scale(1.05);
-                opacity: 1;
+                filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.55)) drop-shadow(0 0 64px rgba(255, 255, 255, 0.25));
             }
         }
 
