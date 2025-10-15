@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screensaver - Getränkekarte</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --text-primary: #FFFFFF;
+            --sparkle-color: #FFD700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            background: var(--bg-dark);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .screensaver-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            max-width: 60%;
+            max-height: 60%;
+            z-index: 10;
+            animation: logoPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        /* Sparkles Canvas */
+        #sparklesCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 8s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) translateX(0px);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) translateX(50px);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo {
+                max-width: 80%;
+                max-height: 80%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                max-width: 90%;
+                max-height: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="sparklesCanvas"></canvas>
+    <div class="screensaver-container">
+        <img src="/images/logo.png" alt="Schlegl Logo" class="logo">
+        
+        <!-- Floating particles -->
+        <div id="particles-container"></div>
+    </div>
+
+    <script>
+        // Funken-Animation (aus speisekarte.js)
+        const canvas = document.getElementById('sparklesCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Setze Canvas-Größe
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Funken-Klasse
+        class Sparkle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Wenn der Funke den Bildschirm verlässt, setze ihn zurück
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(165, 7, 117, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        // Erstelle Funken
+        const sparkles = Array.from({ length: 50 }, () => new Sparkle());
+
+        // Animations-Loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            sparkles.forEach(sparkle => {
+                sparkle.update();
+                sparkle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Floating particles generieren
+        function createParticles() {
+            const container = document.getElementById('particles-container');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Zufällige Startposition
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 6) + 's';
+                
+                container.appendChild(particle);
+            }
+        }
+
+        // Touch/Mouse Interaktion - Screensaver beenden
+        function handleInteraction() {
+            // Hier könnte man zur Hauptseite weiterleiten
+            // window.location.href = '/';
+            console.log('Screensaver interaction detected');
+        }
+
+        // Event Listeners
+        document.addEventListener('click', handleInteraction);
+        document.addEventListener('touchstart', handleInteraction);
+        document.addEventListener('keydown', handleInteraction);
+
+        // Initialisierung
+        createParticles();
+
+        // Particles alle 15 Sekunden neu generieren
+        setInterval(() => {
+            const container = document.getElementById('particles-container');
+            container.innerHTML = '';
+            createParticles();
+        }, 15000);
+    </script>
+</body>
+</html>

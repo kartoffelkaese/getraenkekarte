@@ -75,6 +75,10 @@ app.get('/cycle-jugend', (req, res) => {
     res.sendFile('cycle-jugend.html', { root: './public' });
 });
 
+app.get('/screensaver', (req, res) => {
+    res.sendFile('screensaver.html', { root: './public' });
+});
+
 // Statische Dateien
 app.use(express.static('public'));
 

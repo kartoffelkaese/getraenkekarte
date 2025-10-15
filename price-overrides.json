@@ -1,8 +1,4 @@
 {
   "active": false,
-  "drinks": {
-    "10": {
-      "preis": 16
-    }
-  }
+  "drinks": {}
 }
