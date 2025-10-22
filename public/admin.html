@@ -61,6 +61,12 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="theke-presets-tab" data-bs-toggle="tab" 
+                        data-location="theke-presets" type="button" role="tab">
+                    Theke-Hinten Presets
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="overview-tab" data-bs-toggle="tab" 
                         data-location="overview" type="button" role="tab">
                     Overview
@@ -290,6 +296,59 @@
                                     <!-- Temporäre Preise werden hier dynamisch eingefügt -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Theke-Hinten Presets Sektion -->
+        <div id="thekePresetsSection" style="display: none;">
+            <h2>Theke-Hinten Presets</h2>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Hinweis:</strong> Presets überschreiben die Datenbank-Einstellungen. Temporäre Preise haben Vorrang vor Presets.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Preset-Aktivierung</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="thekePresetsActive" 
+                                       onchange="toggleThekePresetsActive(this.checked)">
+                                <label class="form-check-label" for="thekePresetsActive" style="color: white;">
+                                    Presets aktivieren
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="activePresetSelect" class="form-label" style="color: #fff;">Aktives Preset</label>
+                                <select class="form-select" id="activePresetSelect" onchange="updateActivePreset()">
+                                    <option value="">Kein Preset ausgewählt</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveThekePresetsConfig()">
+                                <i class="bi bi-save"></i> Speichern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Preset-Verwaltung</h5>
+                            <button class="btn btn-success mb-3" onclick="showCreatePresetModal()">
+                                <i class="bi bi-plus-circle"></i> Neues Preset erstellen
+                            </button>
+                            <div id="presetsList">
+                                <p class="text-muted">Keine Presets vorhanden</p>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-info" onclick="forceThekeHintenReload()">
+                                    <i class="bi bi-arrow-clockwise"></i> Reload Karten
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -759,6 +818,58 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
                     <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Löschen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Preset-Erstellung -->
+    <div class="modal fade" id="createPresetModal" tabindex="-1" aria-labelledby="createPresetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createPresetModalLabel">Neues Preset erstellen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="presetName" class="form-label">Preset-Name</label>
+                        <input type="text" class="form-control" id="presetName" placeholder="z.B. Sommer 2025" required>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Hinweis:</strong> Das Preset wird mit dem aktuellen Stand der Datenbank erstellt (alle Drinks, Kategorien, Logo und Werbungen).
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-success" onclick="createPreset()">
+                        <i class="bi bi-save"></i> Preset erstellen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Preset-Umbenennung -->
+    <div class="modal fade" id="renamePresetModal" tabindex="-1" aria-labelledby="renamePresetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="renamePresetModalLabel">Preset umbenennen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="renamePresetName" class="form-label">Neuer Name</label>
+                        <input type="text" class="form-control" id="renamePresetName" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmRenamePreset()">
+                        <i class="bi bi-pencil"></i> Umbenennen
+                    </button>
                 </div>
             </div>
         </div>

@@ -56,6 +56,7 @@ function updateSectionVisibility() {
         'bilder': document.getElementById('bilderSection'),
         'cycle': document.getElementById('cycleSection'),
         'temp-prices': document.getElementById('tempPricesSection'),
+        'theke-presets': document.getElementById('thekePresetsSection'),
         'overview': document.getElementById('overviewSection'),
         'export': document.getElementById('exportSection')
     };
@@ -77,6 +78,10 @@ function updateSectionVisibility() {
         // Nur Temporäre Preise Sektion anzeigen
         if (sections['temp-prices']) sections['temp-prices'].style.display = 'block';
         fetchTempPrices(); // Lade temporäre Preise
+    } else if (currentLocation === 'theke-presets') {
+        // Nur Theke-Presets Sektion anzeigen
+        if (sections['theke-presets']) sections['theke-presets'].style.display = 'block';
+        fetchThekePresets(); // Lade Preset-Konfiguration
     } else if (currentLocation === 'overview') {
         // Nur Overview-Sektion anzeigen
         if (sections.overview) sections.overview.style.display = 'block';
@@ -1982,4 +1987,269 @@ socket.on('overviewConfigChanged', (data) => {
             document.getElementById('overview2Card').value = data.card;
         }
     }
-}); 
+});
+
+// Socket.IO Listener für Theke-Presets
+socket.on('thekePresetsChanged', (data) => {
+    console.log('Theke-Presets geändert:', data);
+    if (currentLocation === 'theke-presets') {
+        updateThekePresetsUI(data);
+    }
+});
+
+// ===== THEKE-HINTEN PRESETS FUNKTIONEN =====
+
+let thekePresetsConfig = { active: false, activePreset: null, presets: {} };
+let currentRenamePresetId = null;
+
+// Lade Theke-Presets Konfiguration
+async function fetchThekePresets() {
+    try {
+        const response = await fetch('/api/theke-presets');
+        if (!response.ok) {
+            throw new Error('Fehler beim Laden der Presets');
+        }
+        thekePresetsConfig = await response.json();
+        updateThekePresetsUI(thekePresetsConfig);
+    } catch (error) {
+        console.error('Fehler beim Laden der Theke-Presets:', error);
+        showNotification('Fehler beim Laden der Presets: ' + error.message, 'error');
+    }
+}
+
+// Aktualisiere die Preset-UI
+function updateThekePresetsUI(config) {
+    thekePresetsConfig = config;
+    
+    // Aktiviere/Deaktiviere Toggle
+    document.getElementById('thekePresetsActive').checked = config.active;
+    
+    // Aktualisiere Preset-Dropdown
+    const select = document.getElementById('activePresetSelect');
+    select.innerHTML = '<option value="">Kein Preset ausgewählt</option>';
+    
+    Object.keys(config.presets || {}).forEach(presetId => {
+        const preset = config.presets[presetId];
+        const option = document.createElement('option');
+        option.value = presetId;
+        option.textContent = preset.name;
+        if (presetId === config.activePreset) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    
+    // Aktualisiere Preset-Liste
+    updatePresetsList(config.presets || {});
+}
+
+// Aktualisiere die Preset-Liste
+function updatePresetsList(presets) {
+    const listContainer = document.getElementById('presetsList');
+    
+    if (Object.keys(presets).length === 0) {
+        listContainer.innerHTML = '<p class="text-muted">Keine Presets vorhanden</p>';
+        return;
+    }
+    
+    let html = '<div class="list-group">';
+    Object.keys(presets).forEach(presetId => {
+        const preset = presets[presetId];
+        const isActive = presetId === thekePresetsConfig.activePreset;
+        html += `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${preset.name}</strong>
+                    ${isActive ? '<span class="badge bg-success ms-2">Aktiv</span>' : ''}
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="renamePreset('${presetId}')" title="Umbenennen">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deletePreset('${presetId}')" title="Löschen">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    listContainer.innerHTML = html;
+}
+
+// Toggle Preset-Aktivierung
+function toggleThekePresetsActive(active) {
+    thekePresetsConfig.active = active;
+    if (!active) {
+        thekePresetsConfig.activePreset = null;
+        document.getElementById('activePresetSelect').value = '';
+    }
+}
+
+// Aktualisiere aktives Preset
+function updateActivePreset() {
+    const select = document.getElementById('activePresetSelect');
+    thekePresetsConfig.activePreset = select.value || null;
+    thekePresetsConfig.active = !!select.value;
+    document.getElementById('thekePresetsActive').checked = thekePresetsConfig.active;
+}
+
+// Speichere Preset-Konfiguration
+async function saveThekePresetsConfig() {
+    try {
+        const response = await fetch('/api/theke-presets', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(thekePresetsConfig)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Speichern');
+        }
+        
+        const result = await response.json();
+        showNotification(result.message || 'Preset-Konfiguration gespeichert', 'success');
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Preset-Konfiguration:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+    }
+}
+
+// Zeige Modal für Preset-Erstellung
+function showCreatePresetModal() {
+    document.getElementById('presetName').value = '';
+    const modal = new bootstrap.Modal(document.getElementById('createPresetModal'));
+    modal.show();
+}
+
+// Erstelle neues Preset
+async function createPreset() {
+    const presetName = document.getElementById('presetName').value.trim();
+    
+    if (!presetName) {
+        showNotification('Bitte geben Sie einen Preset-Namen ein', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/theke-presets/save-current', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ presetName })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Erstellen des Presets');
+        }
+        
+        const result = await response.json();
+        showNotification(result.message || 'Preset erfolgreich erstellt', 'success');
+        
+        // Modal schließen
+        const modal = bootstrap.Modal.getInstance(document.getElementById('createPresetModal'));
+        modal.hide();
+        
+        // UI aktualisieren
+        await fetchThekePresets();
+        
+    } catch (error) {
+        console.error('Fehler beim Erstellen des Presets:', error);
+        showNotification('Fehler beim Erstellen: ' + error.message, 'error');
+    }
+}
+
+// Lösche Preset
+async function deletePreset(presetId) {
+    if (!confirm('Sind Sie sicher, dass Sie dieses Preset löschen möchten?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/theke-presets/${presetId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Löschen des Presets');
+        }
+        
+        const result = await response.json();
+        showNotification(result.message || 'Preset gelöscht', 'success');
+        
+        // UI aktualisieren
+        await fetchThekePresets();
+        
+    } catch (error) {
+        console.error('Fehler beim Löschen des Presets:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+    }
+}
+
+// Zeige Modal für Preset-Umbenennung
+function renamePreset(presetId) {
+    currentRenamePresetId = presetId;
+    const preset = thekePresetsConfig.presets[presetId];
+    document.getElementById('renamePresetName').value = preset.name;
+    const modal = new bootstrap.Modal(document.getElementById('renamePresetModal'));
+    modal.show();
+}
+
+// Bestätige Preset-Umbenennung
+async function confirmRenamePreset() {
+    const newName = document.getElementById('renamePresetName').value.trim();
+    
+    if (!newName) {
+        showNotification('Bitte geben Sie einen neuen Namen ein', 'error');
+        return;
+    }
+    
+    if (!currentRenamePresetId) {
+        showNotification('Fehler: Kein Preset ausgewählt', 'error');
+        return;
+    }
+    
+    try {
+        // Aktualisiere den Namen im lokalen Config
+        thekePresetsConfig.presets[currentRenamePresetId].name = newName;
+        
+        // Speichere die Änderung
+        const response = await fetch('/api/theke-presets', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(thekePresetsConfig)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Umbenennen des Presets');
+        }
+        
+        showNotification('Preset erfolgreich umbenannt', 'success');
+        
+        // Modal schließen
+        const modal = bootstrap.Modal.getInstance(document.getElementById('renamePresetModal'));
+        modal.hide();
+        
+        // UI aktualisieren
+        updateThekePresetsUI(thekePresetsConfig);
+        
+    } catch (error) {
+        console.error('Fehler beim Umbenennen des Presets:', error);
+        showNotification('Fehler beim Umbenennen: ' + error.message, 'error');
+    }
+}
+
+// Lade Presets beim Wechsel zum Tab
+if (currentLocation === 'theke-presets') {
+    fetchThekePresets();
+} 

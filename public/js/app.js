@@ -130,9 +130,18 @@ socket.on('additivesChanged', () => {
 // Socket.IO Event für Preis-Overrides
 socket.on('priceOverridesChanged', (data) => {
     console.log('Preis-Overrides geändert:', data);
-    if (data.location === 'theke-hinten' && currentLocation === 'theke-hinten') {
+    if (data.location === 'theke-hinten' && (currentLocation === 'theke-hinten' || currentLocation === 'theke-hinten-bilder')) {
         console.log('Lade Getränke neu wegen Preis-Overrides');
         fetchDrinks();
+    }
+});
+
+// Socket.IO Event für Theke-Presets
+socket.on('thekePresetsChanged', (data) => {
+    console.log('Theke-Presets geändert:', data);
+    if (currentLocation === 'theke-hinten' || currentLocation === 'theke-hinten-bilder') {
+        console.log('Lade alle Daten neu wegen Preset-Änderungen');
+        location.reload();
     }
 });
 

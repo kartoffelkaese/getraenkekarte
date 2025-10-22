@@ -280,6 +280,230 @@ app.delete('/api/price-overrides/:location', (req, res) => {
     }
 });
 
+// API-Endpunkte für Theke-Hinten Presets
+app.get('/api/theke-presets', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../theke-hinten-presets.json');
+        
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            // Standard-Konfiguration (inaktiv)
+            const defaultConfig = {
+                active: false,
+                activePreset: null,
+                presets: {}
+            };
+            res.json(defaultConfig);
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Theke-Presets:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Theke-Presets' });
+    }
+});
+
+app.post('/api/theke-presets', (req, res) => {
+    try {
+        const { active, activePreset, presets } = req.body;
+        
+        const configPath = path.join(__dirname, '../theke-hinten-presets.json');
+        let config = {};
+        
+        // Lade bestehende Konfiguration
+        if (fs.existsSync(configPath)) {
+            config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        // Aktualisiere Konfiguration
+        config.active = active;
+        config.activePreset = activePreset;
+        config.presets = presets || {};
+        
+        // Speichere Konfiguration
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        res.json({ success: true, message: 'Theke-Presets gespeichert' });
+        
+        // Sende Socket.IO Event für Preset-Änderungen
+        io.emit('thekePresetsChanged', { active, activePreset, presets });
+    } catch (error) {
+        console.error('Fehler beim Speichern der Theke-Presets:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Theke-Presets' });
+    }
+});
+
+app.post('/api/theke-presets/save-current', async (req, res) => {
+    try {
+        const { presetName } = req.body;
+        
+        if (!presetName) {
+            return res.status(400).json({ error: 'Preset-Name ist erforderlich' });
+        }
+        
+        // Lade aktuellen Stand aus der Datenbank für theke-hinten
+        const location = 'theke-hinten';
+        
+        // Hole alle Drinks mit ihren Einstellungen
+        const drinksQuery = `
+            SELECT d.id, d.name, d.preis, d.small_price,
+                   COALESCE(ds_drink.is_active, d.is_active) as is_active,
+                   COALESCE(ds_drink.show_price, d.show_price) as show_price
+            FROM drinks2 d 
+            LEFT JOIN display_settings ds_drink ON ds_drink.element_type = 'drink' 
+                AND ds_drink.element_id = d.id 
+                AND ds_drink.location = ?
+            ORDER BY d.id
+        `;
+        
+        // Hole alle Kategorien mit ihren Einstellungen
+        const categoriesQuery = `
+            SELECT c.id, c.name, 
+                   COALESCE(ds.show_price, c.show_prices) as show_prices,
+                   COALESCE(ds.is_active, c.is_visible) as is_visible,
+                   COALESCE(ds.sort_order, c.sort_order) as sort_order,
+                   COALESCE(ds.force_column_break, c.force_column_break) as force_column_break
+            FROM categories c
+            LEFT JOIN display_settings ds ON ds.element_type = 'category' 
+                AND ds.element_id = c.id 
+                AND ds.location = ?
+            ORDER BY c.id
+        `;
+        
+        // Hole Logo-Einstellungen
+        const logoQuery = `
+            SELECT * FROM logo_settings
+            WHERE location = ?
+        `;
+        
+        // Hole alle Werbungen mit ihren Einstellungen
+        const adsQuery = `
+            SELECT a.id, a.name, a.image_path, a.price,
+                   COALESCE(ds.is_active, a.is_active) as is_active,
+                   COALESCE(ds.sort_order, a.sort_order) as sort_order
+            FROM ads a
+            LEFT JOIN display_settings ds ON ds.element_type = 'ad' 
+                AND ds.element_id = a.id 
+                AND ds.location = ?
+            WHERE (a.card_type = ? OR (a.card_type = 'default' AND ? != 'jugendliche'))
+            ORDER BY a.id
+        `;
+        
+        const [drinksRows] = await db.query(drinksQuery, [location]);
+        const [categoriesRows] = await db.query(categoriesQuery, [location]);
+        const [logoRows] = await db.query(logoQuery, [location]);
+        const [adsRows] = await db.query(adsQuery, [location, location, location]);
+        
+        // Erstelle Preset-Datenstruktur
+        const drinks = {};
+        drinksRows.forEach(drink => {
+            drinks[drink.id] = {
+                preis: drink.preis,
+                small_price: drink.small_price,
+                show_price: drink.show_price
+            };
+        });
+        
+        const categories = {};
+        categoriesRows.forEach(category => {
+            categories[category.id] = {
+                sort_order: category.sort_order,
+                is_visible: category.is_visible,
+                show_prices: category.show_prices,
+                force_column_break: category.force_column_break
+            };
+        });
+        
+        const logo = logoRows[0] || { is_active: true, sort_order: 0, force_column_break: false };
+        const logoData = {
+            is_active: logo.is_active,
+            sort_order: logo.sort_order,
+            force_column_break: logo.force_column_break
+        };
+        
+        const ads = {};
+        adsRows.forEach(ad => {
+            ads[ad.id] = {
+                is_active: ad.is_active,
+                sort_order: ad.sort_order
+            };
+        });
+        
+        // Generiere eindeutige Preset-ID
+        const presetId = 'preset-' + Date.now();
+        
+        // Lade bestehende Konfiguration
+        const configPath = path.join(__dirname, '../theke-hinten-presets.json');
+        let config = {};
+        
+        if (fs.existsSync(configPath)) {
+            config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        // Füge neues Preset hinzu
+        config.presets = config.presets || {};
+        config.presets[presetId] = {
+            name: presetName,
+            drinks: drinks,
+            categories: categories,
+            logo: logoData,
+            ads: ads
+        };
+        
+        // Speichere Konfiguration
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        res.json({ 
+            success: true, 
+            message: 'Preset erfolgreich erstellt',
+            presetId: presetId
+        });
+        
+        // Sende Socket.IO Event
+        io.emit('thekePresetsChanged', { active: config.active, activePreset: config.activePreset, presets: config.presets });
+    } catch (error) {
+        console.error('Fehler beim Erstellen des Presets:', error);
+        res.status(500).json({ error: 'Fehler beim Erstellen des Presets' });
+    }
+});
+
+app.delete('/api/theke-presets/:presetId', (req, res) => {
+    try {
+        const presetId = req.params.presetId;
+        const configPath = path.join(__dirname, '../theke-hinten-presets.json');
+        
+        if (fs.existsSync(configPath)) {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            
+            // Lösche das Preset
+            if (config.presets && config.presets[presetId]) {
+                delete config.presets[presetId];
+                
+                // Wenn das gelöschte Preset aktiv war, deaktiviere Presets
+                if (config.activePreset === presetId) {
+                    config.active = false;
+                    config.activePreset = null;
+                }
+                
+                // Speichere aktualisierte Konfiguration
+                fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+                
+                res.json({ success: true, message: 'Preset gelöscht' });
+                
+                // Sende Socket.IO Event
+                io.emit('thekePresetsChanged', { active: config.active, activePreset: config.activePreset, presets: config.presets });
+            } else {
+                res.status(404).json({ error: 'Preset nicht gefunden' });
+            }
+        } else {
+            res.status(404).json({ error: 'Konfigurationsdatei nicht gefunden' });
+        }
+    } catch (error) {
+        console.error('Fehler beim Löschen des Presets:', error);
+        res.status(500).json({ error: 'Fehler beim Löschen des Presets' });
+    }
+});
+
 // Datenbank-Verbindung
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -447,31 +671,101 @@ app.get('/api/drinks/:location', async (req, res) => {
     try {
         const [rows] = await db.query(query, [location, location]);
         
-        // Lade Preis-Overrides für theke-hinten und theke-hinten-bilder
+        // Lade Preis-Overrides und Presets für theke-hinten und theke-hinten-bilder
         let priceOverrides = {};
+        let presetOverrides = {}; // drink overrides
+        let categoryOverrides = {}; // category overrides
+        
         if (location === 'theke-hinten' || location === 'theke-hinten-bilder') {
+            // Lade Preis-Overrides
             try {
-                const configPath = path.join(__dirname, '../price-overrides.json');
-                if (fs.existsSync(configPath)) {
-                    const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                    if (configData.active && configData.drinks) {
-                        priceOverrides = configData.drinks;
+                const priceConfigPath = path.join(__dirname, '../price-overrides.json');
+                if (fs.existsSync(priceConfigPath)) {
+                    const priceConfigData = JSON.parse(fs.readFileSync(priceConfigPath, 'utf8'));
+                    if (priceConfigData.active && priceConfigData.drinks) {
+                        priceOverrides = priceConfigData.drinks;
                     }
                 }
             } catch (error) {
                 console.error('Fehler beim Laden der Preis-Overrides:', error);
             }
+            
+            // Lade Preset-Overrides
+            console.log(`Loading presets for location: ${location}`);
+            try {
+                const presetConfigPath = path.join(__dirname, '../theke-hinten-presets.json');
+                console.log(`Preset config path: ${presetConfigPath}`);
+                console.log(`File exists: ${fs.existsSync(presetConfigPath)}`);
+                
+                if (fs.existsSync(presetConfigPath)) {
+                    const presetConfigData = JSON.parse(fs.readFileSync(presetConfigPath, 'utf8'));
+                    console.log('Preset config loaded:', {
+                        active: presetConfigData.active,
+                        activePreset: presetConfigData.activePreset,
+                        hasPresets: !!presetConfigData.presets
+                    });
+                    
+                    if (presetConfigData.active && presetConfigData.activePreset && presetConfigData.presets[presetConfigData.activePreset]) {
+                        const activePreset = presetConfigData.presets[presetConfigData.activePreset];
+                        console.log('Active preset found:', activePreset.name);
+                        if (activePreset.drinks) {
+                            presetOverrides = activePreset.drinks;
+                            console.log('Preset drinks loaded:', Object.keys(presetOverrides).length, 'drinks');
+                        }
+                        if (activePreset.categories) {
+                            categoryOverrides = activePreset.categories;
+                            console.log('Preset categories loaded:', Object.keys(categoryOverrides).length, 'categories');
+                        }
+                    } else {
+                        console.log('No active preset found or presets not active');
+                    }
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Preset-Overrides:', error);
+            }
         }
         
-        // Wende Preis-Overrides an
+        // Wende Overrides an (Priorität: Preis-Overrides > Preset-Overrides > DB)
         const drinksWithOverrides = (rows || []).map(drink => {
-            if (priceOverrides[drink.id]) {
-                return {
-                    ...drink,
-                    preis: priceOverrides[drink.id].preis || drink.preis
-                };
+            let updatedDrink = { ...drink };
+            
+            // Wende Preset-Overrides an (falls keine Preis-Overrides vorhanden)
+            if (presetOverrides[drink.id] && !priceOverrides[drink.id]) {
+                const originalShowPrice = drink.show_price;
+                const presetShowPrice = presetOverrides[drink.id].show_price;
+                const finalShowPrice = presetOverrides[drink.id].show_price !== undefined ? !!presetOverrides[drink.id].show_price : drink.show_price;
+                
+                console.log(`Drink ${drink.id} (${drink.name}): original_show_price=${originalShowPrice}, preset_show_price=${presetShowPrice}, final_show_price=${finalShowPrice}`);
+                
+                updatedDrink.preis = presetOverrides[drink.id].preis || drink.preis;
+                updatedDrink.small_price = presetOverrides[drink.id].small_price || drink.small_price;
+                // Wichtig: Auch show_price aus Preset übernehmen, damit Preise angezeigt werden
+                // Konvertiere 0/1 zu Boolean für show_price
+                updatedDrink.show_price = finalShowPrice;
             }
-            return drink;
+            // Wende Kategorien-Overrides aus Preset an (unabhängig von Preis-Overrides)
+            if (categoryOverrides[drink.category_id]) {
+                const cat = categoryOverrides[drink.category_id];
+                if (cat.sort_order !== undefined && cat.sort_order !== null) {
+                    updatedDrink.category_sort_order = cat.sort_order;
+                }
+                if (cat.is_visible !== undefined) {
+                    updatedDrink.category_is_visible = !!cat.is_visible;
+                }
+                if (cat.show_prices !== undefined) {
+                    updatedDrink.category_show_prices = !!cat.show_prices;
+                }
+                if (cat.force_column_break !== undefined) {
+                    updatedDrink.category_force_column_break = !!cat.force_column_break;
+                }
+            }
+
+            // Wende Preis-Overrides an (höchste Priorität)
+            if (priceOverrides[drink.id]) {
+                updatedDrink.preis = priceOverrides[drink.id].preis || drink.preis;
+            }
+            
+            return updatedDrink;
         });
         
         console.log('Drinks API Response:', Array.isArray(drinksWithOverrides), drinksWithOverrides?.length);
@@ -500,8 +794,56 @@ app.get('/api/categories/:location', async (req, res) => {
     
     try {
         const [rows] = await db.query(query, [location]);
-        console.log('Categories API Response:', Array.isArray(rows), rows?.length);
-        res.json(rows || []);
+        
+        // Lade Preset-Overrides für theke-hinten und theke-hinten-bilder
+        let presetOverrides = {};
+        if (location === 'theke-hinten' || location === 'theke-hinten-bilder') {
+            console.log(`Loading category presets for location: ${location}`);
+            try {
+                const presetConfigPath = path.join(__dirname, '../theke-hinten-presets.json');
+                if (fs.existsSync(presetConfigPath)) {
+                    const presetConfigData = JSON.parse(fs.readFileSync(presetConfigPath, 'utf8'));
+                    if (presetConfigData.active && presetConfigData.activePreset && presetConfigData.presets[presetConfigData.activePreset]) {
+                        const activePreset = presetConfigData.presets[presetConfigData.activePreset];
+                        console.log('Active preset for categories:', activePreset.name);
+                        if (activePreset.categories) {
+                            presetOverrides = activePreset.categories;
+                            console.log('Preset categories loaded:', Object.keys(presetOverrides).length, 'categories');
+                        }
+                    } else {
+                        console.log('No active preset found for categories');
+                    }
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Preset-Overrides für Kategorien:', error);
+            }
+        }
+        
+        // Wende Preset-Overrides an
+        const categoriesWithOverrides = (rows || []).map(category => {
+            if (presetOverrides[category.id]) {
+                const originalVisible = category.is_visible;
+                const presetVisible = presetOverrides[category.id].is_visible;
+                const finalVisible = presetOverrides[category.id].is_visible !== undefined ? !!presetOverrides[category.id].is_visible : category.is_visible;
+                
+                console.log(`Category ${category.id} (${category.name}): original=${originalVisible}, preset=${presetVisible}, final=${finalVisible}`);
+                
+                return {
+                    ...category,
+                    sort_order: presetOverrides[category.id].sort_order || category.sort_order,
+                    // Konvertiere 0/1 zu Boolean für is_visible
+                    is_visible: finalVisible,
+                    // Konvertiere 0/1 zu Boolean für show_prices
+                    show_prices: presetOverrides[category.id].show_prices !== undefined ? !!presetOverrides[category.id].show_prices : category.show_prices,
+                    // Konvertiere 0/1 zu Boolean für force_column_break
+                    force_column_break: presetOverrides[category.id].force_column_break !== undefined ? !!presetOverrides[category.id].force_column_break : category.force_column_break
+                };
+            }
+            return category;
+        });
+        
+        console.log('Categories API Response:', Array.isArray(categoriesWithOverrides), categoriesWithOverrides?.length);
+        res.json(categoriesWithOverrides || []);
     } catch (err) {
         console.error('Categories API Error:', err);
         res.status(500).json({ error: err.message });
@@ -645,8 +987,41 @@ app.get('/api/ads/:location', async (req, res) => {
     
     try {
         const [rows] = await db.query(query, [location, location, location]);
-        console.log('Ads API Response:', Array.isArray(rows), rows?.length);
-        res.json(rows || []);
+        
+        // Lade Preset-Overrides für theke-hinten und theke-hinten-bilder
+        let presetOverrides = {};
+        if (location === 'theke-hinten' || location === 'theke-hinten-bilder') {
+            try {
+                const presetConfigPath = path.join(__dirname, '../theke-hinten-presets.json');
+                if (fs.existsSync(presetConfigPath)) {
+                    const presetConfigData = JSON.parse(fs.readFileSync(presetConfigPath, 'utf8'));
+                    if (presetConfigData.active && presetConfigData.activePreset && presetConfigData.presets[presetConfigData.activePreset]) {
+                        const activePreset = presetConfigData.presets[presetConfigData.activePreset];
+                        if (activePreset.ads) {
+                            presetOverrides = activePreset.ads;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Preset-Overrides für Ads:', error);
+            }
+        }
+        
+        // Wende Preset-Overrides an
+        const adsWithOverrides = (rows || []).map(ad => {
+            if (presetOverrides[ad.id]) {
+                return {
+                    ...ad,
+                    // Konvertiere 0/1 zu Boolean für is_active
+                    is_active: presetOverrides[ad.id].is_active !== undefined ? !!presetOverrides[ad.id].is_active : ad.is_active,
+                    sort_order: presetOverrides[ad.id].sort_order !== undefined ? presetOverrides[ad.id].sort_order : ad.sort_order
+                };
+            }
+            return ad;
+        });
+        
+        console.log('Ads API Response:', Array.isArray(adsWithOverrides), adsWithOverrides?.length);
+        res.json(adsWithOverrides || []);
     } catch (err) {
         console.error('Ads API Error:', err);
         res.status(500).json({ error: err.message });
@@ -703,7 +1078,34 @@ app.get('/api/logo/:location', async (req, res) => {
     
     try {
         const [rows] = await db.query(query, [location]);
-        res.json(rows[0] || { is_active: true, sort_order: 0, force_column_break: false });
+        let logoData = rows[0] || { is_active: true, sort_order: 0, force_column_break: false };
+        
+        // Lade Preset-Overrides für theke-hinten und theke-hinten-bilder
+        if (location === 'theke-hinten' || location === 'theke-hinten-bilder') {
+            try {
+                const presetConfigPath = path.join(__dirname, '../theke-hinten-presets.json');
+                if (fs.existsSync(presetConfigPath)) {
+                    const presetConfigData = JSON.parse(fs.readFileSync(presetConfigPath, 'utf8'));
+                    if (presetConfigData.active && presetConfigData.activePreset && presetConfigData.presets[presetConfigData.activePreset]) {
+                        const activePreset = presetConfigData.presets[presetConfigData.activePreset];
+                        if (activePreset.logo) {
+                            logoData = {
+                                ...logoData,
+                                // Konvertiere 0/1 zu Boolean für is_active
+                                is_active: activePreset.logo.is_active !== undefined ? !!activePreset.logo.is_active : logoData.is_active,
+                                sort_order: activePreset.logo.sort_order !== undefined ? activePreset.logo.sort_order : logoData.sort_order,
+                                // Konvertiere 0/1 zu Boolean für force_column_break
+                                force_column_break: activePreset.logo.force_column_break !== undefined ? !!activePreset.logo.force_column_break : logoData.force_column_break
+                            };
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Preset-Overrides für Logo:', error);
+            }
+        }
+        
+        res.json(logoData);
     } catch (err) {
         console.error('Logo API Error:', err);
         res.status(500).json({ error: err.message });
