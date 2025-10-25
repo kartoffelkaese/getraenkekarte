@@ -25,6 +25,7 @@ build/
 
 # Verzeichnis für Bilder-Uploads
 public/uploads/*
+public/images/*
 
 # Coverage Verzeichnis
 coverage/
