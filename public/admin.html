@@ -73,6 +73,12 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reload-tab" data-bs-toggle="tab" 
+                        data-location="reload" type="button" role="tab">
+                    Reload
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="export-tab" data-bs-toggle="tab" 
                         data-location="export" type="button" role="tab">
                     Export
@@ -80,30 +86,31 @@
             </li>
         </ul>
         
-        <!-- Haupttheke Reload Sektion -->
-        <div id="hauptthekeReloadSection" style="display: none;">
-            <h2>Haupttheke Steuerung</h2>
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title" style="color: #fff;">Karte neu starten</h5>
-                    <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
-                    <button class="btn btn-info" onclick="forceHauptthekeReload()">
-                        <i class="bi bi-arrow-clockwise"></i> Haupttheke neu starten
-                    </button>
+        <!-- Reload Sektion -->
+        <div id="reloadSection" style="display: none;">
+            <h2>Karten neu starten</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Haupttheke</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
+                            <button class="btn btn-info" onclick="forceHauptthekeReload()">
+                                <i class="bi bi-arrow-clockwise"></i> Haupttheke neu starten
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Jugendkarte Reload Sektion -->
-        <div id="jugendkarteReloadSection" style="display: none;">
-            <h2>Jugendkarte Steuerung</h2>
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title" style="color: #fff;">Karte neu starten</h5>
-                    <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Jugendkarte-Karten</p>
-                    <button class="btn btn-info" onclick="forceJugendkarteReload()">
-                        <i class="bi bi-arrow-clockwise"></i> Jugendkarte neu starten
-                    </button>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Jugendkarte</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Jugendkarte-Karten</p>
+                            <button class="btn btn-info" onclick="forceJugendkarteReload()">
+                                <i class="bi bi-arrow-clockwise"></i> Jugendkarte neu starten
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

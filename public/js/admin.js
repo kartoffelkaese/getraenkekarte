@@ -58,9 +58,8 @@ function updateSectionVisibility() {
         'temp-prices': document.getElementById('tempPricesSection'),
         'theke-presets': document.getElementById('thekePresetsSection'),
         'overview': document.getElementById('overviewSection'),
-        'export': document.getElementById('exportSection'),
-        'haupttheke-reload': document.getElementById('hauptthekeReloadSection'),
-        'jugendkarte-reload': document.getElementById('jugendkarteReloadSection')
+        'reload': document.getElementById('reloadSection'),
+        'export': document.getElementById('exportSection')
     };
 
     // Alle Sektionen verstecken
@@ -88,6 +87,9 @@ function updateSectionVisibility() {
         // Nur Overview-Sektion anzeigen
         if (sections.overview) sections.overview.style.display = 'block';
         fetchOverviewConfig(); // Lade Overview-Konfiguration
+    } else if (currentLocation === 'reload') {
+        // Nur Reload-Sektion anzeigen
+        if (sections.reload) sections.reload.style.display = 'block';
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
@@ -107,14 +109,6 @@ function updateSectionVisibility() {
         if (sections.ads) sections.ads.style.display = 'block';
         if (sections.drinks) sections.drinks.style.display = 'block';
         if (sections.additives) sections.additives.style.display = 'block';
-        // Reload-Sektion für Haupttheke anzeigen
-        if (currentLocation === 'haupttheke' && sections['haupttheke-reload']) {
-            sections['haupttheke-reload'].style.display = 'block';
-        }
-        // Reload-Sektion für Jugendkarte anzeigen
-        if (currentLocation === 'jugendliche' && sections['jugendkarte-reload']) {
-            sections['jugendkarte-reload'].style.display = 'block';
-        }
     }
 }
 
