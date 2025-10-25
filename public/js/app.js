@@ -163,6 +163,15 @@ socket.on('forceHauptthekeReload', () => {
     }
 });
 
+// Socket.IO Event für Forced-Reload der Jugendkarte
+socket.on('forceJugendkarteReload', () => {
+    console.log('Forced-Reload für Jugendkarte empfangen');
+    if (currentLocation === 'jugendliche') {
+        console.log('Erzwinge Reload der Jugendkarte Seite');
+        location.reload();
+    }
+});
+
 // Funktion zum Laden der Getränke
 async function fetchDrinks() {
     try {

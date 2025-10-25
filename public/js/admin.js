@@ -59,7 +59,8 @@ function updateSectionVisibility() {
         'theke-presets': document.getElementById('thekePresetsSection'),
         'overview': document.getElementById('overviewSection'),
         'export': document.getElementById('exportSection'),
-        'haupttheke-reload': document.getElementById('hauptthekeReloadSection')
+        'haupttheke-reload': document.getElementById('hauptthekeReloadSection'),
+        'jugendkarte-reload': document.getElementById('jugendkarteReloadSection')
     };
 
     // Alle Sektionen verstecken
@@ -109,6 +110,10 @@ function updateSectionVisibility() {
         // Reload-Sektion für Haupttheke anzeigen
         if (currentLocation === 'haupttheke' && sections['haupttheke-reload']) {
             sections['haupttheke-reload'].style.display = 'block';
+        }
+        // Reload-Sektion für Jugendkarte anzeigen
+        if (currentLocation === 'jugendliche' && sections['jugendkarte-reload']) {
+            sections['jugendkarte-reload'].style.display = 'block';
         }
     }
 }
@@ -1916,6 +1921,18 @@ async function forceHauptthekeReload() {
         // Sende Socket.IO Event für Reload
         socket.emit('forceHauptthekeReload');
         showNotification('Reload-Signal an Haupttheke gesendet', 'success');
+    } catch (error) {
+        console.error('Fehler beim Senden des Reload-Signals:', error);
+        showNotification('Fehler beim Senden des Reload-Signals', 'error');
+    }
+}
+
+// Funktion für Forced-Reload der Jugendkarte
+async function forceJugendkarteReload() {
+    try {
+        // Sende Socket.IO Event für Reload
+        socket.emit('forceJugendkarteReload');
+        showNotification('Reload-Signal an Jugendkarte gesendet', 'success');
     } catch (error) {
         console.error('Fehler beim Senden des Reload-Signals:', error);
         showNotification('Fehler beim Senden des Reload-Signals', 'error');

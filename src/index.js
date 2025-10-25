@@ -1628,6 +1628,11 @@ io.on('connection', (socket) => {
         io.emit('forceHauptthekeReload');
     });
 
+    socket.on('forceJugendkarteReload', () => {
+        console.log('Force Jugendkarte Reload Event empfangen');
+        io.emit('forceJugendkarteReload');
+    });
+
     socket.on('forceOverviewReload', (data) => {
         console.log('Force Overview Reload Event empfangen:', data);
         io.emit('forceOverviewReload', data);
