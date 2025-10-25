@@ -49,33 +49,15 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="cycle-tab" data-bs-toggle="tab" 
-                        data-location="cycle" type="button" role="tab">
-                    Cycle
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="temp-prices-tab" data-bs-toggle="tab" 
                         data-location="temp-prices" type="button" role="tab">
                     Temporäre Preise
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="theke-presets-tab" data-bs-toggle="tab" 
-                        data-location="theke-presets" type="button" role="tab">
-                    Theke-Hinten Presets
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="overview-tab" data-bs-toggle="tab" 
-                        data-location="overview" type="button" role="tab">
-                    Overview
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="reload-tab" data-bs-toggle="tab" 
-                        data-location="reload" type="button" role="tab">
-                    Reload
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" 
+                        data-location="settings" type="button" role="tab">
+                    Einstellungen
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -86,179 +68,244 @@
             </li>
         </ul>
         
-        <!-- Reload Sektion -->
-        <div id="reloadSection" style="display: none;">
-            <h2>Karten neu starten</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Haupttheke</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
-                            <button class="btn btn-info" onclick="forceHauptthekeReload()">
-                                <i class="bi bi-arrow-clockwise"></i> Haupttheke neu starten
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Jugendkarte</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Jugendkarte-Karten</p>
-                            <button class="btn btn-info" onclick="forceJugendkarteReload()">
-                                <i class="bi bi-arrow-clockwise"></i> Jugendkarte neu starten
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cycle-Sektion -->
-        <div id="cycleSection" style="display: none;">
-            <h2>Cycle-Konfiguration</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle</p>
-                            <div class="mb-3">
-                                <label for="standardFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
-                                <input type="number" class="form-control" id="standardFirstTime" value="15" min="5" max="300">
-                            </div>
-                            <div class="mb-3">
-                                <label for="standardSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
-                                <input type="number" class="form-control" id="standardSecondTime" value="15" min="5" max="300">
-                            </div>
-                            <button class="btn btn-primary" onclick="saveCycleConfig('standard')">
-                                <i class="bi bi-save"></i> Speichern
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle-jugend</p>
-                            <div class="mb-3">
-                                <label for="jugendFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
-                                <input type="number" class="form-control" id="jugendFirstTime" value="15" min="5" max="300">
-                            </div>
-                            <div class="mb-3">
-                                <label for="jugendSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
-                                <input type="number" class="form-control" id="jugendSecondTime" value="10" min="5" max="300">
-                            </div>
-                            <button class="btn btn-primary" onclick="saveCycleConfig('jugend')">
-                                <i class="bi bi-save"></i> Speichern
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title" style="color: #fff;">Cycle-URLs</h5>
-                        <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="/cycle" target="_blank" class="btn btn-outline-primary">
-                                <i class="bi bi-link-45deg"></i> /cycle
-                            </a>
-                            <a href="/cycle-jugend" target="_blank" class="btn btn-outline-primary">
-                                <i class="bi bi-link-45deg"></i> /cycle-jugend
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Overview-Sektion -->
-        <div id="overviewSection" style="display: none;">
-            <h2>Overview-Konfiguration</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Overview 1</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-1</p>
-                            <div class="mb-3">
-                                <label for="overview1Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
-                                <select class="form-select" id="overview1Card">
-                                    <option value="haupttheke">Haupttheke</option>
-                                    <option value="theke-hinten">Theke Hinten</option>
-                                    <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
-                                    <option value="jugendliche">Jugendkarte</option>
-                                    <option value="speisekarte">Speisekarte</option>
-                                    <option value="bilder">Bilder</option>
-                                    <option value="screensaver">Screensaver</option>
-                                    <option value="cycle">Cycle-Karte</option>
-                                    <option value="cycle-jugend">Cycle-Jugend</option>
-                                </select>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary" onclick="saveOverviewConfig('overview-1')">
+        <!-- Einstellungen Sektion -->
+        <div id="settingsSection" style="display: none;">
+            <h2>Einstellungen</h2>
+            
+            <!-- Cycle-Konfiguration -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Cycle-Konfiguration</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle</p>
+                                <div class="mb-3">
+                                    <label for="standardFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
+                                    <input type="number" class="form-control" id="standardFirstTime" value="15" min="5" max="300">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="standardSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
+                                    <input type="number" class="form-control" id="standardSecondTime" value="15" min="5" max="300">
+                                </div>
+                                <button class="btn btn-primary" onclick="saveCycleConfig('standard')">
                                     <i class="bi bi-save"></i> Speichern
                                 </button>
-                                <button class="btn btn-info" onclick="forceOverviewReload('overview-1')">
-                                    <i class="bi bi-arrow-clockwise"></i> Reload
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle-jugend</p>
+                                <div class="mb-3">
+                                    <label for="jugendFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
+                                    <input type="number" class="form-control" id="jugendFirstTime" value="15" min="5" max="300">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="jugendSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
+                                    <input type="number" class="form-control" id="jugendSecondTime" value="15" min="5" max="300">
+                                </div>
+                                <button class="btn btn-primary" onclick="saveCycleConfig('jugend')">
+                                    <i class="bi bi-save"></i> Speichern
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="mt-4">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Overview 2</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-2</p>
-                            <div class="mb-3">
-                                <label for="overview2Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
-                                <select class="form-select" id="overview2Card">
-                                    <option value="haupttheke">Haupttheke</option>
-                                    <option value="theke-hinten">Theke Hinten</option>
-                                    <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
-                                    <option value="jugendliche">Jugendkarte</option>
-                                    <option value="speisekarte">Speisekarte</option>
-                                    <option value="bilder">Bilder</option>
-                                    <option value="screensaver">Screensaver</option>
-                                    <option value="cycle">Cycle-Haupttheke</option>
-                                    <option value="cycle-jugend">Cycle-Jugend</option>
-                                </select>
+                            <h5 class="card-title" style="color: #fff;">Cycle-URLs</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="/cycle" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-link-45deg"></i> /cycle
+                                </a>
+                                <a href="/cycle-jugend" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-link-45deg"></i> /cycle-jugend
+                                </a>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary" onclick="saveOverviewConfig('overview-2')">
-                                    <i class="bi bi-save"></i> Speichern
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview-Konfiguration -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Overview-Konfiguration</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Overview 1</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-1</p>
+                                <div class="mb-3">
+                                    <label for="overview1Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
+                                    <select class="form-select" id="overview1Card">
+                                        <option value="haupttheke">Haupttheke</option>
+                                        <option value="theke-hinten">Theke Hinten</option>
+                                        <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                        <option value="jugendliche">Jugendkarte</option>
+                                        <option value="speisekarte">Speisekarte</option>
+                                        <option value="bilder">Bilder</option>
+                                        <option value="screensaver">Screensaver</option>
+                                        <option value="cycle">Cycle-Haupttheke</option>
+                                        <option value="cycle-jugend">Cycle-Jugend</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary" onclick="saveOverviewConfig('overview-1')">
+                                        <i class="bi bi-save"></i> Speichern
+                                    </button>
+                                    <button class="btn btn-info" onclick="forceOverviewReload('overview-1')">
+                                        <i class="bi bi-arrow-clockwise"></i> Reload
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Overview 2</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-2</p>
+                                <div class="mb-3">
+                                    <label for="overview2Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
+                                    <select class="form-select" id="overview2Card">
+                                        <option value="haupttheke">Haupttheke</option>
+                                        <option value="theke-hinten">Theke Hinten</option>
+                                        <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                        <option value="jugendliche">Jugendkarte</option>
+                                        <option value="speisekarte">Speisekarte</option>
+                                        <option value="bilder">Bilder</option>
+                                        <option value="screensaver">Screensaver</option>
+                                        <option value="cycle">Cycle-Haupttheke</option>
+                                        <option value="cycle-jugend">Cycle-Jugend</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary" onclick="saveOverviewConfig('overview-2')">
+                                        <i class="bi bi-save"></i> Speichern
+                                    </button>
+                                    <button class="btn btn-info" onclick="forceOverviewReload('overview-2')">
+                                        <i class="bi bi-arrow-clockwise"></i> Reload
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color: #fff;">Overview-URLs</h5>
+                            <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die Overview-Karten:</p>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="/overview-1" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-link-45deg"></i> /overview-1
+                                </a>
+                                <a href="/overview-2" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-link-45deg"></i> /overview-2
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reload-Steuerung -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">Karten neu starten</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Haupttheke</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
+                                <button class="btn btn-info" onclick="forceHauptthekeReload()">
+                                    <i class="bi bi-arrow-clockwise"></i> Haupttheke neu starten
                                 </button>
-                                <button class="btn btn-info" onclick="forceOverviewReload('overview-2')">
-                                    <i class="bi bi-arrow-clockwise"></i> Reload
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Jugendkarte</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Jugendkarte-Karten</p>
+                                <button class="btn btn-info" onclick="forceJugendkarteReload()">
+                                    <i class="bi bi-arrow-clockwise"></i> Jugendkarte neu starten
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="mt-4">
+
+            <!-- Theke-Hinten Presets -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #dc3545; padding-bottom: 10px;">Theke-Hinten Presets</h3>
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title" style="color: #fff;">Overview-URLs</h5>
-                        <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die Overview-Karten:</p>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="/overview-1" target="_blank" class="btn btn-outline-primary">
-                                <i class="bi bi-link-45deg"></i> /overview-1
-                            </a>
-                            <a href="/overview-2" target="_blank" class="btn btn-outline-primary">
-                                <i class="bi bi-link-45deg"></i> /overview-2
-                            </a>
+                        <h5 class="card-title" style="color: #fff;">Preset-Verwaltung</h5>
+                        <p class="card-text" style="color: #e0e0e0;">Verwalten Sie gespeicherte Konfigurationen für die Theke-Hinten Karten</p>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="presetsActive" 
+                                       onchange="togglePresetsActive(this.checked)">
+                                <label class="form-check-label" for="presetsActive" style="color: white;">
+                                    Presets aktivieren
+                                </label>
+                            </div>
+                            <p class="card-text" style="color: white;">
+                                Wenn aktiviert, wird das ausgewählte Preset anstelle der Datenbank-Einträge verwendet.
+                            </p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="activePreset" class="form-label" style="color: #fff;">Aktives Preset</label>
+                                    <select class="form-select" id="activePreset" onchange="loadPresetData()">
+                                        <option value="">Kein Preset ausgewählt</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="newPresetName" class="form-label" style="color: #fff;">Neues Preset erstellen</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="newPresetName" placeholder="Preset-Name">
+                                        <button class="btn btn-success" onclick="createNewPreset()">
+                                            <i class="bi bi-plus"></i> Erstellen
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-3">
+                            <button class="btn btn-primary" onclick="saveCurrentAsPreset()">
+                                <i class="bi bi-save"></i> Aktuellen Stand speichern
+                            </button>
+                            <button class="btn btn-danger" onclick="deletePreset()" id="deletePresetBtn" disabled>
+                                <i class="bi bi-trash"></i> Preset löschen
+                            </button>
+                        </div>
+
+                        <div id="presetsList">
+                            <p class="text-muted">Keine Presets vorhanden</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+
 
         <!-- Temporäre Preise Sektion -->
         <div id="tempPricesSection" style="display: none;">

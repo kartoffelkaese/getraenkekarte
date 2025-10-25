@@ -54,11 +54,8 @@ function updateSectionVisibility() {
         'speisekarte': document.getElementById('speisekarteSection'),
         'additives': findSectionByHeading('Zusatzstoffe verwalten'),
         'bilder': document.getElementById('bilderSection'),
-        'cycle': document.getElementById('cycleSection'),
         'temp-prices': document.getElementById('tempPricesSection'),
-        'theke-presets': document.getElementById('thekePresetsSection'),
-        'overview': document.getElementById('overviewSection'),
-        'reload': document.getElementById('reloadSection'),
+        'settings': document.getElementById('settingsSection'),
         'export': document.getElementById('exportSection')
     };
 
@@ -71,25 +68,16 @@ function updateSectionVisibility() {
     if (currentLocation === 'export') {
         // Nur Export-Sektion anzeigen
         if (sections.export) sections.export.style.display = 'block';
-    } else if (currentLocation === 'cycle') {
-        // Nur Cycle-Sektion anzeigen
-        if (sections.cycle) sections.cycle.style.display = 'block';
-        fetchCycleConfig(); // Lade Cycle-Konfiguration
     } else if (currentLocation === 'temp-prices') {
         // Nur Temporäre Preise Sektion anzeigen
         if (sections['temp-prices']) sections['temp-prices'].style.display = 'block';
         fetchTempPrices(); // Lade temporäre Preise
-    } else if (currentLocation === 'theke-presets') {
-        // Nur Theke-Presets Sektion anzeigen
-        if (sections['theke-presets']) sections['theke-presets'].style.display = 'block';
-        fetchThekePresets(); // Lade Preset-Konfiguration
-    } else if (currentLocation === 'overview') {
-        // Nur Overview-Sektion anzeigen
-        if (sections.overview) sections.overview.style.display = 'block';
+    } else if (currentLocation === 'settings') {
+        // Nur Einstellungen-Sektion anzeigen
+        if (sections.settings) sections.settings.style.display = 'block';
+        fetchCycleConfig(); // Lade Cycle-Konfiguration
         fetchOverviewConfig(); // Lade Overview-Konfiguration
-    } else if (currentLocation === 'reload') {
-        // Nur Reload-Sektion anzeigen
-        if (sections.reload) sections.reload.style.display = 'block';
+        fetchThekePresets(); // Lade Preset-Konfiguration
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
