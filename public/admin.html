@@ -80,6 +80,20 @@
             </li>
         </ul>
         
+        <!-- Haupttheke Reload Sektion -->
+        <div id="hauptthekeReloadSection" style="display: none;">
+            <h2>Haupttheke Steuerung</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #fff;">Karte neu starten</h5>
+                    <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
+                    <button class="btn btn-info" onclick="forceHauptthekeReload()">
+                        <i class="bi bi-arrow-clockwise"></i> Haupttheke neu starten
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Cycle-Sektion -->
         <div id="cycleSection" style="display: none;">
             <h2>Cycle-Konfiguration</h2>
@@ -161,6 +175,8 @@
                                     <option value="speisekarte">Speisekarte</option>
                                     <option value="bilder">Bilder</option>
                                     <option value="screensaver">Screensaver</option>
+                                    <option value="cycle">Cycle-Karte</option>
+                                    <option value="cycle-jugend">Cycle-Jugend</option>
                                 </select>
                             </div>
                             <div class="d-flex gap-2">
@@ -189,6 +205,8 @@
                                     <option value="speisekarte">Speisekarte</option>
                                     <option value="bilder">Bilder</option>
                                     <option value="screensaver">Screensaver</option>
+                                    <option value="cycle">Cycle-Haupttheke</option>
+                                    <option value="cycle-jugend">Cycle-Jugend</option>
                                 </select>
                             </div>
                             <div class="d-flex gap-2">

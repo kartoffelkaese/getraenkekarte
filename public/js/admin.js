@@ -58,7 +58,8 @@ function updateSectionVisibility() {
         'temp-prices': document.getElementById('tempPricesSection'),
         'theke-presets': document.getElementById('thekePresetsSection'),
         'overview': document.getElementById('overviewSection'),
-        'export': document.getElementById('exportSection')
+        'export': document.getElementById('exportSection'),
+        'haupttheke-reload': document.getElementById('hauptthekeReloadSection')
     };
 
     // Alle Sektionen verstecken
@@ -105,6 +106,10 @@ function updateSectionVisibility() {
         if (sections.ads) sections.ads.style.display = 'block';
         if (sections.drinks) sections.drinks.style.display = 'block';
         if (sections.additives) sections.additives.style.display = 'block';
+        // Reload-Sektion für Haupttheke anzeigen
+        if (currentLocation === 'haupttheke' && sections['haupttheke-reload']) {
+            sections['haupttheke-reload'].style.display = 'block';
+        }
     }
 }
 
@@ -1899,6 +1904,18 @@ async function forceReloadThekeHinten() {
         // Sende Socket.IO Event für Reload
         socket.emit('forceThekeHintenReload');
         showNotification('Reload-Signal an Theke-Hinten Karten gesendet', 'success');
+    } catch (error) {
+        console.error('Fehler beim Senden des Reload-Signals:', error);
+        showNotification('Fehler beim Senden des Reload-Signals', 'error');
+    }
+}
+
+// Funktion für Forced-Reload der Haupttheke
+async function forceHauptthekeReload() {
+    try {
+        // Sende Socket.IO Event für Reload
+        socket.emit('forceHauptthekeReload');
+        showNotification('Reload-Signal an Haupttheke gesendet', 'success');
     } catch (error) {
         console.error('Fehler beim Senden des Reload-Signals:', error);
         showNotification('Fehler beim Senden des Reload-Signals', 'error');

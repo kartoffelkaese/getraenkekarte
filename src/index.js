@@ -1617,6 +1617,22 @@ io.on('connection', (socket) => {
         console.error('Socket.IO Fehler:', error);
     });
 
+    // Socket.IO Event-Handler für Reload-Funktionen
+    socket.on('forceThekeHintenReload', () => {
+        console.log('Force Theke-Hinten Reload Event empfangen');
+        io.emit('forceThekeHintenReload');
+    });
+
+    socket.on('forceHauptthekeReload', () => {
+        console.log('Force Haupttheke Reload Event empfangen');
+        io.emit('forceHauptthekeReload');
+    });
+
+    socket.on('forceOverviewReload', (data) => {
+        console.log('Force Overview Reload Event empfangen:', data);
+        io.emit('forceOverviewReload', data);
+    });
+
     socket.on('updateDrink', async (data) => {
         console.log('Update Drink Event empfangen:', {
             socketId: socket.id,

@@ -148,8 +148,17 @@ socket.on('thekePresetsChanged', (data) => {
 // Socket.IO Event für Forced-Reload
 socket.on('forceThekeHintenReload', () => {
     console.log('Forced-Reload für Theke-Hinten empfangen');
-    if (currentLocation === 'theke-hinten') {
+    if (currentLocation === 'theke-hinten' || currentLocation === 'theke-hinten-bilder') {
         console.log('Erzwinge Reload der Theke-Hinten Seite');
+        location.reload();
+    }
+});
+
+// Socket.IO Event für Forced-Reload der Haupttheke
+socket.on('forceHauptthekeReload', () => {
+    console.log('Forced-Reload für Haupttheke empfangen');
+    if (currentLocation === 'haupttheke') {
+        console.log('Erzwinge Reload der Haupttheke Seite');
         location.reload();
     }
 });

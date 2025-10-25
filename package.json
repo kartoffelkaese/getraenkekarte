@@ -1,6 +1,6 @@
 {
   "name": "getraenkekarte",
-  "version": "3.2.0",
+  "version": "3.7.0",
   "main": "src/index.js",
   "engines": {
     "node": ">=22.16.0",
@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "ext": "nodemon src/index.js --host 10.10.250.76 -p 3000"
+    "ext": "nodemon src/index.js --host 192.168.1.126 -p 3000"
   },
   "keywords": [],
   "author": "",
