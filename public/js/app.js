@@ -136,15 +136,6 @@ socket.on('priceOverridesChanged', (data) => {
     }
 });
 
-// Socket.IO Event für Theke-Presets
-socket.on('thekePresetsChanged', (data) => {
-    console.log('Theke-Presets geändert:', data);
-    if (currentLocation === 'theke-hinten' || currentLocation === 'theke-hinten-bilder') {
-        console.log('Lade alle Daten neu wegen Preset-Änderungen');
-        location.reload();
-    }
-});
-
 // Socket.IO Event für Forced-Reload
 socket.on('forceThekeHintenReload', () => {
     console.log('Forced-Reload für Theke-Hinten empfangen');

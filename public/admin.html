@@ -245,64 +245,6 @@
                 </div>
             </div>
 
-            <!-- Theke-Hinten Presets -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #dc3545; padding-bottom: 10px;">Theke-Hinten Presets</h3>
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title" style="color: #fff;">Preset-Verwaltung</h5>
-                        <p class="card-text" style="color: #e0e0e0;">Verwalten Sie gespeicherte Konfigurationen für die Theke-Hinten Karten</p>
-                        
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="presetsActive" 
-                                       onchange="togglePresetsActive(this.checked)">
-                                <label class="form-check-label" for="presetsActive" style="color: white;">
-                                    Presets aktivieren
-                                </label>
-                            </div>
-                            <p class="card-text" style="color: white;">
-                                Wenn aktiviert, wird das ausgewählte Preset anstelle der Datenbank-Einträge verwendet.
-                            </p>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="activePreset" class="form-label" style="color: #fff;">Aktives Preset</label>
-                                    <select class="form-select" id="activePreset" onchange="loadPresetData()">
-                                        <option value="">Kein Preset ausgewählt</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="newPresetName" class="form-label" style="color: #fff;">Neues Preset erstellen</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="newPresetName" placeholder="Preset-Name">
-                                        <button class="btn btn-success" onclick="createNewPreset()">
-                                            <i class="bi bi-plus"></i> Erstellen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex gap-2 mb-3">
-                            <button class="btn btn-primary" onclick="saveCurrentAsPreset()">
-                                <i class="bi bi-save"></i> Aktuellen Stand speichern
-                            </button>
-                            <button class="btn btn-danger" onclick="deletePreset()" id="deletePresetBtn" disabled>
-                                <i class="bi bi-trash"></i> Preset löschen
-                            </button>
-                        </div>
-
-                        <div id="presetsList">
-                            <p class="text-muted">Keine Presets vorhanden</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
 
@@ -909,56 +851,5 @@
         </div>
     </div>
 
-    <!-- Modal für Preset-Erstellung -->
-    <div class="modal fade" id="createPresetModal" tabindex="-1" aria-labelledby="createPresetModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createPresetModalLabel">Neues Preset erstellen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="presetName" class="form-label">Preset-Name</label>
-                        <input type="text" class="form-control" id="presetName" placeholder="z.B. Sommer 2025" required>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>Hinweis:</strong> Das Preset wird mit dem aktuellen Stand der Datenbank erstellt (alle Drinks, Kategorien, Logo und Werbungen).
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="button" class="btn btn-success" onclick="createPreset()">
-                        <i class="bi bi-save"></i> Preset erstellen
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal für Preset-Umbenennung -->
-    <div class="modal fade" id="renamePresetModal" tabindex="-1" aria-labelledby="renamePresetModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="renamePresetModalLabel">Preset umbenennen</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="renamePresetName" class="form-label">Neuer Name</label>
-                        <input type="text" class="form-control" id="renamePresetName" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="button" class="btn btn-primary" onclick="confirmRenamePreset()">
-                        <i class="bi bi-pencil"></i> Umbenennen
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 </html> 
