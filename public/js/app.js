@@ -6,6 +6,25 @@ const socket = io({
 const drinksList = document.getElementById('drinksList');
 const currentLocation = document.body.dataset.location;
 
+// Globale Variablen für Animation Management
+let adRotationInterval = null;
+let adsUpdateTimeout = null;
+
+// Cleanup-Funktion für Intervals beim Verlassen der Seite
+function cleanupIntervals() {
+    if (adRotationInterval) {
+        clearInterval(adRotationInterval);
+        adRotationInterval = null;
+    }
+    if (adsUpdateTimeout) {
+        clearTimeout(adsUpdateTimeout);
+        adsUpdateTimeout = null;
+    }
+}
+
+// Cleanup beim Verlassen der Seite
+window.addEventListener('beforeunload', cleanupIntervals);
+
 // Hilfsfunktion: Ist dies die Bilderseite?
 function isBilderSeite() {
     return window.location.pathname.includes('theke-hinten-bilder');
@@ -77,10 +96,14 @@ socket.on('categoryColumnBreakChanged', (data) => {
     }
 });
 
-// Socket.io Events für Werbungen
+// Socket.io Events für Werbungen mit Debouncing
 socket.on('adsChanged', (data) => {
     if (data && data.location === currentLocation) {
-        fetchAds();
+        // Debounce: Warte 300ms nach letzter Änderung
+        clearTimeout(adsUpdateTimeout);
+        adsUpdateTimeout = setTimeout(() => {
+            fetchAds();
+        }, 300);
     }
 });
 
@@ -362,6 +385,13 @@ async function fetchAds() {
 // Funktion zum Anzeigen der Werbungen
 function displayAds(ads) {
     if (isBilderSeite()) return;
+    
+    // Lösche vorheriges Interval um Memory Leaks zu vermeiden
+    if (adRotationInterval) {
+        clearInterval(adRotationInterval);
+        adRotationInterval = null;
+    }
+    
     const additionalContent = document.querySelector('.additional-content');
     if (!additionalContent) {
         console.error('Element .additional-content nicht gefunden');
@@ -402,7 +432,9 @@ function displayAds(ads) {
     });
 
     // Starte die Animation nur wenn es aktive Werbungen gibt
-    initAdRotation(activeAds);
+    if (activeAds.length > 0) {
+        initAdRotation(activeAds);
+    }
 }
 
 // Funktion für die Werberotation
@@ -428,8 +460,8 @@ function initAdRotation(ads) {
     // Erste Ad sofort anzeigen
     showNextAd();
 
-    // Ads alle 6 Sekunden wechseln
-    setInterval(showNextAd, 6000); // Synchronisiert mit der 6s Float-Animation
+    // Ads alle 6 Sekunden wechseln - Interval speichern für späteres Löschen
+    adRotationInterval = setInterval(showNextAd, 6000); // Synchronisiert mit der 6s Float-Animation
 }
 
 // Funktion zum Laden der Logo-Einstellungen
