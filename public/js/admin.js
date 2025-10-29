@@ -2021,4 +2021,214 @@ socket.on('overviewConfigChanged', (data) => {
     }
 });
 
+// === Health Status Management ===
+
+let autoRefreshInterval = null;
+let isAutoRefreshActive = false;
+
+// Lade Health Status beim Wechsel zum Settings Tab
+function loadHealthStatus() {
+    if (currentLocation === 'settings') {
+        refreshHealthStatus();
+    }
+}
+
+// Health Status aktualisieren
+async function refreshHealthStatus() {
+    const container = document.getElementById('healthStatusContainer');
+    if (!container) return;
+
+    try {
+        // Zeige Loading-Spinner
+        container.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Lade...</span>
+                </div>
+                <p class="mt-2" style="color: #e0e0e0;">Lade System Status...</p>
+            </div>
+        `;
+
+        const response = await fetch('/api/health');
+        const healthData = await response.json();
+
+        if (response.ok) {
+            displayHealthStatus(healthData);
+        } else {
+            displayHealthError(healthData);
+        }
+    } catch (error) {
+        console.error('Health Status Fehler:', error);
+        displayHealthError({ error: 'Verbindung zum Server fehlgeschlagen' });
+    }
+}
+
+// Health Status anzeigen
+function displayHealthStatus(data) {
+    const container = document.getElementById('healthStatusContainer');
+    if (!container) return;
+
+    const isHealthy = data.status === 'healthy';
+    const statusColor = isHealthy ? 'success' : 'danger';
+    const statusIcon = isHealthy ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+    const dbStatus = data.database === 'connected' ? 'Verbunden' : 'Getrennt';
+    const dbColor = data.database === 'connected' ? 'success' : 'danger';
+
+    // Formatiere Uptime
+    const uptime = formatUptime(data.uptime);
+    
+    // Formatiere Memory
+    const memory = data.memory ? formatMemory(data.memory) : 'N/A';
+
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-${statusColor}">
+                    <div class="card-body">
+                        <h6 class="card-title text-white">
+                            <i class="bi ${statusIcon} text-${statusColor}"></i>
+                            System Status
+                        </h6>
+                        <p class="card-text">
+                            <span class="badge bg-${statusColor}">${data.status.toUpperCase()}</span>
+                        </p>
+                        <small class="text-light">
+                            Letzte Aktualisierung: ${new Date(data.timestamp).toLocaleString('de-DE')}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-${dbColor}">
+                    <div class="card-body">
+                        <h6 class="card-title text-white">
+                            <i class="bi bi-database text-${dbColor}"></i>
+                            Datenbank
+                        </h6>
+                        <p class="card-text">
+                            <span class="badge bg-${dbColor}">${dbStatus}</span>
+                        </p>
+                        <small class="text-light">
+                            ${data.connectionStats ? `Verbindungen: ${data.connectionStats.activeConnections}/${data.connectionStats.totalConnections}` : 'Stats nicht verfügbar'}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                            <h6 class="card-title text-white">
+                                <i class="bi bi-clock"></i>
+                                Laufzeit
+                            </h6>
+                        <p class="card-text h5 text-white">${uptime}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                            <h6 class="card-title text-white">
+                                <i class="bi bi-memory"></i>
+                                Speicher
+                            </h6>
+                        <p class="card-text h5 text-white">${memory}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-title text-white">
+                            <i class="bi bi-activity"></i>
+                            Verbindungen
+                        </h6>
+                        <p class="card-text h5 text-white">
+                            ${data.connectionStats ? 
+                                `${data.connectionStats.activeConnections}/${data.connectionStats.totalConnections}` : 
+                                'N/A'
+                            }
+                        </p>
+                        ${data.connectionStats && data.connectionStats.failedConnections > 0 ? 
+                            `<small class="text-danger">Fehler: ${data.connectionStats.failedConnections}</small>` : 
+                            ''
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Health Error anzeigen
+function displayHealthError(data) {
+    const container = document.getElementById('healthStatusContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="alert alert-danger">
+            <h6><i class="bi bi-exclamation-triangle-fill"></i> System Status Fehler</h6>
+            <p class="mb-0">${data.error || 'Unbekannter Fehler'}</p>
+            <small class="text-light">
+                Zeit: ${new Date().toLocaleString('de-DE')}
+            </small>
+        </div>
+    `;
+}
+
+// Uptime formatieren
+function formatUptime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    } else {
+        return `${minutes}m`;
+    }
+}
+
+// Memory formatieren
+function formatMemory(memory) {
+    const usedMB = Math.round(memory.heapUsed / 1024 / 1024);
+    const totalMB = Math.round(memory.heapTotal / 1024 / 1024);
+    return `${usedMB}MB / ${totalMB}MB`;
+}
+
+// Auto-Refresh umschalten
+function toggleAutoRefresh() {
+    const icon = document.getElementById('autoRefreshIcon');
+    const text = document.getElementById('autoRefreshText');
+    
+    if (isAutoRefreshActive) {
+        // Stoppe Auto-Refresh
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        isAutoRefreshActive = false;
+        icon.className = 'bi bi-play-circle';
+        text.textContent = 'Auto-Refresh';
+        showNotification('Auto-Refresh gestoppt', 'info');
+    } else {
+        // Starte Auto-Refresh
+        autoRefreshInterval = setInterval(refreshHealthStatus, 10000); // Alle 10 Sekunden
+        isAutoRefreshActive = true;
+        icon.className = 'bi bi-pause-circle';
+        text.textContent = 'Stoppen';
+        showNotification('Auto-Refresh gestartet (10s)', 'success');
+    }
+}
+
+// Erweitere updateSectionVisibility um Health Status zu laden
+const originalUpdateSectionVisibility = updateSectionVisibility;
+updateSectionVisibility = function() {
+    originalUpdateSectionVisibility();
+    loadHealthStatus();
+};
+
 

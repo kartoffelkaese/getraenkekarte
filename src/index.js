@@ -93,6 +93,32 @@ app.get('/api/version', (req, res) => {
     }
 });
 
+// Health Check Endpoint für Datenbankverbindung
+app.get('/api/health', async (req, res) => {
+    try {
+        // Teste Datenbankverbindung
+        await safeQuery('SELECT 1 as test');
+        
+        res.json({
+            status: 'healthy',
+            database: 'connected',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            connectionStats: connectionStats
+        });
+    } catch (error) {
+        console.error('Health Check Fehler:', error);
+        res.status(503).json({
+            status: 'unhealthy',
+            database: 'disconnected',
+            error: error.message,
+            timestamp: new Date().toISOString(),
+            connectionStats: connectionStats
+        });
+    }
+});
+
 // API-Endpunkte für Cycle-Konfiguration
 app.get('/api/cycle-config', (req, res) => {
     try {
@@ -281,16 +307,107 @@ app.delete('/api/price-overrides/:location', (req, res) => {
 });
 
 
-// Datenbank-Verbindung
-const db = mysql.createConnection({
+// Datenbank-Verbindung mit Connection Pool und Auto-Reconnect
+const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-}).promise();
+    database: process.env.DB_NAME,
+    // Connection Pool Einstellungen
+    connectionLimit: 10,
+    waitForConnections: true,
+    queueLimit: 0,
+    // Auto-Reconnect Einstellungen
+    keepAliveInitialDelay: 0,
+    enableKeepAlive: true,
+    // Retry-Einstellungen
+    // (App-seitig umgesetzt in safeQuery)
+    // Timeout-Einstellungen
+    connectTimeout: 10000,
+    // SSL falls nötig
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+};
+
+// Erstelle Connection Pool
+const db = mysql.createPool(dbConfig).promise();
+
+// Connection Pool Event-Handler
+db.on('connection', (connection) => {
+    console.log('✅ Neue Datenbankverbindung erstellt:', connection.threadId);
+});
+
+db.on('error', (err) => {
+    console.error('❌ Datenbank Pool Fehler:', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.log('🔄 Verbindung verloren, Pool wird automatisch neue Verbindung erstellen');
+    }
+});
+
+// Connection Monitoring
+let connectionStats = {
+    totalConnections: 0,
+    activeConnections: 0,
+    failedConnections: 0,
+    lastError: null,
+    lastErrorTime: null
+};
+
+// Erweitere Event-Handler für Monitoring
+db.on('connection', (connection) => {
+    connectionStats.totalConnections++;
+    connectionStats.activeConnections++;
+    console.log(`📊 DB Stats: Total=${connectionStats.totalConnections}, Active=${connectionStats.activeConnections}`);
+});
+
+db.on('error', (err) => {
+    connectionStats.failedConnections++;
+    connectionStats.lastError = err.message;
+    connectionStats.lastErrorTime = new Date().toISOString();
+    console.error(`📊 DB Error Stats: Failed=${connectionStats.failedConnections}, Last=${connectionStats.lastErrorTime}`);
+});
+
+// Periodisches Connection Monitoring (alle 5 Minuten)
+setInterval(async () => {
+    try {
+        await safeQuery('SELECT 1 as heartbeat');
+        console.log('💓 Datenbank Heartbeat erfolgreich');
+    } catch (error) {
+        console.error('💔 Datenbank Heartbeat fehlgeschlagen:', error.message);
+    }
+}, 5 * 60 * 1000); // 5 Minuten
+
+// Hilfsfunktion für sichere Datenbankabfragen mit Retry
+async function safeQuery(sql, params = []) {
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (retries < maxRetries) {
+        try {
+            const result = await db.query(sql, params);
+            return result;
+        } catch (error) {
+            retries++;
+            console.error(`Datenbankabfrage Fehler (Versuch ${retries}/${maxRetries}):`, error.message);
+            
+            if (error.code === 'ECONNREFUSED' || 
+                error.code === 'PROTOCOL_CONNECTION_LOST' || 
+                error.message.includes('connection is in closed state') ||
+                error.message.includes('Can\'t add new command when connection is in closed state')) {
+                
+                if (retries < maxRetries) {
+                    console.log(`Warte ${retries * 1000}ms vor erneutem Versuch...`);
+                    await new Promise(resolve => setTimeout(resolve, retries * 1000));
+                    continue;
+                }
+            }
+            
+            throw error;
+        }
+    }
+}
 
 // Erstelle die dishes-Tabelle, falls sie nicht existiert
-db.query(`
+safeQuery(`
     CREATE TABLE IF NOT EXISTS dishes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -446,7 +563,7 @@ app.get('/api/drinks/:location', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query, [location, location]);
+        const [rows] = await safeQuery(query, [location, location]);
         
         // Lade Preis-Overrides für theke-hinten und theke-hinten-bilder
         let priceOverrides = {};
@@ -506,7 +623,7 @@ app.get('/api/categories/:location', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query, [location]);
+        const [rows] = await safeQuery(query, [location]);
         
         // Keine Preset-Overrides mehr - verwende nur DB-Daten
         const categoriesWithOverrides = rows || [];
@@ -531,7 +648,7 @@ app.post('/api/drinks/toggle/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, is_active, is_active]);
+        await safeQuery(query, [location, id, is_active, is_active]);
         io.emit('drinkStatusChanged', { id, is_active, location });
         res.json({ success: true });
     } catch (err) {
@@ -551,7 +668,7 @@ app.post('/api/drinks/toggle-price/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, show_price, show_price]);
+        await safeQuery(query, [location, id, show_price, show_price]);
         io.emit('drinkPriceChanged', { id, show_price, location });
         res.json({ success: true });
     } catch (err) {
@@ -571,7 +688,7 @@ app.post('/api/categories/toggle-prices/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, show_prices, show_prices]);
+        await safeQuery(query, [location, id, show_prices, show_prices]);
         io.emit('categoryPricesChanged', { id, show_prices, location });
         res.json({ success: true });
     } catch (err) {
@@ -591,7 +708,7 @@ app.post('/api/categories/toggle-visibility/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, is_visible, is_visible]);
+        await safeQuery(query, [location, id, is_visible, is_visible]);
         io.emit('categoryVisibilityChanged', { id, is_visible, location });
         res.json({ success: true });
     } catch (err) {
@@ -611,7 +728,7 @@ app.post('/api/categories/toggle-column-break/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, force_column_break, force_column_break]);
+        await safeQuery(query, [location, id, force_column_break, force_column_break]);
         io.emit('categoryColumnBreakChanged', { id, force_column_break, location });
         res.json({ success: true });
     } catch (err) {
@@ -631,7 +748,7 @@ app.post('/api/categories/update-order/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, sort_order, sort_order]);
+        await safeQuery(query, [location, id, sort_order, sort_order]);
         io.emit('categorySortChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -655,7 +772,7 @@ app.get('/api/ads/:location', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query, [location, location, location]);
+        const [rows] = await safeQuery(query, [location, location, location]);
         
         // Keine Preset-Overrides mehr - verwende nur DB-Daten
         const adsWithOverrides = rows || [];
@@ -680,7 +797,7 @@ app.post('/api/ads/toggle/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, is_active, is_active]);
+        await safeQuery(query, [location, id, is_active, is_active]);
         io.emit('adsChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -700,7 +817,7 @@ app.post('/api/ads/update-order/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, id, sort_order, sort_order]);
+        await safeQuery(query, [location, id, sort_order, sort_order]);
         io.emit('adsChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -717,7 +834,7 @@ app.get('/api/logo/:location', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query, [location]);
+        const [rows] = await safeQuery(query, [location]);
         let logoData = rows[0] || { is_active: true, sort_order: 0, force_column_break: false };
         
         
@@ -740,7 +857,7 @@ app.post('/api/logo/update-order/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, sort_order, sort_order]);
+        await safeQuery(query, [location, sort_order, sort_order]);
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -760,7 +877,7 @@ app.post('/api/logo/toggle/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, is_active, is_active]);
+        await safeQuery(query, [location, is_active, is_active]);
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -780,7 +897,7 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
     `;
     
     try {
-        await db.query(query, [location, force_column_break, force_column_break]);
+        await safeQuery(query, [location, force_column_break, force_column_break]);
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -796,7 +913,7 @@ app.get('/api/additives', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query);
+        const [rows] = await safeQuery(query);
         res.json(rows || []);
     } catch (err) {
         console.error('Additives API Error:', err);
@@ -814,7 +931,7 @@ app.get('/api/drink-additives/:drinkId', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query, [drinkId]);
+        const [rows] = await safeQuery(query, [drinkId]);
         res.json(rows || []);
     } catch (err) {
         console.error('Drink Additives API Error:', err);
@@ -828,12 +945,12 @@ app.post('/api/drink-additives/:drinkId', async (req, res) => {
     
     try {
         // Lösche bestehende Zuordnungen
-        await db.query('DELETE FROM drink_additives WHERE drink_id = ?', [drinkId]);
+        await safeQuery('DELETE FROM drink_additives WHERE drink_id = ?', [drinkId]);
         
         // Füge neue Zuordnungen hinzu
         if (additiveIds && additiveIds.length > 0) {
             const values = additiveIds.map(id => [drinkId, id]);
-            await db.query('INSERT INTO drink_additives (drink_id, additive_id) VALUES ?', [values]);
+            await safeQuery('INSERT INTO drink_additives (drink_id, additive_id) VALUES ?', [values]);
         }
         
         io.emit('drinkAdditivesChanged', { drinkId });
@@ -850,7 +967,7 @@ app.get('/api/additives/:id', async (req, res) => {
     const query = 'SELECT * FROM additives WHERE id = ?';
     
     try {
-        const [rows] = await db.query(query, [id]);
+        const [rows] = await safeQuery(query, [id]);
         if (rows.length > 0) {
             res.json(rows[0]);
         } else {
@@ -866,7 +983,7 @@ app.post('/api/additives', async (req, res) => {
     const { code, name, show_in_footer = true } = req.body;
     try {
         const query = 'INSERT INTO additives (code, name, show_in_footer) VALUES (?, ?, ?)';
-        const [result] = await db.query(query, [code, name, show_in_footer]);
+        const [result] = await safeQuery(query, [code, name, show_in_footer]);
         io.emit('additivesChanged');
         res.json({ id: result.insertId });
     } catch (err) {
@@ -880,7 +997,7 @@ app.put('/api/additives/:id', async (req, res) => {
     const query = 'UPDATE additives SET code = ?, name = ? WHERE id = ?';
     
     try {
-        await db.query(query, [code, name, id]);
+        await safeQuery(query, [code, name, id]);
         io.emit('additivesChanged');
         res.json({ success: true });
     } catch (err) {
@@ -894,7 +1011,7 @@ app.delete('/api/additives/:id', async (req, res) => {
     const query = 'DELETE FROM additives WHERE id = ?';
     
     try {
-        await db.query(query, [id]);
+        await safeQuery(query, [id]);
         io.emit('additivesChanged');
         res.json({ success: true });
     } catch (err) {
@@ -906,7 +1023,7 @@ app.delete('/api/additives/:id', async (req, res) => {
 // API-Endpunkt für die Zusatzstoff-Liste
 app.get('/api/additives-list', async (req, res) => {
     try {
-        const [rows] = await db.query(`
+        const [rows] = await safeQuery(`
             SELECT * 
             FROM additives
             WHERE show_in_footer = TRUE
@@ -925,7 +1042,7 @@ app.put('/api/additives/:id/toggle-footer', async (req, res) => {
     const { show_in_footer } = req.body;
     
     try {
-        await db.query('UPDATE additives SET show_in_footer = ? WHERE id = ?', [show_in_footer, id]);
+        await safeQuery('UPDATE additives SET show_in_footer = ? WHERE id = ?', [show_in_footer, id]);
         io.emit('additivesChanged');
         res.json({ success: true });
     } catch (err) {
@@ -952,7 +1069,7 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         
-        await db.query(query, [name || '', imagePath, price || null, isActive, sortOrder, cardType]);
+        await safeQuery(query, [name || '', imagePath, price || null, isActive, sortOrder, cardType]);
         
         // Sende Erfolgsantwort
         res.json({ 
@@ -977,7 +1094,7 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
     
     try {
         // Hole zuerst den Bildpfad aus der Datenbank
-        const [rows] = await db.query('SELECT image_path FROM ads WHERE id = ?', [adId]);
+        const [rows] = await safeQuery('SELECT image_path FROM ads WHERE id = ?', [adId]);
         
         if (rows.length === 0) {
             return res.status(404).json({ success: false, error: 'Werbung nicht gefunden' });
@@ -987,7 +1104,7 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
         const fullImagePath = path.join(__dirname, '..', 'public', imagePath);
         
         // Lösche den Datenbankeintrag
-        await db.query('DELETE FROM ads WHERE id = ?', [adId]);
+        await safeQuery('DELETE FROM ads WHERE id = ?', [adId]);
         
         // Lösche das Bild, falls es existiert
         if (fs.existsSync(fullImagePath)) {
@@ -1109,7 +1226,7 @@ app.get('/api/dishes', async (req, res) => {
     `;
     
     try {
-        const [rows] = await db.query(query);
+        const [rows] = await safeQuery(query);
         res.json(rows || []);
     } catch (err) {
         console.error('Dishes API Error:', err);
@@ -1120,7 +1237,7 @@ app.get('/api/dishes', async (req, res) => {
 // Speisekarten-API Endpunkte
 app.get('/api/dishes/:id', async (req, res) => {
     try {
-        const [dishes] = await db.query('SELECT * FROM dishes WHERE id = ?', [req.params.id]);
+        const [dishes] = await safeQuery('SELECT * FROM dishes WHERE id = ?', [req.params.id]);
         if (dishes.length === 0) {
             return res.status(404).json({ error: 'Gericht nicht gefunden' });
         }
@@ -1140,7 +1257,7 @@ app.post('/api/dishes', upload.single('dishImage'), async (req, res) => {
             image_path = `/images/${req.file.filename}`;
         }
 
-        const [result] = await db.query(
+        const [result] = await safeQuery(
             'INSERT INTO dishes (name, price, description, image_path, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?)',
             [name, price, description, image_path, sort_order || 0, is_active === 'true']
         );
@@ -1169,7 +1286,7 @@ app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
             ? [name, price, description, image_path, sort_order || 0, is_active === 'true', req.params.id]
             : [name, price, description, sort_order || 0, is_active === 'true', req.params.id];
 
-        await db.query(query, params);
+        await safeQuery(query, params);
 
         // Emittiere das Event mit der Location
         io.emit('dishesChanged', { location: 'speisekarte' });
@@ -1183,7 +1300,7 @@ app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
 
 app.delete('/api/dishes/:id', async (req, res) => {
     try {
-        await db.query('DELETE FROM dishes WHERE id = ?', [req.params.id]);
+        await safeQuery('DELETE FROM dishes WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     } catch (error) {
         console.error('Fehler beim Löschen des Gerichts:', error);
@@ -1194,7 +1311,7 @@ app.delete('/api/dishes/:id', async (req, res) => {
 app.put('/api/dishes/:id/status', async (req, res) => {
     try {
         const { is_active } = req.body;
-        await db.query('UPDATE dishes SET is_active = ? WHERE id = ?', [is_active, req.params.id]);
+        await safeQuery('UPDATE dishes SET is_active = ? WHERE id = ?', [is_active, req.params.id]);
         
         // Emittiere das Event mit der Location
         io.emit('dishesChanged', { location: 'speisekarte' });
@@ -1209,7 +1326,7 @@ app.put('/api/dishes/:id/status', async (req, res) => {
 app.put('/api/dishes/:id/order', async (req, res) => {
     try {
         const { sort_order } = req.body;
-        await db.query('UPDATE dishes SET sort_order = ? WHERE id = ?', [sort_order, req.params.id]);
+        await safeQuery('UPDATE dishes SET sort_order = ? WHERE id = ?', [sort_order, req.params.id]);
         
         // Emittiere das Event mit der Location
         io.emit('dishesChanged', { location: 'speisekarte' });
