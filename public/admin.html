@@ -61,6 +61,12 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" 
+                        data-location="schedule" type="button" role="tab">
+                    Schedule
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="export-tab" data-bs-toggle="tab" 
                         data-location="export" type="button" role="tab">
                     Export
@@ -281,7 +287,107 @@
 
         </div>
 
+        <!-- Schedule Sektion -->
+        <div id="scheduleSection" style="display: none;">
+            <h2>Schedule-Verwaltung</h2>
+            
+            <!-- Default-Karte Konfiguration -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Standard-Karte</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Fallback-Karte</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Wird angezeigt, wenn keine Regel zutrifft</p>
+                                <div class="mb-3">
+                                    <label for="defaultCardSelect" class="form-label" style="color: #fff;">Standard-Karte</label>
+                                    <select class="form-select" id="defaultCardSelect">
+                                        <option value="haupttheke">Haupttheke</option>
+                                        <option value="theke-hinten">Theke Hinten</option>
+                                        <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                        <option value="jugendliche">Jugendkarte</option>
+                                        <option value="speisekarte">Speisekarte</option>
+                                        <option value="bilder">Bilder</option>
+                                        <option value="screensaver">Screensaver</option>
+                                        <option value="cycle">Cycle-Haupttheke</option>
+                                        <option value="cycle-jugend">Cycle-Jugend</option>
+                                        <option value="overview-1">Overview 1</option>
+                                        <option value="overview-2">Overview 2</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveDefaultCard()">
+                                    <i class="bi bi-save"></i> Speichern
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Aktionen</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-info" onclick="forceScheduleReload()">
+                                        <i class="bi bi-arrow-clockwise"></i> Schedule neu starten
+                                    </button>
+                                    <button class="btn btn-success" onclick="showAddRuleModal()">
+                                        <i class="bi bi-plus-circle"></i> Neue Regel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Aktuelle Karte Status -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">Aktueller Status</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-warning">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-white">
+                                    <i class="bi bi-play-circle text-warning"></i>
+                                    Aktuelle Karte
+                                </h5>
+                                <p class="card-text h4 text-warning fw-bold" id="currentScheduleCard">Lade...</p>
+                                <small class="text-light" id="scheduleLastUpdate">Letzte Aktualisierung: --:--</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-info">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-white">
+                                    <i class="bi bi-clock text-info"></i>
+                                    Nächste Prüfung
+                                </h5>
+                                <p class="card-text h5 text-info fw-bold" id="nextScheduleCheck">--:--</p>
+                                <small class="text-light">Automatische Überprüfung alle 60s</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regeln-Liste -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Schedule-Regeln</h3>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="rulesList">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Lade...</span>
+                                </div>
+                                <p class="mt-2" style="color: #e0e0e0;">Lade Regeln...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Temporäre Preise Sektion -->
         <div id="tempPricesSection" style="display: none;">
@@ -786,6 +892,124 @@
                         <!-- Bilder werden hier dynamisch eingefügt -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Regel-Editor Modal -->
+        <div class="modal fade" id="ruleModal" tabindex="-1" aria-labelledby="ruleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ruleModalLabel">Schedule-Regel bearbeiten</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="ruleForm">
+                            <input type="hidden" id="ruleId" value="">
+                            
+                            <!-- Regeltyp -->
+                            <div class="mb-3">
+                                <label for="ruleType" class="form-label fw-bold">Regeltyp</label>
+                                <select class="form-select" id="ruleType" onchange="toggleRuleFields()">
+                                    <option value="weekly">Wöchentlich</option>
+                                    <option value="date">Spezifisches Datum</option>
+                                </select>
+                            </div>
+
+                            <!-- Wöchentliche Regeln -->
+                            <div id="weeklyFields">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Wochentage</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day0" value="0">
+                                                <label class="form-check-label" for="day0">Sonntag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day1" value="1">
+                                                <label class="form-check-label" for="day1">Montag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day2" value="2">
+                                                <label class="form-check-label" for="day2">Dienstag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day3" value="3">
+                                                <label class="form-check-label" for="day3">Mittwoch</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day4" value="4">
+                                                <label class="form-check-label" for="day4">Donnerstag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day5" value="5">
+                                                <label class="form-check-label" for="day5">Freitag</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="day6" value="6">
+                                                <label class="form-check-label" for="day6">Samstag</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Datums-Regeln -->
+                            <div id="dateFields" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="startDate" class="form-label fw-bold">Start-Datum</label>
+                                    <input type="date" class="form-control" id="startDate">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="endDate" class="form-label fw-bold">End-Datum (optional)</label>
+                                    <input type="date" class="form-control" id="endDate">
+                                    <div class="form-text">Leer lassen für einzelnes Datum</div>
+                                </div>
+                            </div>
+
+                            <!-- Zeit -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="startTime" class="form-label fw-bold">Start-Zeit</label>
+                                        <input type="time" class="form-control" id="startTime" value="00:00">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="endTime" class="form-label fw-bold">End-Zeit</label>
+                                        <input type="time" class="form-control" id="endTime" value="23:59">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Karte -->
+                            <div class="mb-3">
+                                <label for="ruleCard" class="form-label fw-bold">Anzuzeigende Karte</label>
+                                <select class="form-select" id="ruleCard">
+                                    <option value="haupttheke">Haupttheke</option>
+                                    <option value="theke-hinten">Theke Hinten</option>
+                                    <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                    <option value="jugendliche">Jugendkarte</option>
+                                    <option value="speisekarte">Speisekarte</option>
+                                    <option value="bilder">Bilder</option>
+                                    <option value="screensaver">Screensaver</option>
+                                    <option value="cycle">Cycle-Haupttheke</option>
+                                    <option value="cycle-jugend">Cycle-Jugend</option>
+                                    <option value="overview-1">Overview 1</option>
+                                    <option value="overview-2">Overview 2</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-primary" onclick="saveRule()">Speichern</button>
+                    </div>
+                </div>
             </div>
         </div>
 

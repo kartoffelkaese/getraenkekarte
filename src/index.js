@@ -198,6 +198,72 @@ app.post('/api/overview-config/:overview', (req, res) => {
     }
 });
 
+// Schedule-Konfiguration API
+app.get('/api/schedule-config', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../schedule-config.json');
+        
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            // Fallback-Konfiguration
+            res.json({
+                defaultCard: 'cycle',
+                rules: []
+            });
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Schedule-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+app.post('/api/schedule-config', (req, res) => {
+    try {
+        const { defaultCard, rules } = req.body;
+        
+        if (!defaultCard) {
+            return res.status(400).json({ error: 'Default-Karte ist erforderlich' });
+        }
+        
+        const configData = {
+            defaultCard,
+            rules: rules || []
+        };
+        
+        const configPath = path.join(__dirname, '../schedule-config.json');
+        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+        
+        // Sende Socket.IO Event
+        io.emit('scheduleConfigChanged', configData);
+        
+        res.json({ message: 'Schedule-Konfiguration gespeichert', config: configData });
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Schedule-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
+    }
+});
+
+app.get('/api/schedule-config/current', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../schedule-config.json');
+        let configData = { defaultCard: 'cycle', rules: [] };
+        
+        if (fs.existsSync(configPath)) {
+            configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        const currentCard = calculateCurrentCard(configData);
+        res.json({ currentCard, config: configData });
+        
+    } catch (error) {
+        console.error('Fehler beim Berechnen der aktuellen Karte:', error);
+        res.status(500).json({ error: 'Fehler beim Berechnen der aktuellen Karte' });
+    }
+});
+
 app.post('/api/cycle-config', (req, res) => {
     try {
         const { type, firstTime, secondTime } = req.body;
@@ -1338,6 +1404,77 @@ app.put('/api/dishes/:id/order', async (req, res) => {
     }
 });
 
+// Schedule-Berechnungslogik
+function calculateCurrentCard(config) {
+    const now = new Date();
+    const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+    
+    const currentDay = berlinTime.getDay(); // 0 = Sonntag, 1 = Montag, etc.
+    const currentTime = berlinTime.toTimeString().slice(0, 5); // HH:MM Format
+    const currentDate = berlinTime.toISOString().split('T')[0]; // YYYY-MM-DD Format
+    
+    console.log(`Schedule-Berechnung: Tag=${currentDay}, Zeit=${currentTime}, Datum=${currentDate}`);
+    
+    // Sortiere Regeln nach Priorität: Spezifische Daten > Wöchentliche Regeln
+    const sortedRules = [...(config.rules || [])].sort((a, b) => {
+        if (a.type === 'date' && b.type === 'weekly') return -1;
+        if (a.type === 'weekly' && b.type === 'date') return 1;
+        return 0;
+    });
+    
+    // Prüfe jede Regel
+    for (const rule of sortedRules) {
+        if (rule.type === 'weekly') {
+            // Wöchentliche Regel
+            if (rule.days && rule.days.includes(currentDay)) {
+                if (isTimeInRange(currentTime, rule.startTime, rule.endTime)) {
+                    console.log(`Wöchentliche Regel gefunden: ${rule.id} -> ${rule.card}`);
+                    return rule.card;
+                }
+            }
+        } else if (rule.type === 'date') {
+            // Spezifische Datumsregel
+            if (isDateInRange(currentDate, rule.startDate, rule.endDate)) {
+                if (isTimeInRange(currentTime, rule.startTime, rule.endTime)) {
+                    console.log(`Datumsregel gefunden: ${rule.id} -> ${rule.card}`);
+                    return rule.card;
+                }
+            }
+        }
+    }
+    
+    // Fallback auf Default-Karte
+    console.log(`Keine Regel gefunden, verwende Default: ${config.defaultCard}`);
+    return config.defaultCard || 'cycle';
+}
+
+function isTimeInRange(currentTime, startTime, endTime) {
+    const current = timeToMinutes(currentTime);
+    const start = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+    
+    if (start <= end) {
+        // Normale Zeit (z.B. 09:00 - 17:00)
+        return current >= start && current <= end;
+    } else {
+        // Über Mitternacht (z.B. 22:00 - 06:00)
+        return current >= start || current <= end;
+    }
+}
+
+function isDateInRange(currentDate, startDate, endDate) {
+    if (!endDate) {
+        // Nur Start-Datum (einzelner Tag)
+        return currentDate === startDate;
+    }
+    return currentDate >= startDate && currentDate <= endDate;
+}
+
+function timeToMinutes(timeString) {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
 // Socket.io Verbindung
 io.on('connection', (socket) => {
     console.log('Neue Socket.IO Verbindung:', socket.id);
@@ -1369,6 +1506,11 @@ io.on('connection', (socket) => {
     socket.on('forceOverviewReload', (data) => {
         console.log('Force Overview Reload Event empfangen:', data);
         io.emit('forceOverviewReload', data);
+    });
+
+    socket.on('forceScheduleReload', () => {
+        console.log('Force Schedule Reload Event empfangen');
+        io.emit('forceScheduleReload');
     });
 
     socket.on('updateDrink', async (data) => {

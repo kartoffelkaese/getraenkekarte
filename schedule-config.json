@@ -1,0 +1,15 @@
+{
+  "defaultCard": "cycle",
+  "rules": [
+    {
+      "id": "rule-1761751593192",
+      "type": "weekly",
+      "startTime": "02:00",
+      "endTime": "23:59",
+      "card": "cycle-jugend",
+      "days": [
+        6
+      ]
+    }
+  ]
+}

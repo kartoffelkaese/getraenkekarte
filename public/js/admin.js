@@ -56,6 +56,7 @@ function updateSectionVisibility() {
         'bilder': document.getElementById('bilderSection'),
         'temp-prices': document.getElementById('tempPricesSection'),
         'settings': document.getElementById('settingsSection'),
+        'schedule': document.getElementById('scheduleSection'),
         'export': document.getElementById('exportSection')
     };
 
@@ -77,6 +78,10 @@ function updateSectionVisibility() {
         if (sections.settings) sections.settings.style.display = 'block';
         fetchCycleConfig(); // Lade Cycle-Konfiguration
         fetchOverviewConfig(); // Lade Overview-Konfiguration
+    } else if (currentLocation === 'schedule') {
+        // Nur Schedule-Sektion anzeigen
+        if (sections.schedule) sections.schedule.style.display = 'block';
+        loadScheduleConfig(); // Lade Schedule-Konfiguration
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
@@ -2230,5 +2235,409 @@ updateSectionVisibility = function() {
     originalUpdateSectionVisibility();
     loadHealthStatus();
 };
+
+// === Schedule Management ===
+
+let scheduleConfig = { defaultCard: 'cycle', rules: [] };
+let scheduleStatusInterval = null;
+
+// Lade Schedule-Konfiguration
+async function loadScheduleConfig() {
+    if (currentLocation === 'schedule') {
+        try {
+            const response = await fetch('/api/schedule-config');
+            scheduleConfig = await response.json();
+            
+            // Aktualisiere Default-Karte Dropdown
+            const defaultCardSelect = document.getElementById('defaultCardSelect');
+            if (defaultCardSelect) {
+                defaultCardSelect.value = scheduleConfig.defaultCard;
+            }
+            
+            // Lade Regeln-Liste
+            displayRulesList();
+            
+            // Lade aktuelle Karte
+            await updateScheduleStatus();
+            
+            // Starte periodische Status-Aktualisierung
+            startScheduleStatusUpdates();
+            
+        } catch (error) {
+            console.error('Fehler beim Laden der Schedule-Konfiguration:', error);
+            showNotification('Fehler beim Laden der Schedule-Konfiguration', 'error');
+        }
+    } else {
+        // Stoppe Status-Updates wenn nicht im Schedule-Tab
+        stopScheduleStatusUpdates();
+    }
+}
+
+// Aktualisiere Schedule-Status im Admin-Panel
+async function updateScheduleStatus() {
+    if (currentLocation !== 'schedule') return;
+    
+    try {
+        const response = await fetch('/api/schedule-config/current');
+        const data = await response.json();
+        
+        // Aktualisiere aktuelle Karte
+        const currentCardElement = document.getElementById('currentScheduleCard');
+        if (currentCardElement) {
+            currentCardElement.textContent = data.currentCard || 'Unbekannt';
+        }
+        
+        // Aktualisiere letzte Aktualisierung
+        const lastUpdateElement = document.getElementById('scheduleLastUpdate');
+        if (lastUpdateElement) {
+            lastUpdateElement.textContent = `Letzte Aktualisierung: ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        
+        // Aktualisiere nächste Prüfung
+        const nextCheckElement = document.getElementById('nextScheduleCheck');
+        if (nextCheckElement) {
+            const now = new Date();
+            const nextCheck = new Date(now.getTime() + 60000); // +1 Minute
+            nextCheckElement.textContent = nextCheck.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren des Schedule-Status:', error);
+    }
+}
+
+// Starte periodische Status-Updates
+function startScheduleStatusUpdates() {
+    if (scheduleStatusInterval) {
+        clearInterval(scheduleStatusInterval);
+    }
+    
+    // Sofortige erste Aktualisierung
+    updateScheduleStatus();
+    
+    // Dann alle 30 Sekunden
+    scheduleStatusInterval = setInterval(updateScheduleStatus, 30000);
+    console.log('Schedule-Status-Updates gestartet (30s Intervall)');
+}
+
+// Stoppe periodische Status-Updates
+function stopScheduleStatusUpdates() {
+    if (scheduleStatusInterval) {
+        clearInterval(scheduleStatusInterval);
+        scheduleStatusInterval = null;
+        console.log('Schedule-Status-Updates gestoppt');
+    }
+}
+
+// Zeige Regeln-Liste an
+function displayRulesList() {
+    const rulesList = document.getElementById('rulesList');
+    if (!rulesList) return;
+
+    if (scheduleConfig.rules.length === 0) {
+        rulesList.innerHTML = `
+            <div class="text-center text-light">
+                <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6c757d;"></i>
+                <p class="mt-2 text-white">Keine Regeln definiert</p>
+                <button class="btn btn-success" onclick="showAddRuleModal()">
+                    <i class="bi bi-plus-circle"></i> Erste Regel hinzufügen
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="row">';
+    
+    scheduleConfig.rules.forEach((rule, index) => {
+        const ruleType = rule.type === 'weekly' ? 'Wöchentlich' : 'Datum';
+        const ruleDescription = getRuleDescription(rule);
+        const ruleColor = rule.type === 'weekly' ? 'primary' : 'success';
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card border-${ruleColor}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title text-white">
+                                    <span class="badge bg-${ruleColor}">${ruleType}</span>
+                                    ${rule.card}
+                                </h6>
+                                <p class="card-text small text-light">${ruleDescription}</p>
+                                <small class="text-light">Zeit: ${rule.startTime} - ${rule.endTime}</small>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editRule('${rule.id}')" title="Bearbeiten">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteRule('${rule.id}')" title="Löschen">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    rulesList.innerHTML = html;
+}
+
+// Generiere Regel-Beschreibung
+function getRuleDescription(rule) {
+    if (rule.type === 'weekly') {
+        const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+        const selectedDays = rule.days.map(day => dayNames[day]).join(', ');
+        return `Tage: ${selectedDays}`;
+    } else if (rule.type === 'date') {
+        if (rule.endDate && rule.endDate !== rule.startDate) {
+            return `Datum: ${rule.startDate} - ${rule.endDate}`;
+        } else {
+            return `Datum: ${rule.startDate}`;
+        }
+    }
+    return 'Unbekannter Typ';
+}
+
+// Zeige Add Rule Modal
+function showAddRuleModal() {
+    const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
+    document.getElementById('ruleModalLabel').textContent = 'Neue Schedule-Regel';
+    document.getElementById('ruleId').value = '';
+    clearRuleForm();
+    modal.show();
+}
+
+// Bearbeite Regel
+function editRule(ruleId) {
+    const rule = scheduleConfig.rules.find(r => r.id === ruleId);
+    if (!rule) return;
+
+    const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
+    document.getElementById('ruleModalLabel').textContent = 'Schedule-Regel bearbeiten';
+    document.getElementById('ruleId').value = ruleId;
+    
+    // Fülle Formular
+    document.getElementById('ruleType').value = rule.type;
+    toggleRuleFields();
+    
+    if (rule.type === 'weekly') {
+        rule.days.forEach(day => {
+            const checkbox = document.getElementById(`day${day}`);
+            if (checkbox) checkbox.checked = true;
+        });
+    } else if (rule.type === 'date') {
+        document.getElementById('startDate').value = rule.startDate;
+        document.getElementById('endDate').value = rule.endDate || '';
+    }
+    
+    document.getElementById('startTime').value = rule.startTime;
+    document.getElementById('endTime').value = rule.endTime;
+    document.getElementById('ruleCard').value = rule.card;
+    
+    modal.show();
+}
+
+// Lösche Regel
+async function deleteRule(ruleId) {
+    if (!confirm('Möchten Sie diese Regel wirklich löschen?')) return;
+
+    try {
+        const updatedRules = scheduleConfig.rules.filter(r => r.id !== ruleId);
+        await saveScheduleConfig({ ...scheduleConfig, rules: updatedRules });
+        showNotification('Regel gelöscht', 'success');
+        displayRulesList();
+    } catch (error) {
+        console.error('Fehler beim Löschen der Regel:', error);
+        showNotification('Fehler beim Löschen der Regel', 'error');
+    }
+}
+
+// Speichere Regel
+async function saveRule() {
+    const ruleId = document.getElementById('ruleId').value;
+    const ruleType = document.getElementById('ruleType').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const card = document.getElementById('ruleCard').value;
+
+    // Validierung
+    if (!card) {
+        showNotification('Bitte wählen Sie eine Karte aus', 'error');
+        return;
+    }
+
+    if (startTime >= endTime) {
+        showNotification('End-Zeit muss nach Start-Zeit liegen', 'error');
+        return;
+    }
+
+    let rule = {
+        id: ruleId || `rule-${Date.now()}`,
+        type: ruleType,
+        startTime,
+        endTime,
+        card
+    };
+
+    if (ruleType === 'weekly') {
+        const selectedDays = [];
+        for (let i = 0; i < 7; i++) {
+            const checkbox = document.getElementById(`day${i}`);
+            if (checkbox && checkbox.checked) {
+                selectedDays.push(i);
+            }
+        }
+        if (selectedDays.length === 0) {
+            showNotification('Bitte wählen Sie mindestens einen Wochentag aus', 'error');
+            return;
+        }
+        rule.days = selectedDays;
+    } else if (ruleType === 'date') {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!startDate) {
+            showNotification('Bitte wählen Sie ein Start-Datum aus', 'error');
+            return;
+        }
+        
+        if (endDate && endDate < startDate) {
+            showNotification('End-Datum muss nach Start-Datum liegen', 'error');
+            return;
+        }
+        
+        rule.startDate = startDate;
+        if (endDate) rule.endDate = endDate;
+    }
+
+    try {
+        let updatedRules;
+        if (ruleId) {
+            // Bearbeite bestehende Regel
+            updatedRules = scheduleConfig.rules.map(r => r.id === ruleId ? rule : r);
+        } else {
+            // Füge neue Regel hinzu
+            updatedRules = [...scheduleConfig.rules, rule];
+        }
+
+        await saveScheduleConfig({ ...scheduleConfig, rules: updatedRules });
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ruleModal'));
+        modal.hide();
+        
+        showNotification(ruleId ? 'Regel aktualisiert' : 'Regel hinzugefügt', 'success');
+        displayRulesList();
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Regel:', error);
+        showNotification('Fehler beim Speichern der Regel', 'error');
+    }
+}
+
+// Speichere Schedule-Konfiguration
+async function saveScheduleConfig(config) {
+    try {
+        const response = await fetch('/api/schedule-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Speichern');
+        }
+
+        scheduleConfig = config;
+        return await response.json();
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Schedule-Konfiguration:', error);
+        throw error;
+    }
+}
+
+// Speichere Default-Karte
+async function saveDefaultCard() {
+    const defaultCard = document.getElementById('defaultCardSelect').value;
+    
+    try {
+        await saveScheduleConfig({ ...scheduleConfig, defaultCard });
+        showNotification('Standard-Karte gespeichert', 'success');
+    } catch (error) {
+        console.error('Fehler beim Speichern der Standard-Karte:', error);
+        showNotification('Fehler beim Speichern der Standard-Karte', 'error');
+    }
+}
+
+// Force Schedule Reload
+async function forceScheduleReload() {
+    try {
+        socket.emit('forceScheduleReload');
+        showNotification('Schedule wird neu gestartet', 'info');
+    } catch (error) {
+        console.error('Fehler beim Schedule Reload:', error);
+        showNotification('Fehler beim Schedule Reload', 'error');
+    }
+}
+
+// Toggle Regel-Felder basierend auf Typ
+function toggleRuleFields() {
+    const ruleType = document.getElementById('ruleType').value;
+    const weeklyFields = document.getElementById('weeklyFields');
+    const dateFields = document.getElementById('dateFields');
+    
+    if (ruleType === 'weekly') {
+        weeklyFields.style.display = 'block';
+        dateFields.style.display = 'none';
+    } else if (ruleType === 'date') {
+        weeklyFields.style.display = 'none';
+        dateFields.style.display = 'block';
+    }
+}
+
+// Leere Regel-Formular
+function clearRuleForm() {
+    document.getElementById('ruleType').value = 'weekly';
+    toggleRuleFields();
+    
+    // Leere alle Checkboxen
+    for (let i = 0; i < 7; i++) {
+        const checkbox = document.getElementById(`day${i}`);
+        if (checkbox) checkbox.checked = false;
+    }
+    
+    // Leere Datums-Felder
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    
+    // Setze Standard-Zeiten
+    document.getElementById('startTime').value = '00:00';
+    document.getElementById('endTime').value = '23:59';
+    
+    // Setze Standard-Karte
+    document.getElementById('ruleCard').value = 'cycle';
+}
+
+// Socket.IO Event-Listener für Schedule
+socket.on('scheduleConfigChanged', (data) => {
+    console.log('Schedule-Konfiguration geändert:', data);
+    scheduleConfig = data;
+    if (currentLocation === 'schedule') {
+        displayRulesList();
+        updateScheduleStatus(); // Aktualisiere Status bei Konfigurationsänderungen
+    }
+});
+
+// Cleanup beim Verlassen der Seite
+window.addEventListener('beforeunload', () => {
+    stopScheduleStatusUpdates();
+});
 
 
