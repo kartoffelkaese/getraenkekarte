@@ -55,6 +55,10 @@ app.get('/overview-2', (req, res) => {
     res.sendFile('overview-2.html', { root: './public' });
 });
 
+app.get('/schedule', (req, res) => {
+    res.sendFile('schedule.html', { root: './public' });
+});
+
 // Umleitung von / auf /haupttheke
 app.get('/', (req, res) => {
     res.redirect('/haupttheke');
