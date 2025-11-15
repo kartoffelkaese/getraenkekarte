@@ -62,7 +62,7 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" 
-                        data-location="schedule" type="button" role="tab">
+                        data-location="schedule-1" type="button" role="tab">
                     Schedule
                 </button>
             </li>
@@ -285,13 +285,77 @@
                 </div>
             </div>
 
+            <!-- Preset-Verwaltung -->
+            <div class="mb-5">
+                <h3 style="color: #fff; border-bottom: 2px solid #17a2b8; padding-bottom: 10px;">Preset-Verwaltung</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Preset speichern</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Speichere die aktuellen Einstellungen einer Karte als Preset</p>
+                                <div class="mb-3">
+                                    <label for="presetLocation" class="form-label" style="color: #fff;">Karte</label>
+                                    <select class="form-select" id="presetLocation">
+                                        <option value="haupttheke">Haupttheke</option>
+                                        <option value="theke-hinten">Theke Hinten</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="presetName" class="form-label" style="color: #fff;">Preset-Name</label>
+                                    <input type="text" class="form-control" id="presetName" placeholder="z.B. Abendpreset">
+                                </div>
+                                <button class="btn btn-primary" onclick="savePreset()">
+                                    <i class="bi bi-save"></i> Preset speichern
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #fff;">Gespeicherte Presets</h5>
+                                <p class="card-text" style="color: #e0e0e0;">Liste aller Presets für die ausgewählte Karte</p>
+                                <div id="presetsList">
+                                    <div class="text-center">
+                                        <p class="mt-2" style="color: #e0e0e0;">Wähle eine Karte aus</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Schedule Sektion -->
         <div id="scheduleSection" style="display: none;">
             <h2>Schedule-Verwaltung</h2>
             
-            <!-- Default-Karte Konfiguration -->
+            <!-- Tabs für Schedule 1 und 2 -->
+            <ul class="nav nav-tabs mb-4" id="scheduleTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="schedule1-tab" data-bs-toggle="tab" 
+                            data-bs-target="#schedule1-pane" type="button" role="tab" 
+                            aria-controls="schedule1-pane" aria-selected="true" onclick="switchScheduleTab(1)">
+                        Schedule 1
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="schedule2-tab" data-bs-toggle="tab" 
+                            data-bs-target="#schedule2-pane" type="button" role="tab" 
+                            aria-controls="schedule2-pane" aria-selected="false" onclick="switchScheduleTab(2)">
+                        Schedule 2
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Tab Content -->
+            <div class="tab-content" id="scheduleTabContent">
+                <!-- Schedule 1 Tab -->
+                <div class="tab-pane fade show active" id="schedule1-pane" role="tabpanel" aria-labelledby="schedule1-tab">
+                    <!-- Default-Karte Konfiguration -->
             <div class="mb-5">
                 <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Standard-Karte</h3>
                 <div class="row">
@@ -371,17 +435,119 @@
                 </div>
             </div>
 
-            <!-- Regeln-Liste -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Schedule-Regeln</h3>
-                <div class="card">
-                    <div class="card-body">
-                        <div id="rulesList">
-                            <div class="text-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Lade...</span>
+                    <!-- Regeln-Liste -->
+                    <div class="mb-5">
+                        <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Schedule-Regeln</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="rulesList">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Lade...</span>
+                                        </div>
+                                        <p class="mt-2" style="color: #e0e0e0;">Lade Regeln...</p>
+                                    </div>
                                 </div>
-                                <p class="mt-2" style="color: #e0e0e0;">Lade Regeln...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Schedule 2 Tab -->
+                <div class="tab-pane fade" id="schedule2-pane" role="tabpanel" aria-labelledby="schedule2-tab">
+                    <!-- Default-Karte Konfiguration -->
+                    <div class="mb-5">
+                        <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Standard-Karte</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title" style="color: #fff;">Fallback-Karte</h5>
+                                        <p class="card-text" style="color: #e0e0e0;">Wird angezeigt, wenn keine Regel zutrifft</p>
+                                        <div class="mb-3">
+                                            <label for="defaultCardSelect2" class="form-label" style="color: #fff;">Standard-Karte</label>
+                                            <select class="form-select" id="defaultCardSelect2">
+                                                <option value="haupttheke">Haupttheke</option>
+                                                <option value="theke-hinten">Theke Hinten</option>
+                                                <option value="theke-hinten-bilder">Theke Hinten Bilder</option>
+                                                <option value="jugendliche">Jugendkarte</option>
+                                                <option value="speisekarte">Speisekarte</option>
+                                                <option value="bilder">Bilder</option>
+                                                <option value="screensaver">Screensaver</option>
+                                                <option value="cycle">Cycle-Haupttheke</option>
+                                                <option value="cycle-jugend">Cycle-Jugend</option>
+                                                <option value="overview-1">Overview 1</option>
+                                                <option value="overview-2">Overview 2</option>
+                                            </select>
+                                        </div>
+                                        <button class="btn btn-primary" onclick="saveDefaultCard2()">
+                                            <i class="bi bi-save"></i> Speichern
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title" style="color: #fff;">Aktionen</h5>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-info" onclick="forceSchedule2Reload()">
+                                                <i class="bi bi-arrow-clockwise"></i> Schedule-2 neu starten
+                                            </button>
+                                            <button class="btn btn-success" onclick="showAddRuleModal2()">
+                                                <i class="bi bi-plus-circle"></i> Neue Regel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aktuelle Karte Status -->
+                    <div class="mb-5">
+                        <h3 style="color: #fff; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">Aktueller Status</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-dark border-warning">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-white">
+                                            <i class="bi bi-play-circle text-warning"></i>
+                                            Aktuelle Karte
+                                        </h5>
+                                        <p class="card-text h4 text-warning fw-bold" id="currentSchedule2Card">Lade...</p>
+                                        <small class="text-light" id="schedule2LastUpdate">Letzte Aktualisierung: --:--</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-dark border-info">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-white">
+                                            <i class="bi bi-clock text-info"></i>
+                                            Nächste Prüfung
+                                        </h5>
+                                        <p class="card-text h5 text-info fw-bold" id="nextSchedule2Check">--:--</p>
+                                        <small class="text-light">Automatische Überprüfung alle 60s</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regeln-Liste -->
+                    <div class="mb-5">
+                        <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Schedule-Regeln</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="rulesList2">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Lade...</span>
+                                        </div>
+                                        <p class="mt-2" style="color: #e0e0e0;">Lade Regeln...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -906,6 +1072,7 @@
                     <div class="modal-body">
                         <form id="ruleForm">
                             <input type="hidden" id="ruleId" value="">
+                            <input type="hidden" id="ruleScheduleNumber" value="1">
                             
                             <!-- Regeltyp -->
                             <div class="mb-3">

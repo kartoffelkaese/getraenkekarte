@@ -78,10 +78,16 @@ function updateSectionVisibility() {
         if (sections.settings) sections.settings.style.display = 'block';
         fetchCycleConfig(); // Lade Cycle-Konfiguration
         fetchOverviewConfig(); // Lade Overview-Konfiguration
-    } else if (currentLocation === 'schedule') {
+        loadPresetsIfSettings(); // Lade Presets
+    } else if (currentLocation === 'schedule-1') {
         // Nur Schedule-Sektion anzeigen
         if (sections.schedule) sections.schedule.style.display = 'block';
-        loadScheduleConfig(); // Lade Schedule-Konfiguration
+        // Lade die Konfiguration basierend auf aktivem Tab
+        if (currentScheduleTab === 1) {
+            loadScheduleConfig();
+        } else {
+            loadSchedule2Config();
+        }
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
@@ -2239,11 +2245,27 @@ updateSectionVisibility = function() {
 // === Schedule Management ===
 
 let scheduleConfig = { defaultCard: 'cycle', rules: [] };
+let schedule2Config = { defaultCard: 'cycle', rules: [] };
 let scheduleStatusInterval = null;
+let schedule2StatusInterval = null;
+let currentScheduleTab = 1; // 1 oder 2
+
+// Wechsle zwischen Schedule 1 und 2 Tabs
+function switchScheduleTab(scheduleNumber) {
+    currentScheduleTab = scheduleNumber;
+    
+    if (scheduleNumber === 1) {
+        loadScheduleConfig();
+        stopSchedule2StatusUpdates();
+    } else {
+        loadSchedule2Config();
+        stopScheduleStatusUpdates();
+    }
+}
 
 // Lade Schedule-Konfiguration
 async function loadScheduleConfig() {
-    if (currentLocation === 'schedule') {
+    if (currentLocation === 'schedule-1') {
         try {
             const response = await fetch('/api/schedule-config');
             scheduleConfig = await response.json();
@@ -2273,9 +2295,41 @@ async function loadScheduleConfig() {
     }
 }
 
+// Lade Schedule-2-Konfiguration
+async function loadSchedule2Config() {
+    if (currentLocation === 'schedule-1') {
+        try {
+            const response = await fetch('/api/schedule-2-config');
+            schedule2Config = await response.json();
+            
+            // Aktualisiere Default-Karte Dropdown
+            const defaultCardSelect2 = document.getElementById('defaultCardSelect2');
+            if (defaultCardSelect2) {
+                defaultCardSelect2.value = schedule2Config.defaultCard;
+            }
+            
+            // Lade Regeln-Liste
+            displayRulesList2();
+            
+            // Lade aktuelle Karte
+            await updateSchedule2Status();
+            
+            // Starte periodische Status-Aktualisierung
+            startSchedule2StatusUpdates();
+            
+        } catch (error) {
+            console.error('Fehler beim Laden der Schedule-2-Konfiguration:', error);
+            showNotification('Fehler beim Laden der Schedule-2-Konfiguration', 'error');
+        }
+    } else {
+        // Stoppe Status-Updates wenn nicht im Schedule-Tab
+        stopSchedule2StatusUpdates();
+    }
+}
+
 // Aktualisiere Schedule-Status im Admin-Panel
 async function updateScheduleStatus() {
-    if (currentLocation !== 'schedule') return;
+    if (currentLocation !== 'schedule-1') return;
     
     try {
         const response = await fetch('/api/schedule-config/current');
@@ -2354,6 +2408,12 @@ function displayRulesList() {
         const ruleDescription = getRuleDescription(rule);
         const ruleColor = rule.type === 'weekly' ? 'primary' : 'success';
         
+        // Prüfe ob es ein Preset ist
+        const isPreset = rule.card.startsWith('preset:');
+        const cardDisplay = isPreset 
+            ? `<i class="bi bi-bookmark text-info"></i> Preset: ${rule.card.replace('preset:', '')}`
+            : rule.card;
+        
         html += `
             <div class="col-md-6 mb-3">
                 <div class="card border-${ruleColor}">
@@ -2362,7 +2422,7 @@ function displayRulesList() {
                             <div>
                                 <h6 class="card-title text-white">
                                     <span class="badge bg-${ruleColor}">${ruleType}</span>
-                                    ${rule.card}
+                                    ${cardDisplay}
                                 </h6>
                                 <p class="card-text small text-light">${ruleDescription}</p>
                                 <small class="text-light">Zeit: ${rule.startTime} - ${rule.endTime}</small>
@@ -2403,22 +2463,31 @@ function getRuleDescription(rule) {
 }
 
 // Zeige Add Rule Modal
-function showAddRuleModal() {
+async function showAddRuleModal() {
     const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
     document.getElementById('ruleModalLabel').textContent = 'Neue Schedule-Regel';
     document.getElementById('ruleId').value = '';
+    document.getElementById('ruleScheduleNumber').value = '1'; // Markiere als Schedule-1
     clearRuleForm();
+    
+    // Lade Presets und füge sie zum Select hinzu
+    await populateRuleCardSelect();
+    
     modal.show();
 }
 
 // Bearbeite Regel
-function editRule(ruleId) {
+async function editRule(ruleId) {
     const rule = scheduleConfig.rules.find(r => r.id === ruleId);
     if (!rule) return;
 
     const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
     document.getElementById('ruleModalLabel').textContent = 'Schedule-Regel bearbeiten';
     document.getElementById('ruleId').value = ruleId;
+    document.getElementById('ruleScheduleNumber').value = '1'; // Markiere als Schedule-1
+    
+    // Lade Presets und füge sie zum Select hinzu
+    await populateRuleCardSelect();
     
     // Fülle Formular
     document.getElementById('ruleType').value = rule.type;
@@ -2515,22 +2584,34 @@ async function saveRule() {
     }
 
     try {
+        const scheduleNumber = document.getElementById('ruleScheduleNumber')?.value || '1';
+        const config = scheduleNumber === '2' ? schedule2Config : scheduleConfig;
         let updatedRules;
+        
         if (ruleId) {
             // Bearbeite bestehende Regel
-            updatedRules = scheduleConfig.rules.map(r => r.id === ruleId ? rule : r);
+            updatedRules = config.rules.map(r => r.id === ruleId ? rule : r);
         } else {
             // Füge neue Regel hinzu
-            updatedRules = [...scheduleConfig.rules, rule];
+            updatedRules = [...config.rules, rule];
         }
 
-        await saveScheduleConfig({ ...scheduleConfig, rules: updatedRules });
+        if (scheduleNumber === '2') {
+            await saveSchedule2Config({ ...schedule2Config, rules: updatedRules });
+        } else {
+            await saveScheduleConfig({ ...scheduleConfig, rules: updatedRules });
+        }
         
         const modal = bootstrap.Modal.getInstance(document.getElementById('ruleModal'));
         modal.hide();
         
         showNotification(ruleId ? 'Regel aktualisiert' : 'Regel hinzugefügt', 'success');
-        displayRulesList();
+        
+        if (scheduleNumber === '2') {
+            displayRulesList2();
+        } else {
+            displayRulesList();
+        }
         
     } catch (error) {
         console.error('Fehler beim Speichern der Regel:', error);
@@ -2629,15 +2710,510 @@ function clearRuleForm() {
 socket.on('scheduleConfigChanged', (data) => {
     console.log('Schedule-Konfiguration geändert:', data);
     scheduleConfig = data;
-    if (currentLocation === 'schedule') {
+    if (currentLocation === 'schedule-1' && currentScheduleTab === 1) {
         displayRulesList();
         updateScheduleStatus(); // Aktualisiere Status bei Konfigurationsänderungen
+    }
+});
+
+socket.on('schedule2ConfigChanged', (data) => {
+    console.log('Schedule-2-Konfiguration geändert:', data);
+    schedule2Config = data;
+    if (currentLocation === 'schedule-1' && currentScheduleTab === 2) {
+        displayRulesList2();
+        updateSchedule2Status(); // Aktualisiere Status bei Konfigurationsänderungen
     }
 });
 
 // Cleanup beim Verlassen der Seite
 window.addEventListener('beforeunload', () => {
     stopScheduleStatusUpdates();
+    stopSchedule2StatusUpdates();
 });
 
+// === Schedule-2 Management ===
+
+// Aktualisiere Schedule-2-Status im Admin-Panel
+async function updateSchedule2Status() {
+    if (currentLocation !== 'schedule-1' || currentScheduleTab !== 2) return;
+    
+    try {
+        const response = await fetch('/api/schedule-2-config/current');
+        const data = await response.json();
+        
+        // Aktualisiere aktuelle Karte
+        const currentCardElement = document.getElementById('currentSchedule2Card');
+        if (currentCardElement) {
+            currentCardElement.textContent = data.currentCard || 'Unbekannt';
+        }
+        
+        // Aktualisiere letzte Aktualisierung
+        const lastUpdateElement = document.getElementById('schedule2LastUpdate');
+        if (lastUpdateElement) {
+            lastUpdateElement.textContent = `Letzte Aktualisierung: ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        
+        // Aktualisiere nächste Prüfung
+        const nextCheckElement = document.getElementById('nextSchedule2Check');
+        if (nextCheckElement) {
+            const now = new Date();
+            const nextCheck = new Date(now.getTime() + 60000); // +1 Minute
+            nextCheckElement.textContent = nextCheck.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren des Schedule-2-Status:', error);
+    }
+}
+
+// Starte periodische Status-Updates für Schedule-2
+function startSchedule2StatusUpdates() {
+    if (schedule2StatusInterval) {
+        clearInterval(schedule2StatusInterval);
+    }
+    
+    // Sofortige erste Aktualisierung
+    updateSchedule2Status();
+    
+    // Dann alle 30 Sekunden
+    schedule2StatusInterval = setInterval(updateSchedule2Status, 30000);
+    console.log('Schedule-2-Status-Updates gestartet (30s Intervall)');
+}
+
+// Stoppe periodische Status-Updates für Schedule-2
+function stopSchedule2StatusUpdates() {
+    if (schedule2StatusInterval) {
+        clearInterval(schedule2StatusInterval);
+        schedule2StatusInterval = null;
+        console.log('Schedule-2-Status-Updates gestoppt');
+    }
+}
+
+// Zeige Regeln-Liste für Schedule-2 an
+function displayRulesList2() {
+    const rulesList = document.getElementById('rulesList2');
+    if (!rulesList) return;
+
+    if (schedule2Config.rules.length === 0) {
+        rulesList.innerHTML = `
+            <div class="text-center text-light">
+                <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6c757d;"></i>
+                <p class="mt-2 text-white">Keine Regeln definiert</p>
+                <button class="btn btn-success" onclick="showAddRuleModal2()">
+                    <i class="bi bi-plus-circle"></i> Erste Regel hinzufügen
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="row">';
+    
+    schedule2Config.rules.forEach((rule, index) => {
+        const ruleType = rule.type === 'weekly' ? 'Wöchentlich' : 'Datum';
+        const ruleDescription = getRuleDescription(rule);
+        const ruleColor = rule.type === 'weekly' ? 'primary' : 'success';
+        
+        // Prüfe ob es ein Preset ist
+        const isPreset = rule.card.startsWith('preset:');
+        const cardDisplay = isPreset 
+            ? `<i class="bi bi-bookmark text-info"></i> Preset: ${rule.card.replace('preset:', '')}`
+            : rule.card;
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card border-${ruleColor}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title text-white">
+                                    <span class="badge bg-${ruleColor}">${ruleType}</span>
+                                    ${cardDisplay}
+                                </h6>
+                                <p class="card-text small text-light">${ruleDescription}</p>
+                                <small class="text-light">Zeit: ${rule.startTime} - ${rule.endTime}</small>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editRule2('${rule.id}')" title="Bearbeiten">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteRule2('${rule.id}')" title="Löschen">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    rulesList.innerHTML = html;
+}
+
+// Zeige Add Rule Modal für Schedule-2
+async function showAddRuleModal2() {
+    const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
+    document.getElementById('ruleModalLabel').textContent = 'Neue Schedule-2-Regel';
+    document.getElementById('ruleId').value = '';
+    document.getElementById('ruleScheduleNumber').value = '2'; // Markiere als Schedule-2
+    clearRuleForm();
+    
+    // Lade Presets und füge sie zum Select hinzu
+    await populateRuleCardSelect();
+    
+    modal.show();
+}
+
+// Bearbeite Regel für Schedule-2
+async function editRule2(ruleId) {
+    const rule = schedule2Config.rules.find(r => r.id === ruleId);
+    if (!rule) return;
+
+    const modal = new bootstrap.Modal(document.getElementById('ruleModal'));
+    document.getElementById('ruleModalLabel').textContent = 'Schedule-2-Regel bearbeiten';
+    document.getElementById('ruleId').value = ruleId;
+    document.getElementById('ruleScheduleNumber').value = '2'; // Markiere als Schedule-2
+    
+    // Lade Presets und füge sie zum Select hinzu
+    await populateRuleCardSelect();
+    
+    // Fülle Formular
+    document.getElementById('ruleType').value = rule.type;
+    toggleRuleFields();
+    
+    if (rule.type === 'weekly') {
+        rule.days.forEach(day => {
+            const checkbox = document.getElementById(`day${day}`);
+            if (checkbox) checkbox.checked = true;
+        });
+    } else if (rule.type === 'date') {
+        document.getElementById('startDate').value = rule.startDate;
+        document.getElementById('endDate').value = rule.endDate || '';
+    }
+    
+    document.getElementById('startTime').value = rule.startTime;
+    document.getElementById('endTime').value = rule.endTime;
+    document.getElementById('ruleCard').value = rule.card;
+    
+    modal.show();
+}
+
+// Lösche Regel für Schedule-2
+async function deleteRule2(ruleId) {
+    if (!confirm('Möchten Sie diese Regel wirklich löschen?')) return;
+
+    try {
+        const updatedRules = schedule2Config.rules.filter(r => r.id !== ruleId);
+        await saveSchedule2Config({ ...schedule2Config, rules: updatedRules });
+        showNotification('Regel gelöscht', 'success');
+        displayRulesList2();
+    } catch (error) {
+        console.error('Fehler beim Löschen der Regel:', error);
+        showNotification('Fehler beim Löschen der Regel', 'error');
+    }
+}
+
+// Speichere Schedule-2-Konfiguration
+async function saveSchedule2Config(config) {
+    try {
+        const response = await fetch('/api/schedule-2-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Speichern');
+        }
+
+        schedule2Config = config;
+        return await response.json();
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Schedule-2-Konfiguration:', error);
+        throw error;
+    }
+}
+
+// Speichere Default-Karte für Schedule-2
+async function saveDefaultCard2() {
+    const defaultCard = document.getElementById('defaultCardSelect2').value;
+    
+    try {
+        await saveSchedule2Config({ ...schedule2Config, defaultCard });
+        showNotification('Standard-Karte gespeichert', 'success');
+    } catch (error) {
+        console.error('Fehler beim Speichern der Standard-Karte:', error);
+        showNotification('Fehler beim Speichern der Standard-Karte', 'error');
+    }
+}
+
+// Force Schedule-2 Reload
+async function forceSchedule2Reload() {
+    try {
+        socket.emit('forceSchedule2Reload');
+        showNotification('Schedule-2 wird neu gestartet', 'info');
+    } catch (error) {
+        console.error('Fehler beim Schedule-2 Reload:', error);
+        showNotification('Fehler beim Schedule-2 Reload', 'error');
+    }
+}
+
+// === Preset-Verwaltung ===
+
+// Lade Presets beim Wechsel zum Settings Tab
+function loadPresetsIfSettings() {
+    if (currentLocation === 'settings') {
+        const presetLocation = document.getElementById('presetLocation');
+        if (presetLocation) {
+            loadPresets(presetLocation.value);
+        }
+    }
+}
+
+// Event-Listener für Preset-Location-Wechsel
+document.addEventListener('DOMContentLoaded', function() {
+    const presetLocation = document.getElementById('presetLocation');
+    if (presetLocation) {
+        presetLocation.addEventListener('change', function() {
+            loadPresets(this.value);
+        });
+        
+        // Initial lade Presets für die erste Location
+        loadPresets(presetLocation.value);
+    }
+});
+
+// Preset speichern
+async function savePreset() {
+    const location = document.getElementById('presetLocation').value;
+    const name = document.getElementById('presetName').value.trim();
+    
+    // Validierung
+    if (!name || name.length === 0) {
+        showNotification('Bitte gib einen Preset-Namen ein', 'error');
+        return;
+    }
+    
+    // Validierung im Frontend (keine ungültigen Zeichen)
+    const sanitizedName = sanitizePresetName(name);
+    if (sanitizedName.length === 0) {
+        showNotification('Der Preset-Name enthält keine gültigen Zeichen', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/presets/${location}/save`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: name })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification(data.message || 'Preset erfolgreich gespeichert', 'success');
+            
+            // Leere Preset-Name Feld
+            document.getElementById('presetName').value = '';
+            
+            // Aktualisiere Preset-Liste
+            loadPresets(location);
+        } else {
+            showNotification(data.error || 'Fehler beim Speichern des Presets', 'error');
+        }
+    } catch (error) {
+        console.error('Fehler beim Speichern des Presets:', error);
+        showNotification('Fehler beim Speichern des Presets: ' + error.message, 'error');
+    }
+}
+
+// Lade Preset-Liste
+async function loadPresets(location) {
+    const presetsList = document.getElementById('presetsList');
+    if (!presetsList) return;
+    
+    // Zeige Loading-Spinner
+    presetsList.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Lade...</span>
+            </div>
+            <p class="mt-2" style="color: #e0e0e0;">Lade Presets...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`/api/presets/${location}`);
+        
+        if (!response.ok) {
+            throw new Error('Fehler beim Laden der Presets');
+        }
+        
+        const presets = await response.json();
+        displayPresetsList(presets, location);
+    } catch (error) {
+        console.error('Fehler beim Laden der Presets:', error);
+        presetsList.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                Fehler beim Laden der Presets: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Zeige Preset-Liste an
+function displayPresetsList(presets, location) {
+    const presetsList = document.getElementById('presetsList');
+    if (!presetsList) return;
+    
+    if (!presets || presets.length === 0) {
+        presetsList.innerHTML = `
+            <div class="text-center">
+                <p class="mt-2" style="color: #e0e0e0;">Keine Presets gespeichert</p>
+                <small style="color: #999;">Speichere ein Preset, um es hier zu sehen</small>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="list-group">';
+    
+    presets.forEach(preset => {
+        const createdDate = new Date(preset.created);
+        const formattedDate = createdDate.toLocaleString('de-DE', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        html += `
+            <div class="list-group-item bg-dark border-secondary mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1" style="color: #fff;">${preset.name}</h6>
+                        <small class="text-muted">Erstellt: ${formattedDate}</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-danger" onclick="removePreset('${location}', '${preset.filename}')">
+                            <i class="bi bi-trash"></i> Löschen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    presetsList.innerHTML = html;
+}
+
+// Preset löschen
+async function removePreset(location, filename) {
+    // Bestätigungs-Dialog
+    if (!confirm(`Möchtest du das Preset "${filename}" wirklich löschen?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/presets/${location}/${filename}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification(data.message || 'Preset erfolgreich gelöscht', 'success');
+            
+            // Aktualisiere Preset-Liste
+            loadPresets(location);
+        } else {
+            showNotification(data.error || 'Fehler beim Löschen des Presets', 'error');
+        }
+    } catch (error) {
+        console.error('Fehler beim Löschen des Presets:', error);
+        showNotification('Fehler beim Löschen des Presets: ' + error.message, 'error');
+    }
+}
+
+// Validierung des Preset-Namens im Frontend
+function sanitizePresetName(name) {
+    // Ersetze ungültige Zeichen durch Bindestrich
+    return name
+        .trim()
+        .replace(/[^a-zA-Z0-9äöüÄÖÜß\-_ ]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+}
+
+// Lade Presets und füge sie zum ruleCard Select hinzu
+async function populateRuleCardSelect() {
+    const ruleCardSelect = document.getElementById('ruleCard');
+    if (!ruleCardSelect) return;
+    
+    // Speichere aktuelle Auswahl
+    const currentValue = ruleCardSelect.value;
+    
+    // Entferne alle Preset-Optionen (dynamisch hinzugefügte)
+    const existingOptions = Array.from(ruleCardSelect.options);
+    existingOptions.forEach(option => {
+        if (option.value.startsWith('preset:')) {
+            option.remove();
+        }
+    });
+    
+    // Lade Presets für beide Locations
+    try {
+        const [hauptthekePresets, thekeHintenPresets] = await Promise.all([
+            fetch('/api/presets/haupttheke').then(r => r.ok ? r.json() : []).catch(() => []),
+            fetch('/api/presets/theke-hinten').then(r => r.ok ? r.json() : []).catch(() => [])
+        ]);
+        
+        // Füge Optgroup für Presets hinzu
+        if (hauptthekePresets.length > 0 || thekeHintenPresets.length > 0) {
+            // Füge Separator hinzu
+            const separator = document.createElement('option');
+            separator.disabled = true;
+            separator.textContent = '─────────── Presets ───────────';
+            ruleCardSelect.appendChild(separator);
+            
+            // Füge Haupttheke Presets hinzu
+            if (hauptthekePresets.length > 0) {
+                hauptthekePresets.forEach(preset => {
+                    const option = document.createElement('option');
+                    option.value = `preset:${preset.filename}`;
+                    option.textContent = `📌 Haupttheke: ${preset.name}`;
+                    ruleCardSelect.appendChild(option);
+                });
+            }
+            
+            // Füge Theke-Hinten Presets hinzu
+            if (thekeHintenPresets.length > 0) {
+                thekeHintenPresets.forEach(preset => {
+                    const option = document.createElement('option');
+                    option.value = `preset:${preset.filename}`;
+                    option.textContent = `📌 Theke Hinten: ${preset.name}`;
+                    ruleCardSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Stelle vorherige Auswahl wieder her
+        if (currentValue) {
+            ruleCardSelect.value = currentValue;
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Presets für Regel-Editor:', error);
+    }
+}
 

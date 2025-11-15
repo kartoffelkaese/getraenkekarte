@@ -55,8 +55,12 @@ app.get('/overview-2', (req, res) => {
     res.sendFile('overview-2.html', { root: './public' });
 });
 
-app.get('/schedule', (req, res) => {
-    res.sendFile('schedule.html', { root: './public' });
+app.get('/schedule-1', (req, res) => {
+    res.sendFile('schedule-1.html', { root: './public' });
+});
+
+app.get('/schedule-2', (req, res) => {
+    res.sendFile('schedule-2.html', { root: './public' });
 });
 
 // Umleitung von / auf /haupttheke
@@ -205,7 +209,7 @@ app.post('/api/overview-config/:overview', (req, res) => {
 // Schedule-Konfiguration API
 app.get('/api/schedule-config', (req, res) => {
     try {
-        const configPath = path.join(__dirname, '../schedule-config.json');
+        const configPath = path.join(__dirname, '../schedule-1-config.json');
         
         if (fs.existsSync(configPath)) {
             const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -236,7 +240,7 @@ app.post('/api/schedule-config', (req, res) => {
             rules: rules || []
         };
         
-        const configPath = path.join(__dirname, '../schedule-config.json');
+        const configPath = path.join(__dirname, '../schedule-1-config.json');
         fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
         
         // Sende Socket.IO Event
@@ -252,7 +256,7 @@ app.post('/api/schedule-config', (req, res) => {
 
 app.get('/api/schedule-config/current', (req, res) => {
     try {
-        const configPath = path.join(__dirname, '../schedule-config.json');
+        const configPath = path.join(__dirname, '../schedule-1-config.json');
         let configData = { defaultCard: 'cycle', rules: [] };
         
         if (fs.existsSync(configPath)) {
@@ -260,10 +264,202 @@ app.get('/api/schedule-config/current', (req, res) => {
         }
         
         const currentCard = calculateCurrentCard(configData);
+        
+        // Prüfe ob aktuelle Karte ein Preset ist und lade/aktiviere es
+        if (currentCard.startsWith('preset:')) {
+            const filename = currentCard.replace('preset:', '');
+            
+            // Extrahiere Location aus Dateinamen
+            let location = null;
+            if (filename.startsWith('haupttheke-')) {
+                location = 'haupttheke';
+            } else if (filename.startsWith('theke-hinten-')) {
+                location = 'theke-hinten';
+            }
+            
+            if (location) {
+                // Lade Preset und aktiviere es
+                const presetPath = path.join(__dirname, '../public/presets', filename);
+                if (fs.existsSync(presetPath)) {
+                    try {
+                        const presetData = JSON.parse(fs.readFileSync(presetPath, 'utf8'));
+                        activePresets[location] = { filename, presetData };
+                        console.log(`Preset aktiviert für ${location}: ${filename}`);
+                    } catch (error) {
+                        console.error('Fehler beim Laden des Presets:', error);
+                    }
+                } else {
+                    console.warn(`Preset-Datei nicht gefunden: ${presetPath}`);
+                }
+            }
+        } else {
+            // Wenn keine Preset-Karte aktiv ist, prüfe ob aktive Presets noch benötigt werden
+            // Entferne nur, wenn die Location wirklich nicht mehr als Preset verwendet wird
+            Object.keys(activePresets).forEach(loc => {
+                // Prüfe ob Location in einer aktiven Regel als Preset verwendet wird
+                const hasActivePresetRule = configData.rules.some(rule => {
+                    if (!rule.card || !rule.card.startsWith('preset:')) return false;
+                    
+                    const ruleFilename = rule.card.replace('preset:', '');
+                    if (!ruleFilename.startsWith(`${loc}-`)) return false;
+                    
+                    // Prüfe ob diese Regel gerade aktiv ist
+                    const now = new Date();
+                    const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+                    const currentDay = berlinTime.getDay();
+                    const currentTime = berlinTime.toTimeString().slice(0, 5);
+                    const currentDate = berlinTime.toISOString().split('T')[0];
+                    
+                    if (rule.type === 'weekly' && rule.days && rule.days.includes(currentDay)) {
+                        return isTimeInRange(currentTime, rule.startTime, rule.endTime);
+                    } else if (rule.type === 'date') {
+                        if (isDateInRange(currentDate, rule.startDate, rule.endDate)) {
+                            return isTimeInRange(currentTime, rule.startTime, rule.endTime);
+                        }
+                    }
+                    return false;
+                });
+                
+                if (!hasActivePresetRule) {
+                    delete activePresets[loc];
+                    console.log(`Preset deaktiviert für ${loc} (keine aktive Regel)`);
+                }
+            });
+        }
+        
         res.json({ currentCard, config: configData });
         
     } catch (error) {
         console.error('Fehler beim Berechnen der aktuellen Karte:', error);
+        res.status(500).json({ error: 'Fehler beim Berechnen der aktuellen Karte' });
+    }
+});
+
+// Schedule-2-Konfiguration API
+app.get('/api/schedule-2-config', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../schedule-2-config.json');
+        
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            // Fallback-Konfiguration
+            res.json({
+                defaultCard: 'cycle',
+                rules: []
+            });
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Schedule-2-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+app.post('/api/schedule-2-config', (req, res) => {
+    try {
+        const { defaultCard, rules } = req.body;
+        
+        if (!defaultCard) {
+            return res.status(400).json({ error: 'Default-Karte ist erforderlich' });
+        }
+        
+        const configData = {
+            defaultCard,
+            rules: rules || []
+        };
+        
+        const configPath = path.join(__dirname, '../schedule-2-config.json');
+        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+        
+        // Sende Socket.IO Event
+        io.emit('schedule2ConfigChanged', configData);
+        
+        res.json({ message: 'Schedule-2-Konfiguration gespeichert', config: configData });
+        
+    } catch (error) {
+        console.error('Fehler beim Speichern der Schedule-2-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
+    }
+});
+
+app.get('/api/schedule-2-config/current', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../schedule-2-config.json');
+        let configData = { defaultCard: 'cycle', rules: [] };
+        
+        if (fs.existsSync(configPath)) {
+            configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+        
+        const currentCard = calculateCurrentCard(configData);
+        
+        // Prüfe ob aktuelle Karte ein Preset ist und lade/aktiviere es
+        if (currentCard.startsWith('preset:')) {
+            const filename = currentCard.replace('preset:', '');
+            
+            // Extrahiere Location aus Dateinamen
+            let location = null;
+            if (filename.startsWith('haupttheke-')) {
+                location = 'haupttheke';
+            } else if (filename.startsWith('theke-hinten-')) {
+                location = 'theke-hinten';
+            }
+            
+            if (location) {
+                // Lade Preset und aktiviere es
+                const presetPath = path.join(__dirname, '../public/presets', filename);
+                if (fs.existsSync(presetPath)) {
+                    try {
+                        const presetData = JSON.parse(fs.readFileSync(presetPath, 'utf8'));
+                        activePresets[location] = { filename, presetData };
+                        console.log(`Preset aktiviert für ${location}: ${filename} (Schedule-2)`);
+                    } catch (error) {
+                        console.error('Fehler beim Laden des Presets:', error);
+                    }
+                } else {
+                    console.warn(`Preset-Datei nicht gefunden: ${presetPath}`);
+                }
+            }
+        } else {
+            // Wenn keine Preset-Karte aktiv ist, prüfe ob aktive Presets noch benötigt werden
+            // Entferne nur, wenn die Location wirklich nicht mehr als Preset verwendet wird
+            Object.keys(activePresets).forEach(loc => {
+                // Prüfe ob Location in einer aktiven Regel als Preset verwendet wird
+                const hasActivePresetRule = configData.rules.some(rule => {
+                    if (!rule.card || !rule.card.startsWith('preset:')) return false;
+                    
+                    const ruleFilename = rule.card.replace('preset:', '');
+                    if (!ruleFilename.startsWith(`${loc}-`)) return false;
+                    
+                    // Prüfe ob diese Regel gerade aktiv ist
+                    const now = new Date();
+                    const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+                    const currentDay = berlinTime.getDay();
+                    const currentTime = berlinTime.toTimeString().slice(0, 5);
+                    const currentDate = berlinTime.toISOString().split('T')[0];
+                    
+                    if (rule.type === 'weekly' && rule.days && rule.days.includes(currentDay)) {
+                        return isTimeInRange(currentTime, rule.startTime, rule.endTime);
+                    } else if (rule.type === 'date') {
+                        if (isDateInRange(currentDate, rule.startDate, rule.endDate)) {
+                            return isTimeInRange(currentTime, rule.startTime, rule.endTime);
+                        }
+                    }
+                    return false;
+                });
+                
+                if (!hasActivePresetRule) {
+                    delete activePresets[loc];
+                    console.log(`Preset deaktiviert für ${loc} (keine aktive Regel)`);
+                }
+            });
+        }
+        
+        res.json({ currentCard, config: configData });
+        
+    } catch (error) {
+        console.error('Fehler beim Berechnen der aktuellen Karte (Schedule-2):', error);
         res.status(500).json({ error: 'Fehler beim Berechnen der aktuellen Karte' });
     }
 });
@@ -308,6 +504,17 @@ app.post('/api/cycle-config', (req, res) => {
 app.get('/api/price-overrides/:location', (req, res) => {
     try {
         const location = req.params.location;
+        
+        // Prüfe ob ein Preset aktiv ist für diese Location
+        const preset = activePresets[location];
+        
+        // Wenn Preset aktiv ist und Preis-Overrides enthält, verwende diese
+        if (preset && preset.presetData.priceOverrides) {
+            res.json(preset.presetData.priceOverrides);
+            return;
+        }
+        
+        // Sonst lade aus Datei
         const configPath = path.join(__dirname, '../price-overrides.json');
         
         if (fs.existsSync(configPath)) {
@@ -635,6 +842,9 @@ app.get('/api/drinks/:location', async (req, res) => {
     try {
         const [rows] = await safeQuery(query, [location, location]);
         
+        // Prüfe ob ein Preset aktiv ist für diese Location
+        const preset = activePresets[location];
+        
         // Lade Preis-Overrides für theke-hinten und theke-hinten-bilder
         let priceOverrides = {};
         
@@ -652,11 +862,35 @@ app.get('/api/drinks/:location', async (req, res) => {
                 console.error('Fehler beim Laden der Preis-Overrides:', error);
             }
             
+            // Wenn Preset aktiv ist, verwende Preis-Overrides aus Preset
+            if (preset && preset.presetData.priceOverrides && preset.presetData.priceOverrides.active) {
+                priceOverrides = preset.presetData.priceOverrides.drinks || {};
+            }
         }
         
-        // Wende Preis-Overrides an
+        // Wende Preis-Overrides und Preset-Einstellungen an
         const drinksWithOverrides = (rows || []).map(drink => {
             let updatedDrink = { ...drink };
+            
+            // Wende Preset-Einstellungen für Getränke an (falls Preset aktiv)
+            if (preset && preset.presetData.displaySettings && preset.presetData.displaySettings.drinks) {
+                const presetDrink = preset.presetData.displaySettings.drinks.find(d => d.element_id === drink.id);
+                if (presetDrink) {
+                    updatedDrink.is_active = presetDrink.is_active;
+                    updatedDrink.show_price = presetDrink.show_price;
+                }
+            }
+            
+            // Wende Preset-Einstellungen für Kategorien an (falls Preset aktiv)
+            if (preset && preset.presetData.displaySettings && preset.presetData.displaySettings.categories) {
+                const presetCategory = preset.presetData.displaySettings.categories.find(c => c.element_id === drink.category_id);
+                if (presetCategory) {
+                    updatedDrink.category_is_visible = presetCategory.is_active;
+                    updatedDrink.category_show_prices = presetCategory.show_price;
+                    updatedDrink.category_sort_order = presetCategory.sort_order;
+                    updatedDrink.category_force_column_break = presetCategory.force_column_break;
+                }
+            }
             
             // Wende Preis-Overrides an
             if (priceOverrides[drink.id]) {
@@ -695,8 +929,25 @@ app.get('/api/categories/:location', async (req, res) => {
     try {
         const [rows] = await safeQuery(query, [location]);
         
-        // Keine Preset-Overrides mehr - verwende nur DB-Daten
-        const categoriesWithOverrides = rows || [];
+        // Prüfe ob ein Preset aktiv ist für diese Location
+        const preset = activePresets[location];
+        
+        // Wende Preset-Einstellungen an (falls Preset aktiv)
+        const categoriesWithOverrides = (rows || []).map(category => {
+            let updatedCategory = { ...category };
+            
+            if (preset && preset.presetData.displaySettings && preset.presetData.displaySettings.categories) {
+                const presetCategory = preset.presetData.displaySettings.categories.find(c => c.element_id === category.id);
+                if (presetCategory) {
+                    updatedCategory.is_visible = presetCategory.is_active;
+                    updatedCategory.show_prices = presetCategory.show_price;
+                    updatedCategory.sort_order = presetCategory.sort_order;
+                    updatedCategory.force_column_break = presetCategory.force_column_break;
+                }
+            }
+            
+            return updatedCategory;
+        });
         
         console.log('Categories API Response:', Array.isArray(categoriesWithOverrides), categoriesWithOverrides?.length);
         res.json(categoriesWithOverrides || []);
@@ -844,8 +1095,23 @@ app.get('/api/ads/:location', async (req, res) => {
     try {
         const [rows] = await safeQuery(query, [location, location, location]);
         
-        // Keine Preset-Overrides mehr - verwende nur DB-Daten
-        const adsWithOverrides = rows || [];
+        // Prüfe ob ein Preset aktiv ist für diese Location
+        const preset = activePresets[location];
+        
+        // Wende Preset-Einstellungen an (falls Preset aktiv)
+        const adsWithOverrides = (rows || []).map(ad => {
+            let updatedAd = { ...ad };
+            
+            if (preset && preset.presetData.displaySettings && preset.presetData.displaySettings.ads) {
+                const presetAd = preset.presetData.displaySettings.ads.find(a => a.element_id === ad.id);
+                if (presetAd) {
+                    updatedAd.is_active = presetAd.is_active;
+                    updatedAd.sort_order = presetAd.sort_order;
+                }
+            }
+            
+            return updatedAd;
+        });
         
         console.log('Ads API Response:', Array.isArray(adsWithOverrides), adsWithOverrides?.length);
         res.json(adsWithOverrides || []);
@@ -907,6 +1173,15 @@ app.get('/api/logo/:location', async (req, res) => {
         const [rows] = await safeQuery(query, [location]);
         let logoData = rows[0] || { is_active: true, sort_order: 0, force_column_break: false };
         
+        // Prüfe ob ein Preset aktiv ist für diese Location
+        const preset = activePresets[location];
+        
+        // Wende Preset-Einstellungen an (falls Preset aktiv)
+        if (preset && preset.presetData.logoSettings) {
+            logoData.is_active = preset.presetData.logoSettings.is_active;
+            logoData.sort_order = preset.presetData.logoSettings.sort_order;
+            logoData.force_column_break = preset.presetData.logoSettings.force_column_break;
+        }
         
         res.json(logoData);
     } catch (err) {
@@ -1479,6 +1754,270 @@ function timeToMinutes(timeString) {
     return hours * 60 + minutes;
 }
 
+// Preset-Verwaltung: State Management (temporäre Anwendung ohne DB-Änderungen)
+let activePresets = {}; // { location: { filename, presetData } }
+
+// Preset-Verwaltung: Hilfsfunktionen
+function ensurePresetsDirectory() {
+    const presetsDir = path.join(__dirname, '../public/presets');
+    if (!fs.existsSync(presetsDir)) {
+        fs.mkdirSync(presetsDir, { recursive: true });
+        console.log('Presets-Verzeichnis erstellt:', presetsDir);
+    }
+}
+
+function sanitizeFilename(name) {
+    // Ersetze ungültige Zeichen durch Bindestrich
+    return name
+        .trim()
+        .replace(/[^a-zA-Z0-9äöüÄÖÜß\-_ ]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+}
+
+async function collectCurrentSettings(location) {
+    try {
+        const presetData = {
+            location: location,
+            version: '1.0',
+            created: new Date().toISOString(),
+            displaySettings: {
+                drinks: [],
+                categories: [],
+                ads: []
+            },
+            logoSettings: {
+                is_active: true,
+                sort_order: 0,
+                force_column_break: false
+            },
+            priceOverrides: {
+                active: false,
+                drinks: {}
+            }
+        };
+
+        // Sammle display_settings für drinks
+        const drinksQuery = `
+            SELECT element_id, is_active, show_price
+            FROM display_settings
+            WHERE location = ? AND element_type = 'drink'
+        `;
+        const [drinks] = await safeQuery(drinksQuery, [location]);
+        presetData.displaySettings.drinks = (drinks || []).map(row => ({
+            element_id: row.element_id,
+            is_active: row.is_active === 1 || row.is_active === true,
+            show_price: row.show_price === 1 || row.show_price === true
+        }));
+
+        // Sammle display_settings für categories
+        const categoriesQuery = `
+            SELECT element_id, is_active, show_price, sort_order, force_column_break
+            FROM display_settings
+            WHERE location = ? AND element_type = 'category'
+        `;
+        const [categories] = await safeQuery(categoriesQuery, [location]);
+        presetData.displaySettings.categories = (categories || []).map(row => ({
+            element_id: row.element_id,
+            is_active: row.is_active === 1 || row.is_active === true,
+            show_price: row.show_price === 1 || row.show_price === true,
+            sort_order: row.sort_order || 0,
+            force_column_break: row.force_column_break === 1 || row.force_column_break === true
+        }));
+
+        // Sammle display_settings für ads
+        const adsQuery = `
+            SELECT element_id, is_active, sort_order
+            FROM display_settings
+            WHERE location = ? AND element_type = 'ad'
+        `;
+        const [ads] = await safeQuery(adsQuery, [location]);
+        presetData.displaySettings.ads = (ads || []).map(row => ({
+            element_id: row.element_id,
+            is_active: row.is_active === 1 || row.is_active === true,
+            sort_order: row.sort_order || 0
+        }));
+
+        // Sammle logo_settings
+        const logoQuery = `
+            SELECT is_active, sort_order, force_column_break
+            FROM logo_settings
+            WHERE location = ?
+        `;
+        const [logoRows] = await safeQuery(logoQuery, [location]);
+        if (logoRows && logoRows.length > 0) {
+            const logo = logoRows[0];
+            presetData.logoSettings = {
+                is_active: logo.is_active === 1 || logo.is_active === true,
+                sort_order: logo.sort_order || 0,
+                force_column_break: logo.force_column_break === 1 || logo.force_column_break === true
+            };
+        }
+
+        // Sammle price-overrides (nur für theke-hinten)
+        if (location === 'theke-hinten' || location === 'theke-hinten-bilder') {
+            const priceOverridesPath = path.join(__dirname, '../price-overrides.json');
+            if (fs.existsSync(priceOverridesPath)) {
+                const priceOverrides = JSON.parse(fs.readFileSync(priceOverridesPath, 'utf8'));
+                presetData.priceOverrides = {
+                    active: priceOverrides.active || false,
+                    drinks: priceOverrides.drinks || {}
+                };
+            }
+        }
+
+        return presetData;
+    } catch (error) {
+        console.error('Fehler beim Sammeln der aktuellen Einstellungen:', error);
+        throw error;
+    }
+}
+
+// Preset-API Endpunkte
+app.post('/api/presets/:location/save', auth, async (req, res) => {
+    try {
+        const location = req.params.location;
+        const { name } = req.body;
+
+        // Validierung
+        if (!name || typeof name !== 'string' || name.trim().length === 0) {
+            return res.status(400).json({ error: 'Preset-Name ist erforderlich' });
+        }
+
+        if (location !== 'haupttheke' && location !== 'theke-hinten') {
+            return res.status(400).json({ error: 'Ungültige Location. Nur haupttheke oder theke-hinten erlaubt' });
+        }
+
+        // Erstelle Presets-Verzeichnis falls nicht vorhanden
+        ensurePresetsDirectory();
+
+        // Sammle alle aktuellen Einstellungen
+        const presetData = await collectCurrentSettings(location);
+        presetData.name = name.trim();
+
+        // Erstelle Dateinamen
+        const sanitizedName = sanitizeFilename(name);
+        const filename = `${location}-${sanitizedName}.json`;
+        const filePath = path.join(__dirname, '../public/presets', filename);
+
+        // Prüfe ob Datei bereits existiert
+        if (fs.existsSync(filePath)) {
+            // Füge Timestamp hinzu um Duplikate zu vermeiden
+            const timestamp = Date.now();
+            const filenameWithTimestamp = `${location}-${sanitizedName}-${timestamp}.json`;
+            const filePathWithTimestamp = path.join(__dirname, '../public/presets', filenameWithTimestamp);
+            fs.writeFileSync(filePathWithTimestamp, JSON.stringify(presetData, null, 2));
+            
+            return res.json({
+                success: true,
+                filename: filenameWithTimestamp,
+                message: 'Preset gespeichert (Dateiname wurde erweitert, da bereits vorhanden)'
+            });
+        }
+
+        // Speichere Preset
+        fs.writeFileSync(filePath, JSON.stringify(presetData, null, 2));
+        
+        console.log(`Preset gespeichert: ${filename}`);
+        
+        res.json({
+            success: true,
+            filename: filename,
+            message: 'Preset erfolgreich gespeichert'
+        });
+    } catch (error) {
+        console.error('Fehler beim Speichern des Presets:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern des Presets' });
+    }
+});
+
+app.get('/api/presets/:location', auth, async (req, res) => {
+    try {
+        const location = req.params.location;
+
+        if (location !== 'haupttheke' && location !== 'theke-hinten') {
+            return res.status(400).json({ error: 'Ungültige Location. Nur haupttheke oder theke-hinten erlaubt' });
+        }
+
+        const presetsDir = path.join(__dirname, '../public/presets');
+        
+        if (!fs.existsSync(presetsDir)) {
+            return res.json([]);
+        }
+
+        // Lade alle JSON-Dateien die mit {location}- beginnen
+        const files = fs.readdirSync(presetsDir);
+        const presetFiles = files.filter(file => 
+            file.startsWith(`${location}-`) && file.endsWith('.json')
+        );
+
+        const presets = [];
+        for (const file of presetFiles) {
+            try {
+                const filePath = path.join(presetsDir, file);
+                const fileContent = fs.readFileSync(filePath, 'utf8');
+                const presetData = JSON.parse(fileContent);
+                
+                presets.push({
+                    filename: file,
+                    name: presetData.name || file.replace(`${location}-`, '').replace('.json', ''),
+                    location: presetData.location || location,
+                    created: presetData.created || fs.statSync(filePath).mtime.toISOString(),
+                    version: presetData.version || '1.0'
+                });
+            } catch (error) {
+                console.error(`Fehler beim Laden des Presets ${file}:`, error);
+                // Überspringe ungültige Dateien
+            }
+        }
+
+        // Sortiere nach Erstellungsdatum (neueste zuerst)
+        presets.sort((a, b) => new Date(b.created) - new Date(a.created));
+
+        res.json(presets);
+    } catch (error) {
+        console.error('Fehler beim Laden der Preset-Liste:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Preset-Liste' });
+    }
+});
+
+app.delete('/api/presets/:location/:filename', auth, async (req, res) => {
+    try {
+        const location = req.params.location;
+        const filename = req.params.filename;
+
+        // Validierung
+        if (location !== 'haupttheke' && location !== 'theke-hinten') {
+            return res.status(400).json({ error: 'Ungültige Location' });
+        }
+
+        // Prüfe ob Dateiname zur Location gehört
+        if (!filename.startsWith(`${location}-`)) {
+            return res.status(400).json({ error: 'Dateiname gehört nicht zur angegebenen Location' });
+        }
+
+        const filePath = path.join(__dirname, '../public/presets', filename);
+
+        // Prüfe ob Datei existiert
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'Preset-Datei nicht gefunden' });
+        }
+
+        // Lösche Datei
+        fs.unlinkSync(filePath);
+        
+        console.log(`Preset gelöscht: ${filename}`);
+        
+        res.json({
+            success: true,
+            message: 'Preset erfolgreich gelöscht'
+        });
+    } catch (error) {
+        console.error('Fehler beim Löschen des Presets:', error);
+        res.status(500).json({ error: 'Fehler beim Löschen des Presets' });
+    }
+});
+
 // Socket.io Verbindung
 io.on('connection', (socket) => {
     console.log('Neue Socket.IO Verbindung:', socket.id);
@@ -1515,6 +2054,11 @@ io.on('connection', (socket) => {
     socket.on('forceScheduleReload', () => {
         console.log('Force Schedule Reload Event empfangen');
         io.emit('forceScheduleReload');
+    });
+    
+    socket.on('forceSchedule2Reload', () => {
+        console.log('Force Schedule-2 Reload Event empfangen');
+        io.emit('forceSchedule2Reload');
     });
 
     socket.on('updateDrink', async (data) => {

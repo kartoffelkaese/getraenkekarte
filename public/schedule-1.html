@@ -170,6 +170,25 @@
             return hours * 60 + minutes;
         }
         
+        // Extrahiere Location aus Preset-Namen
+        function extractLocationFromPreset(presetName) {
+            if (!presetName.startsWith('preset:')) {
+                return null;
+            }
+            
+            // Entferne 'preset:' Präfix
+            const filename = presetName.replace('preset:', '');
+            
+            // Extrahiere Location aus Dateinamen (Format: location-name.json)
+            if (filename.startsWith('haupttheke-')) {
+                return 'haupttheke';
+            } else if (filename.startsWith('theke-hinten-')) {
+                return 'theke-hinten';
+            }
+            
+            return null;
+        }
+        
         // Lazy Loading: Lade iFrame nur wenn es benötigt wird
         function loadFrame(cardName) {
             const frameId = `${cardName}Frame`;
@@ -211,7 +230,17 @@
         
         function unloadInactiveFrames() {
             const allFrames = document.querySelectorAll('.schedule-frame');
-            const currentFrame = document.getElementById(`${currentCard}Frame`);
+            
+            // Extrahiere echten Card-Namen wenn es ein Preset ist
+            let currentFrameName = currentCard;
+            if (currentCard && currentCard.startsWith('preset:')) {
+                const location = extractLocationFromPreset(currentCard);
+                if (location) {
+                    currentFrameName = location;
+                }
+            }
+            
+            const currentFrame = document.getElementById(`${currentFrameName}Frame`);
             
             allFrames.forEach(frame => {
                 if (frame !== currentFrame && !frame.classList.contains('active')) {
@@ -237,7 +266,16 @@
             
             // Deaktiviere aktuellen Frame
             if (currentCard) {
-                const currentFrame = document.getElementById(`${currentCard}Frame`);
+                // Prüfe ob aktueller Card ein Preset war und extrahiere echten Card-Namen
+                let currentFrameName = currentCard;
+                if (currentCard.startsWith('preset:')) {
+                    const location = extractLocationFromPreset(currentCard);
+                    if (location) {
+                        currentFrameName = location;
+                    }
+                }
+                
+                const currentFrame = document.getElementById(`${currentFrameName}Frame`);
                 if (currentFrame) {
                     currentFrame.classList.remove('active');
                 }
@@ -247,13 +285,29 @@
             
             // Lade und aktiviere neuen Frame (Lazy Loading)
             if (currentCard) {
-                const newFrame = loadFrame(currentCard);
+                let cardToLoad = currentCard;
+                
+                // Prüfe ob es ein Preset ist
+                if (currentCard.startsWith('preset:')) {
+                    const location = extractLocationFromPreset(currentCard);
+                    if (location) {
+                        cardToLoad = location;
+                        console.log(`Preset erkannt: ${currentCard} -> zeige ${location}`);
+                        // TODO: Preset später hier anwenden
+                    } else {
+                        console.warn(`Konnte Location aus Preset nicht extrahieren: ${currentCard}`);
+                        // Fallback auf cycle
+                        cardToLoad = 'cycle';
+                    }
+                }
+                
+                const newFrame = loadFrame(cardToLoad);
                 if (newFrame) {
                     newFrame.classList.add('active');
                     // Plane Entfernung inaktiver Frames
                     scheduleFrameUnload();
                 } else {
-                    console.warn(`Frame für Karte '${currentCard}' konnte nicht geladen werden`);
+                    console.warn(`Frame für Karte '${cardToLoad}' konnte nicht geladen werden`);
                     // Fallback auf cycle
                     currentCard = 'cycle';
                     const fallbackFrame = loadFrame('cycle');
@@ -354,3 +408,4 @@
     </script>
 </body>
 </html>
+
