@@ -487,8 +487,11 @@ function displayLogo(settings) {
     
     const logoContainer = document.createElement('div');
     logoContainer.className = 'logo-container';
+    
+    // Füge CSS-Klasse für Logo-Größe hinzu (nur für haupttheke)
+    const logoImageClass = 'logo-image' + (settings.logo_size === 'small' ? ' small' : '');
     logoContainer.innerHTML = `
-        <img src="${logoPath}" alt="Logo" class="logo-image">
+        <img src="${logoPath}" alt="Logo" class="${logoImageClass}">
     `;
     
     // Füge das Logo an der richtigen Position ein

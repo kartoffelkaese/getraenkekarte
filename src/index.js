@@ -698,6 +698,38 @@ safeQuery(`
     console.error('Fehler beim Erstellen der dishes-Tabelle:', error);
 });
 
+// Füge logo_size Spalte zur logo_settings Tabelle hinzu, falls sie nicht existiert
+async function ensureLogoSizeColumn() {
+    try {
+        // Prüfe ob die Spalte bereits existiert
+        const [columns] = await safeQuery(`
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'logo_settings' 
+            AND COLUMN_NAME = 'logo_size'
+        `);
+        
+        if (columns.length === 0) {
+            // Spalte existiert nicht, füge sie hinzu
+            await safeQuery(`
+                ALTER TABLE logo_settings 
+                ADD COLUMN logo_size VARCHAR(10) DEFAULT 'normal' 
+                AFTER force_column_break
+            `);
+            console.log('✅ Spalte logo_size zur logo_settings Tabelle hinzugefügt');
+        } else {
+            console.log('✅ Spalte logo_size existiert bereits');
+        }
+    } catch (error) {
+        console.error('Fehler beim Hinzufügen der logo_size Spalte:', error);
+        // Nicht kritisch, weiterlaufen lassen
+    }
+}
+
+// Führe Migration beim Serverstart aus
+ensureLogoSizeColumn();
+
 // Konfiguration für Multer (Datei-Upload)
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -1171,7 +1203,7 @@ app.get('/api/logo/:location', async (req, res) => {
     
     try {
         const [rows] = await safeQuery(query, [location]);
-        let logoData = rows[0] || { is_active: true, sort_order: 0, force_column_break: false };
+        let logoData = rows[0] || { is_active: true, sort_order: 0, force_column_break: false, logo_size: 'normal' };
         
         // Prüfe ob ein Preset aktiv ist für diese Location
         const preset = activePresets[location];
@@ -1181,6 +1213,14 @@ app.get('/api/logo/:location', async (req, res) => {
             logoData.is_active = preset.presetData.logoSettings.is_active;
             logoData.sort_order = preset.presetData.logoSettings.sort_order;
             logoData.force_column_break = preset.presetData.logoSettings.force_column_break;
+            if (preset.presetData.logoSettings.logo_size) {
+                logoData.logo_size = preset.presetData.logoSettings.logo_size;
+            }
+        }
+        
+        // Stelle sicher, dass logo_size gesetzt ist
+        if (!logoData.logo_size) {
+            logoData.logo_size = 'normal';
         }
         
         res.json(logoData);
@@ -1243,6 +1283,36 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
     
     try {
         await safeQuery(query, [location, force_column_break, force_column_break]);
+        io.emit('logoChanged', { location });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Logo-Größe
+app.post('/api/logo/update-size/:location', async (req, res) => {
+    const { logo_size } = req.body;
+    const location = req.params.location;
+    
+    // Nur für haupttheke erlauben
+    if (location !== 'haupttheke') {
+        return res.status(400).json({ error: 'Logo-Größe ist nur für haupttheke verfügbar' });
+    }
+    
+    // Validiere logo_size
+    if (logo_size !== 'normal' && logo_size !== 'small') {
+        return res.status(400).json({ error: 'Ungültige Logo-Größe. Erlaubt: normal, small' });
+    }
+    
+    const query = `
+        INSERT INTO logo_settings (location, logo_size)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE logo_size = ?
+    `;
+    
+    try {
+        await safeQuery(query, [location, logo_size, logo_size]);
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
@@ -1840,7 +1910,7 @@ async function collectCurrentSettings(location) {
 
         // Sammle logo_settings
         const logoQuery = `
-            SELECT is_active, sort_order, force_column_break
+            SELECT is_active, sort_order, force_column_break, logo_size
             FROM logo_settings
             WHERE location = ?
         `;
@@ -1850,7 +1920,8 @@ async function collectCurrentSettings(location) {
             presetData.logoSettings = {
                 is_active: logo.is_active === 1 || logo.is_active === true,
                 sort_order: logo.sort_order || 0,
-                force_column_break: logo.force_column_break === 1 || logo.force_column_break === true
+                force_column_break: logo.force_column_break === 1 || logo.force_column_break === true,
+                logo_size: logo.logo_size || 'normal'
             };
         }
 

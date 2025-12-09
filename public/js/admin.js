@@ -303,6 +303,9 @@ async function fetchLogo() {
         const visibilitySwitch = document.querySelector('#logo-visibility-switch');
         const orderInput = document.querySelector('#logo-order');
         const columnBreakSwitch = document.querySelector('#logo-column-break-switch');
+        const sizeSelect = document.querySelector('#logo-size-select');
+        const sizeHeader = document.querySelector('#logo-size-header');
+        const sizeCell = document.querySelector('#logo-size-cell');
         
         if (visibilitySwitch) {
             visibilitySwitch.checked = logoSettings.is_active;
@@ -314,6 +317,18 @@ async function fetchLogo() {
 
         if (columnBreakSwitch) {
             columnBreakSwitch.checked = logoSettings.force_column_break || false;
+        }
+        
+        // Logo-Größe nur für haupttheke anzeigen
+        if (currentLocation === 'haupttheke') {
+            if (sizeHeader) sizeHeader.style.display = 'table-cell';
+            if (sizeCell) sizeCell.style.display = 'table-cell';
+            if (sizeSelect) {
+                sizeSelect.value = logoSettings.logo_size || 'normal';
+            }
+        } else {
+            if (sizeHeader) sizeHeader.style.display = 'none';
+            if (sizeCell) sizeCell.style.display = 'none';
         }
     } catch (error) {
         console.error('Fehler beim Laden der Logo-Einstellungen:', error);
@@ -1036,6 +1051,40 @@ async function toggleLogoColumnBreak(force_column_break) {
         const switchElement = document.querySelector('#logo-column-break-switch');
         if (switchElement) {
             switchElement.checked = !force_column_break;
+        }
+    }
+}
+
+// Funktion zum Aktualisieren der Logo-Größe
+async function updateLogoSize(logo_size) {
+    // Nur für haupttheke erlauben
+    if (currentLocation !== 'haupttheke') {
+        console.warn('Logo-Größe ist nur für haupttheke verfügbar');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/logo/update-size/${currentLocation}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ logo_size })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Netzwerk-Antwort war nicht ok');
+        }
+        
+        socket.emit('logoChanged', { location: currentLocation });
+        console.log('Logo-Größe aktualisiert:', logo_size);
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren der Logo-Größe:', error);
+        // Bei Fehler Select zurücksetzen
+        const selectElement = document.querySelector('#logo-size-select');
+        if (selectElement) {
+            // Lade aktuelle Einstellungen neu
+            fetchLogo();
         }
     }
 }

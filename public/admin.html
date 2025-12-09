@@ -325,7 +325,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+        </div>
 
         </div>
 
@@ -746,6 +746,7 @@
                             <th>Anzeigen</th>
                             <th>Reihenfolge</th>
                             <th>Spaltenumbruch</th>
+                            <th id="logo-size-header" style="display: none;">Größe</th>
                         </tr>
                     </thead>
                     <tbody id="logoTableBody">
@@ -770,6 +771,15 @@
                                            id="logo-column-break-switch"
                                            onchange="toggleLogoColumnBreak(this.checked)">
                                 </div>
+                            </td>
+                            <td id="logo-size-cell" style="display: none;">
+                                <select class="form-select form-select-sm" 
+                                        id="logo-size-select"
+                                        style="width: 120px"
+                                        onchange="updateLogoSize(this.value)">
+                                    <option value="normal">Normal</option>
+                                    <option value="small">Klein</option>
+                                </select>
                             </td>
                         </tr>
                     </tbody>
