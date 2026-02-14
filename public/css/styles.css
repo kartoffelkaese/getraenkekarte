@@ -606,6 +606,17 @@ body.theke-hinten .drink-ad .drink-price {
     text-align: center;
 }
 
+/* Theke-Hinten 2 Spalten: etwas größere Schrift */
+body.theke-hinten[data-columns="2"] .category-header h2 {
+    font-size: 1.95rem;
+}
+body.theke-hinten[data-columns="2"] .card-title {
+    font-size: 1.65rem;
+}
+body.theke-hinten[data-columns="2"] .additives-info {
+    font-size: 0.85rem;
+}
+
 /* Zusatzstoffe Container Styles - Allgemein */
 .additives-container {
     position: fixed;
