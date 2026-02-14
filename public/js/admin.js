@@ -1583,7 +1583,7 @@ async function exportCard(location) {
 }
 
 async function exportAllCards() {
-    const locations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'jugendliche', 'speisekarte', 'bilder'];
+    const locations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'theke-hinten-2', 'jugendliche', 'speisekarte', 'bilder'];
     
     try {
         showNotification('Starte Export aller Karten...', 'info');

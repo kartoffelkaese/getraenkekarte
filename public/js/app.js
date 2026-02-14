@@ -218,7 +218,8 @@ function displayDrinks(drinks) {
             }
         });
     } else {
-        // Für Theke-Hinten: Erstelle neue Spalten
+        // Für Theke-Hinten: Erstelle neue Spalten (2 oder 3 je nach data-columns)
+        const columnCount = Math.min(3, Math.max(2, parseInt(document.body.dataset.columns, 10) || 3));
         const drinksList = document.getElementById('drinksList');
         drinksList.innerHTML = '';
         
@@ -232,19 +233,17 @@ function displayDrinks(drinks) {
         rowContainer.className = 'drinks-row';
         drinksContainer.appendChild(rowContainer);
 
-        // Erstelle die drei Spalten
-        const columns = [
-            document.createElement('div'),
-            document.createElement('div'),
-            document.createElement('div')
-        ];
-        columns.forEach((col, index) => {
+        // Erstelle die Spalten (columnCount)
+        const columns = [];
+        for (let i = 0; i < columnCount; i++) {
+            const col = document.createElement('div');
             col.className = 'category-column';
-            if (index === 1) {
+            if (columnCount === 3 && i === 1) {
                 col.classList.add('middle-column');
             }
+            columns.push(col);
             rowContainer.appendChild(col);
-        });
+        }
     }
     
     // Gemeinsame Logik für beide Layouts
@@ -294,8 +293,9 @@ function displayDrinks(drinks) {
         }
         
         // Wenn wir die maximale Anzahl an Spalten erreicht haben, bleiben wir in der letzten Spalte
-        if (currentColumn >= 3) {
-            currentColumn = 2;
+        const maxColumn = columns.length - 1;
+        if (currentColumn > maxColumn) {
+            currentColumn = maxColumn;
         }
         
         const categoryContainer = document.createElement('div');
