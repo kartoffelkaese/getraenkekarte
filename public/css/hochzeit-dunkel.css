@@ -5,6 +5,7 @@
 /* --- Grundlayout + dunkles Hochzeits-Theme --- */
 body.hochzeit-dunkel {
     color: #e8e4dc;
+    background-color: #1a1814;
     background-image:
         radial-gradient(circle at 50% 50%, rgba(196, 163, 90, 0.08) 1px, transparent 1px),
         linear-gradient(180deg, #1a1814 0%, #252219 100%);
@@ -12,24 +13,23 @@ body.hochzeit-dunkel {
     background-position: 0 0, 0 0;
 }
 
+/* HTML-Hintergrund überschreiben, damit kein schwarzer Balken sichtbar ist */
+html {
+    background-color: #1a1814;
+}
+
 body.hochzeit-dunkel .fullscreen-container {
-    margin: 0;
-    height: 100vh;
-    width: 100vw;
+    margin: 8px;
+    height: calc(100vh - 16px);
+    width: calc(100vw - 16px);
     background: transparent;
     padding: 0 1.5rem;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(196, 163, 90, 0.4);
-    box-shadow: 0 0 0 1px rgba(196, 163, 90, 0.15) inset, 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-body.hochzeit-dunkel .fullscreen-container::before {
-    content: '';
-    position: absolute;
-    top: 8px; left: 8px; right: 8px; bottom: 8px;
     border: 1px solid rgba(196, 163, 90, 0.25);
-    border-radius: 8px;
-    pointer-events: none;
+    corner-shape: squircle;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 body.hochzeit-dunkel .content-area {
@@ -133,10 +133,10 @@ body.hochzeit-dunkel .additional-content {
 body.hochzeit-dunkel .additives-container {
     position: fixed;
     bottom: 1.3rem;
-    left: 1.5rem;
-    right: 1.5rem;
+    left: calc(8px + 1.5rem);
+    right: calc(8px + 1.5rem);
     width: auto;
-    max-width: calc(100vw - 3rem);
+    max-width: calc(100vw - 16px - 3rem);
     background: linear-gradient(180deg, #1a1814 0%, #252219 100%);
     border-top: 2px solid #c4a35a;
     box-shadow: 0 -2px 10px rgba(196, 163, 90, 0.1);
