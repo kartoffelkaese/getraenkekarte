@@ -43,6 +43,14 @@ app.get('/theke-hinten-2', (req, res) => {
     res.sendFile('theke-hinten-2.html', { root: './public' });
 });
 
+app.get('/hochzeit', (req, res) => {
+    res.sendFile('hochzeit.html', { root: './public' });
+});
+
+app.get('/hochzeit-dunkel', (req, res) => {
+    res.sendFile('hochzeit-dunkel.html', { root: './public' });
+});
+
 app.get('/bilder', (req, res) => {
     res.sendFile('bilder.html', { root: './public' });
 });
@@ -1543,7 +1551,7 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
 // API-Endpunkt zum Exportieren einer Karte als PNG
 app.get('/api/export/:location', auth, async (req, res) => {
     const location = req.params.location;
-    const validLocations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'jugendliche', 'speisekarte', 'bilder'];
+    const validLocations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'theke-hinten-2', 'hochzeit', 'hochzeit-dunkel', 'jugendliche', 'speisekarte', 'bilder'];
     
     if (!validLocations.includes(location)) {
         return res.status(400).json({ success: false, error: 'Ungültige Karten-Location' });

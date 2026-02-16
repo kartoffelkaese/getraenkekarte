@@ -10,15 +10,6 @@
       "days": [
         6
       ]
-    },
-    {
-      "id": "rule-1763238982117",
-      "type": "date",
-      "startTime": "21:37",
-      "endTime": "21:40",
-      "card": "preset:theke-hinten-theke-hinten-alle-preise.json",
-      "startDate": "2025-11-15"
     }
   ]
 }
-
