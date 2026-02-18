@@ -266,6 +266,51 @@ app.post('/api/schedule-config', (req, res) => {
     }
 });
 
+// API-Endpunkte für Hochzeitskarten-Schriftgröße
+app.get('/api/hochzeit-config', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../hochzeit-config.json');
+        
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            // Fallback-Konfiguration
+            res.json({
+                fontSize: 'large'
+            });
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Hochzeitskarten-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+app.post('/api/hochzeit-config', (req, res) => {
+    try {
+        const { fontSize } = req.body;
+        
+        if (!fontSize || (fontSize !== 'large' && fontSize !== 'small')) {
+            return res.status(400).json({ error: 'Ungültige Schriftgröße. Erlaubt: large, small' });
+        }
+        
+        const configData = {
+            fontSize
+        };
+        
+        const configPath = path.join(__dirname, '../hochzeit-config.json');
+        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+        
+        // Sende Socket.IO Event
+        io.emit('hochzeitConfigChanged', configData);
+        
+        res.json({ message: 'Hochzeitskarten-Konfiguration gespeichert', config: configData });
+    } catch (error) {
+        console.error('Fehler beim Speichern der Hochzeitskarten-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
+    }
+});
+
 app.get('/api/schedule-config/current', (req, res) => {
     try {
         const configPath = path.join(__dirname, '../schedule-1-config.json');
@@ -1307,9 +1352,9 @@ app.post('/api/logo/update-size/:location', async (req, res) => {
     const { logo_size } = req.body;
     const location = req.params.location;
     
-    // Nur für haupttheke erlauben
-    if (location !== 'haupttheke') {
-        return res.status(400).json({ error: 'Logo-Größe ist nur für haupttheke verfügbar' });
+    // Nur für haupttheke und theke-hinten erlauben
+    if (location !== 'haupttheke' && location !== 'theke-hinten') {
+        return res.status(400).json({ error: 'Logo-Größe ist nur für haupttheke und theke-hinten verfügbar' });
     }
     
     // Validiere logo_size

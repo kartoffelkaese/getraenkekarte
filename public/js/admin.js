@@ -79,6 +79,7 @@ function updateSectionVisibility() {
         fetchCycleConfig(); // Lade Cycle-Konfiguration
         fetchOverviewConfig(); // Lade Overview-Konfiguration
         loadPresetsIfSettings(); // Lade Presets
+        loadHochzeitConfig(); // Lade Hochzeitskarten-Konfiguration
     } else if (currentLocation === 'schedule-1') {
         // Nur Schedule-Sektion anzeigen
         if (sections.schedule) sections.schedule.style.display = 'block';
@@ -319,8 +320,8 @@ async function fetchLogo() {
             columnBreakSwitch.checked = logoSettings.force_column_break || false;
         }
         
-        // Logo-Größe nur für haupttheke anzeigen
-        if (currentLocation === 'haupttheke') {
+        // Logo-Größe für haupttheke und theke-hinten anzeigen
+        if (currentLocation === 'haupttheke' || currentLocation === 'theke-hinten') {
             if (sizeHeader) sizeHeader.style.display = 'table-cell';
             if (sizeCell) sizeCell.style.display = 'table-cell';
             if (sizeSelect) {
@@ -1057,9 +1058,9 @@ async function toggleLogoColumnBreak(force_column_break) {
 
 // Funktion zum Aktualisieren der Logo-Größe
 async function updateLogoSize(logo_size) {
-    // Nur für haupttheke erlauben
-    if (currentLocation !== 'haupttheke') {
-        console.warn('Logo-Größe ist nur für haupttheke verfügbar');
+    // Nur für haupttheke und theke-hinten erlauben
+    if (currentLocation !== 'haupttheke' && currentLocation !== 'theke-hinten') {
+        console.warn('Logo-Größe ist nur für haupttheke und theke-hinten verfügbar');
         return;
     }
     
@@ -3265,4 +3266,57 @@ async function populateRuleCardSelect() {
         console.error('Fehler beim Laden der Presets für Regel-Editor:', error);
     }
 }
+
+// === Hochzeitskarten-Schriftgröße ===
+
+async function loadHochzeitConfig() {
+    try {
+        const response = await fetch('/api/hochzeit-config');
+        if (response.ok) {
+            const config = await response.json();
+            const fontSizeSelect = document.getElementById('hochzeitFontSize');
+            if (fontSizeSelect && config.fontSize) {
+                fontSizeSelect.value = config.fontSize;
+            }
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Hochzeitskarten-Konfiguration:', error);
+    }
+}
+
+async function saveHochzeitFontSize() {
+    const fontSizeSelect = document.getElementById('hochzeitFontSize');
+    if (!fontSizeSelect) return;
+    
+    const fontSize = fontSizeSelect.value;
+    
+    try {
+        const response = await fetch('/api/hochzeit-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fontSize })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification('Hochzeitskarten-Schriftgröße gespeichert', 'success');
+        } else {
+            const data = await response.json();
+            showNotification(data.error || 'Fehler beim Speichern', 'error');
+        }
+    } catch (error) {
+        console.error('Fehler beim Speichern der Hochzeitskarten-Konfiguration:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+    }
+}
+
+// Socket.IO: Aktualisiere Schriftgröße bei Änderungen
+socket.on('hochzeitConfigChanged', (config) => {
+    const fontSizeSelect = document.getElementById('hochzeitFontSize');
+    if (fontSizeSelect && config.fontSize) {
+        fontSizeSelect.value = config.fontSize;
+    }
+});
 

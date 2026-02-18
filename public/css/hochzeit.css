@@ -117,7 +117,8 @@ body.hochzeit .category-container {
 body.hochzeit .card {
     background: #fffefb;
     border: none;
-    border-left: 3px solid #c4a35a;
+    /* border-left: 3px solid #c4a35a; */
+    border-left: 3px solid #a50775;
     box-shadow: 0 2px 8px rgba(196, 163, 90, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
     border-radius: 0 8px 8px 0;
     margin-bottom: 0.25rem;
@@ -133,6 +134,19 @@ body.hochzeit .card-title {
 body.hochzeit .additives-info {
     font-size: 0.8rem;
     color: #6b6356;
+}
+
+/* Kleine Schriftgröße für Hochzeitskarten */
+body.hochzeit[data-font-size="small"] .category-header h2 {
+    font-size: 1.7rem;
+}
+
+body.hochzeit[data-font-size="small"] .card-title {
+    font-size: 1.35rem;
+}
+
+body.hochzeit[data-font-size="small"] .additives-info {
+    font-size: 0.75rem;
 }
 
 /* Werbebereich auf der Hochzeitskarte ausgeblendet */

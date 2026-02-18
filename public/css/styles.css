@@ -683,6 +683,10 @@ body.haupttheke .logo-image.small {
     max-height: 10vh;
 }
 
+body.theke-hinten .logo-image.small {
+    max-height: 10vh;
+}
+
 /* Admin Tabs Styling */
 .nav-tabs .nav-link {
     color: #333333;
