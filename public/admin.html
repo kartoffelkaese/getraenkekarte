@@ -67,9 +67,9 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="export-tab" data-bs-toggle="tab" 
-                        data-location="export" type="button" role="tab">
-                    Export
+                <button class="nav-link" id="links-tab" data-bs-toggle="tab" 
+                        data-location="links" type="button" role="tab">
+                    Links
                 </button>
             </li>
         </ul>
@@ -592,6 +592,30 @@
             </div>
         </div>
 
+        <!-- Links Sektion -->
+        <div id="linksSection" style="display: none;">
+            <h2>Verfügbare Karten-Links</h2>
+            <p class="text-muted mb-4">Alle verfügbaren Karten und deren URLs. Klicken Sie auf den Link um zu öffnen oder nutzen Sie die Schaltfläche zum Kopieren.</p>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="color: #fff;">Karte</th>
+                                    <th style="color: #fff;">URL</th>
+                                    <th style="color: #fff; width: 140px;">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="linksTableBody">
+                                <!-- Links werden dynamisch eingefügt -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Temporäre Preise Sektion -->
         <div id="tempPricesSection" style="display: none;">
             <h2>Temporäre Preise (Theke Hinten)</h2>
@@ -726,61 +750,6 @@
             </div>
         </div>
 
-        <!-- Export-Sektion -->
-        <div id="exportSection" style="display: none;">
-            <h2>Karten Export</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Alle Karten exportieren</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Exportiert alle verfügbaren Karten als PNG (1920x1080px)</p>
-                            <button class="btn btn-success" onclick="exportAllCards()">
-                                <i class="bi bi-download"></i> Alle Karten exportieren
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Einzelne Karte exportieren</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Wählen Sie eine spezifische Karte zum Exportieren</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('haupttheke')">
-                                    <i class="bi bi-download"></i> Haupttheke
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('theke-hinten')">
-                                    <i class="bi bi-download"></i> Theke Hinten
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('theke-hinten-bilder')">
-                                    <i class="bi bi-download"></i> Theke Hinten Bilder
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('theke-hinten-2')">
-                                    <i class="bi bi-download"></i> Theke Hinten (2 Spalten)
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('hochzeit')">
-                                    <i class="bi bi-download"></i> Hochzeitskarte
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('hochzeit-dunkel')">
-                                    <i class="bi bi-download"></i> Hochzeitskarte (dunkel)
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('jugendliche')">
-                                    <i class="bi bi-download"></i> Jugendkarte
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('speisekarte')">
-                                    <i class="bi bi-download"></i> Speisekarte
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="exportCard('bilder')">
-                                    <i class="bi bi-download"></i> Bilder
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Kategorien-Sektion -->
         <div class="mb-4">
             <h2>Logo</h2>

@@ -34,14 +34,12 @@ Ein modernes, webbasiertes Getränkekarten-System mit Echtzeit-Updates, Admin-In
 - **Vollständige Getränkeverwaltung** (CRUD-Operationen)
 - **Kategorie-Management** mit Drag & Drop
 - **Bild-Upload** und -Verwaltung
-- **Karten-Export** als PNG (1920x1080px)
 - **Echtzeit-Monitoring** aller Displays
 - **Fernsteuerung** aller Funktionen
 
 ### 🔧 Technische Features
 - **Socket.IO** für Echtzeit-Kommunikation
 - **MySQL-Datenbank** für Getränkedaten
-- **Puppeteer** für Karten-Export
 - **Responsive Design** für alle Bildschirmgrößen
 - **Basic Auth** für Admin-Zugang
 
@@ -50,7 +48,6 @@ Ein modernes, webbasiertes Getränkekarten-System mit Echtzeit-Updates, Admin-In
 - **Node.js** >= 22.16.0
 - **npm** >= 11.4.2
 - **MySQL** Datenbank
-- **Chrome/Chromium** (für Puppeteer)
 
 ## 🚀 Installation
 
@@ -145,12 +142,6 @@ npm run ext
 - **Fernsteuerung** der angezeigten Karte
 - **Remote Reload** bei Änderungen
 
-### 📤 Export
-- **Alle Karten** als PNG exportieren
-- **Einzelne Karten** exportieren
-- **1920x1080px** Auflösung
-- **Automatischer Download**
-
 ## 🔧 API-Endpunkte
 
 ### Getränke
@@ -178,10 +169,6 @@ npm run ext
 ### Overview-Konfiguration
 - `GET /api/overview-config/:overview` - Overview-Konfiguration abrufen
 - `POST /api/overview-config/:overview` - Overview-Konfiguration speichern
-
-### Export
-- `POST /api/export/all` - Alle Karten exportieren
-- `POST /api/export/:card` - Einzelne Karte exportieren
 
 ### Version
 - `GET /api/version` - Aktuelle Version abrufen

@@ -57,7 +57,7 @@ function updateSectionVisibility() {
         'temp-prices': document.getElementById('tempPricesSection'),
         'settings': document.getElementById('settingsSection'),
         'schedule': document.getElementById('scheduleSection'),
-        'export': document.getElementById('exportSection')
+        'links': document.getElementById('linksSection')
     };
 
     // Alle Sektionen verstecken
@@ -66,10 +66,7 @@ function updateSectionVisibility() {
     });
 
     // Sektionen basierend auf der Location anzeigen
-    if (currentLocation === 'export') {
-        // Nur Export-Sektion anzeigen
-        if (sections.export) sections.export.style.display = 'block';
-    } else if (currentLocation === 'temp-prices') {
+    if (currentLocation === 'temp-prices') {
         // Nur Temporäre Preise Sektion anzeigen
         if (sections['temp-prices']) sections['temp-prices'].style.display = 'block';
         fetchTempPrices(); // Lade temporäre Preise
@@ -89,6 +86,10 @@ function updateSectionVisibility() {
         } else {
             loadSchedule2Config();
         }
+    } else if (currentLocation === 'links') {
+        // Nur Links-Sektion anzeigen
+        if (sections.links) sections.links.style.display = 'block';
+        renderLinksTable();
     } else if (currentLocation === 'speisekarte') {
         if (sections.speisekarte) sections.speisekarte.style.display = 'block';
     } else if (currentLocation === 'jugendliche') {
@@ -120,6 +121,62 @@ function findSectionByHeading(headingText) {
         }
     }
     return null;
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Links-Tabelle: alle verfügbaren Karten mit URLs
+const CARD_LINKS = [
+    { path: '/', name: 'Haupttheke (Start)' },
+    { path: '/haupttheke', name: 'Haupttheke' },
+    { path: '/theke-hinten', name: 'Theke Hinten' },
+    { path: '/theke-hinten-bilder', name: 'Theke Hinten Bilder' },
+    { path: '/theke-hinten-2', name: 'Theke Hinten (2 Spalten)' },
+    { path: '/hochzeit', name: 'Hochzeitskarte' },
+    { path: '/hochzeit-dunkel', name: 'Hochzeitskarte (dunkel)' },
+    { path: '/jugendliche', name: 'Jugendkarte' },
+    { path: '/speisekarte', name: 'Speisekarte' },
+    { path: '/bilder', name: 'Bilder' },
+    { path: '/cycle', name: 'Cycle (Haupttheke ↔ Speisekarte)' },
+    { path: '/cycle-jugend', name: 'Cycle Jugend' },
+    { path: '/overview-1', name: 'Overview 1' },
+    { path: '/overview-2', name: 'Overview 2' },
+    { path: '/schedule-1', name: 'Schedule 1' },
+    { path: '/schedule-2', name: 'Schedule 2' },
+    { path: '/screensaver', name: 'Screensaver' }
+];
+
+function renderLinksTable() {
+    const tbody = document.getElementById('linksTableBody');
+    if (!tbody) return;
+    const baseUrl = window.location.origin;
+    tbody.innerHTML = CARD_LINKS.map(card => {
+        const url = baseUrl + card.path;
+        return `<tr>
+            <td>${escapeHtml(card.name)}</td>
+            <td><code class="text-info">${escapeHtml(url)}</code></td>
+            <td>
+                <a href="${escapeHtml(url)}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="Öffnen">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-secondary" onclick="copyLinkToClipboard(this.dataset.url)" data-url="${escapeHtml(url)}" title="Kopieren">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function copyLinkToClipboard(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        showNotification('Link in Zwischenablage kopiert', 'success');
+    }).catch(() => {
+        showNotification('Kopieren fehlgeschlagen', 'error');
+    });
 }
 
 // Initialer Load
@@ -1545,90 +1602,6 @@ if (imageUploadForm) {
 // Alle Bilder löschen
 const deleteAllImagesBtn = document.getElementById('deleteAllImagesBtn');
 
-// Export-Funktionalität
-async function exportCard(location) {
-    try {
-        showNotification(`Exportiere ${location}...`, 'info');
-        
-        const response = await fetch(`/api/export/${location}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Fehler beim Exportieren');
-        }
-        
-        // Blob aus Response erstellen
-        const blob = await response.blob();
-        
-        // Download-Link erstellen
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${location}-export-${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        showNotification(`${location} erfolgreich exportiert!`, 'success');
-        
-    } catch (error) {
-        console.error('Fehler beim Exportieren:', error);
-        showNotification(`Fehler beim Exportieren von ${location}: ${error.message}`, 'error');
-    }
-}
-
-async function exportAllCards() {
-    const locations = ['haupttheke', 'theke-hinten', 'theke-hinten-bilder', 'theke-hinten-2', 'hochzeit', 'hochzeit-dunkel', 'jugendliche', 'speisekarte', 'bilder'];
-    
-    try {
-        showNotification('Starte Export aller Karten...', 'info');
-        
-        for (let i = 0; i < locations.length; i++) {
-            const location = locations[i];
-            showNotification(`Exportiere ${location} (${i + 1}/${locations.length})...`, 'info');
-            
-            const response = await fetch(`/api/export/${location}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Fehler bei ${location}: ${errorData.error || 'Unbekannter Fehler'}`);
-            }
-            
-            // Blob aus Response erstellen
-            const blob = await response.blob();
-            
-            // Download-Link erstellen
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${location}-export-${Date.now()}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            // Kurze Pause zwischen Downloads
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        showNotification('Alle Karten erfolgreich exportiert!', 'success');
-        
-    } catch (error) {
-        console.error('Fehler beim Exportieren aller Karten:', error);
-        showNotification(`Fehler beim Exportieren: ${error.message}`, 'error');
-    }
-}
 if (deleteAllImagesBtn) {
     deleteAllImagesBtn.addEventListener('click', async function() {
         if (!confirm('Möchten Sie wirklich alle Bilder unwiderruflich löschen?')) return;
