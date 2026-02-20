@@ -136,6 +136,19 @@ body.hochzeit .additives-info {
     color: #6b6356;
 }
 
+/* Größere Schriftgröße für Hochzeitskarten */
+body.hochzeit[data-font-size="larger"] .category-header h2 {
+    font-size: 2.1rem;
+}
+
+body.hochzeit[data-font-size="larger"] .card-title {
+    font-size: 1.75rem;
+}
+
+body.hochzeit[data-font-size="larger"] .additives-info {
+    font-size: 0.9rem;
+}
+
 /* Kleine Schriftgröße für Hochzeitskarten */
 body.hochzeit[data-font-size="small"] .category-header h2 {
     font-size: 1.7rem;

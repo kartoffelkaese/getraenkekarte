@@ -138,6 +138,8 @@ const CARD_LINKS = [
     { path: '/theke-hinten-2', name: 'Theke Hinten (2 Spalten)' },
     { path: '/hochzeit', name: 'Hochzeitskarte' },
     { path: '/hochzeit-dunkel', name: 'Hochzeitskarte (dunkel)' },
+    { path: '/hochzeit-3spalten', name: 'Hochzeitskarte (3 Spalten)' },
+    { path: '/hochzeit-dunkel-3spalten', name: 'Hochzeitskarte dunkel (3 Spalten)' },
     { path: '/jugendliche', name: 'Jugendkarte' },
     { path: '/speisekarte', name: 'Speisekarte' },
     { path: '/bilder', name: 'Bilder' },

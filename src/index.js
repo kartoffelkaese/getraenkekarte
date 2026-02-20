@@ -50,6 +50,14 @@ app.get('/hochzeit-dunkel', (req, res) => {
     res.sendFile('hochzeit-dunkel.html', { root: './public' });
 });
 
+app.get('/hochzeit-3spalten', (req, res) => {
+    res.sendFile('hochzeit-3spalten.html', { root: './public' });
+});
+
+app.get('/hochzeit-dunkel-3spalten', (req, res) => {
+    res.sendFile('hochzeit-dunkel-3spalten.html', { root: './public' });
+});
+
 app.get('/bilder', (req, res) => {
     res.sendFile('bilder.html', { root: './public' });
 });

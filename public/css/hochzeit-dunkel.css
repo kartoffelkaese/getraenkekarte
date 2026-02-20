@@ -127,6 +127,19 @@ body.hochzeit-dunkel .additives-info {
     color: #b0a99e;
 }
 
+/* Größere Schriftgröße für Hochzeitskarten (dunkel) */
+body.hochzeit-dunkel[data-font-size="larger"] .category-header h2 {
+    font-size: 2.1rem;
+}
+
+body.hochzeit-dunkel[data-font-size="larger"] .card-title {
+    font-size: 1.75rem;
+}
+
+body.hochzeit-dunkel[data-font-size="larger"] .additives-info {
+    font-size: 0.9rem;
+}
+
 /* Kleine Schriftgröße für Hochzeitskarten (dunkel) */
 body.hochzeit-dunkel[data-font-size="small"] .category-header h2 {
     font-size: 1.7rem;
