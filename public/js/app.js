@@ -30,16 +30,21 @@ function isBilderSeite() {
     return window.location.pathname.includes('theke-hinten-bilder');
 }
 
+// Hilfsfunktion: Seiten ohne Werbebereich
+function isWerbefreiSeite() {
+    return isBilderSeite() || window.location.pathname.includes('hauptkarte-kopie');
+}
+
 // Lade die Daten beim Start
 fetchDrinks();
-if (!isBilderSeite()) {
+if (!isWerbefreiSeite()) {
 fetchAds();
 }
 fetchLogo();
 loadAdditives();
 
 // Lade die Werbungen beim Start
-if (!isBilderSeite()) {
+if (!isWerbefreiSeite()) {
 fetchAds();
 }
 
@@ -98,7 +103,7 @@ socket.on('categoryColumnBreakChanged', (data) => {
 
 // Socket.io Events für Werbungen mit Debouncing
 socket.on('adsChanged', (data) => {
-    if (data && data.location === currentLocation) {
+    if (data && data.location === currentLocation && !isWerbefreiSeite()) {
         // Debounce: Warte 300ms nach letzter Änderung
         clearTimeout(adsUpdateTimeout);
         adsUpdateTimeout = setTimeout(() => {
@@ -199,7 +204,7 @@ async function fetchDrinks() {
 
 // Funktion zum Anzeigen der Getränke
 function displayDrinks(drinks) {
-    const isHaupttheke = currentLocation === 'haupttheke' && !document.body.classList.contains('hauptkarte-kopie');
+    const isHaupttheke = currentLocation === 'haupttheke';
     
     if (isHaupttheke) {
         // Für Haupttheke: Verwende existierende Spalten
@@ -384,7 +389,7 @@ async function fetchAds() {
 
 // Funktion zum Anzeigen der Werbungen
 function displayAds(ads) {
-    if (isBilderSeite()) return;
+    if (isWerbefreiSeite()) return;
     
     // Lösche vorheriges Interval um Memory Leaks zu vermeiden
     if (adRotationInterval) {

@@ -1,0 +1,13 @@
+/* Overrides nur fuer /hauptkarte-kopie */
+
+body.hauptkarte-kopie .drinks-row {
+    gap: 1rem;
+    max-width: 100%;
+    padding: 0;
+}
+
+body.hauptkarte-kopie .category-column {
+    flex: 1 1 0;
+    max-width: none;
+    margin: 0;
+}
