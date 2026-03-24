@@ -199,7 +199,7 @@ async function fetchDrinks() {
 
 // Funktion zum Anzeigen der Getränke
 function displayDrinks(drinks) {
-    const isHaupttheke = currentLocation === 'haupttheke';
+    const isHaupttheke = currentLocation === 'haupttheke' && !document.body.classList.contains('hauptkarte-kopie');
     
     if (isHaupttheke) {
         // Für Haupttheke: Verwende existierende Spalten

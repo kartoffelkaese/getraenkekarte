@@ -30,6 +30,10 @@ app.get('/haupttheke', (req, res) => {
     res.sendFile('haupttheke.html', { root: './public' });
 });
 
+app.get('/hauptkarte-kopie', (req, res) => {
+    res.sendFile('hauptkarte-kopie.html', { root: './public' });
+});
+
 app.get('/theke-hinten', (req, res) => {
     res.sendFile('theke-hinten.html', { root: './public' });
 });
