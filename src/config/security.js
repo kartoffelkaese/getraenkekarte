@@ -203,7 +203,7 @@ function getProductionContentSecurityPolicy() {
         directives: {
             defaultSrc: ["'self'"],
             baseUri: ["'self'"],
-            fontSrc: ["'self'", 'https://cdn.jsdelivr.net', 'data:'],
+            fontSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://fonts.gstatic.com', 'data:'],
             formAction: ["'self'"],
             frameAncestors: ["'self'"],
             imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
@@ -216,7 +216,7 @@ function getProductionContentSecurityPolicy() {
             ],
             // admin.html u. a. nutzt onclick="..."
             scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
             connectSrc: [
                 "'self'",
                 'https://cdn.jsdelivr.net',
