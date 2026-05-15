@@ -224,21 +224,13 @@ app.get('/api/health', async (req, res) => {
     try {
         await safeQuery('SELECT 1 as test');
 
-        if (isProduction) {
-            return res.json({
-                status: 'healthy',
-                database: 'connected',
-                timestamp: new Date().toISOString(),
-            });
-        }
-
         res.json({
             status: 'healthy',
             database: 'connected',
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
             memory: process.memoryUsage(),
-            connectionStats: connectionStats,
+            connectionStats,
         });
     } catch (error) {
         console.error('Health Check Fehler:', error);
@@ -246,10 +238,10 @@ app.get('/api/health', async (req, res) => {
             status: 'unhealthy',
             database: 'disconnected',
             timestamp: new Date().toISOString(),
+            connectionStats,
         };
         if (!isProduction) {
             payload.error = error.message;
-            payload.connectionStats = connectionStats;
         }
         res.status(503).json(payload);
     }
