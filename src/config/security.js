@@ -219,6 +219,7 @@ function getProductionContentSecurityPolicy() {
             styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
             connectSrc: [
                 "'self'",
+                'https://cdn.jsdelivr.net',
                 'https://www.gstatic.com',
                 'https://firestore.googleapis.com',
                 'https://firebase.googleapis.com',
