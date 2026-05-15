@@ -168,25 +168,8 @@ const VALID_LOCATIONS = new Set([
     'screensaver',
 ]);
 
-const VALID_SCHEDULE_CARDS = new Set([
-    'cycle',
-    'cycle-jugend',
-    'haupttheke',
-    'theke-hinten',
-    'theke-hinten-bilder',
-    'theke-hinten-bilder-dunkel',
-    'jugendliche',
-    'speisekarte',
-    'overview-1',
-    'overview-2',
-    'schedule-1',
-    'schedule-2',
-    'bilder',
-    'hochzeit',
-    'hochzeit-dunkel',
-    'hochzeit-3spalten',
-    'hochzeit-dunkel-3spalten',
-]);
+/** Erlaubte Karten für Schedule (Default + Regeln): gleiche Slugs wie Öffentliche Karten-Routen */
+const VALID_SCHEDULE_CARDS = new Set(VALID_LOCATIONS);
 
 /** Reverse-Proxy: Standard in Produktion TRUST_PROXY=true (express-rate-limit / Client-IP). */
 function resolveTrustProxy() {
