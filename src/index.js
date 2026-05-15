@@ -227,6 +227,7 @@ app.get('/api/health', async (req, res) => {
         if (isProduction) {
             return res.json({
                 status: 'healthy',
+                database: 'connected',
                 timestamp: new Date().toISOString(),
             });
         }

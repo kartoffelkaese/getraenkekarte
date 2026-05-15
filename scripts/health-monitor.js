@@ -3,13 +3,21 @@
 /**
  * Health Monitor Script für Getränkekarte
  * Überwacht die Datenbankverbindung und startet die Anwendung bei Problemen neu
+ *
+ * Umgebung (optional):
+ *   HEALTH_MONITOR_APP_URL – volle Basis-URL, z. B. http://127.0.0.1:8080
+ *   HEALTH_MONITOR_HOST / HEALTH_MONITOR_PORT – Fallback wenn keine APP_URL gesetzt
+ *   PORT – wird als Port-Fallback genutzt (gleicher Wert wie die Haupt-App hilfreich)
  */
 
 const http = require('http');
 const { exec } = require('child_process');
 
+const port = process.env.HEALTH_MONITOR_PORT || process.env.PORT || '3000';
+const host = process.env.HEALTH_MONITOR_HOST || '127.0.0.1';
+
 const config = {
-    appUrl: 'http://localhost:3000',
+    appUrl: process.env.HEALTH_MONITOR_APP_URL || `http://${host}:${port}`,
     healthEndpoint: '/api/health',
     checkInterval: 30000, // 30 Sekunden
     maxFailures: 3, // Max 3 Fehler vor Restart
@@ -60,7 +68,12 @@ function makeRequest(url) {
             
             res.on('end', () => {
                 try {
-                    const jsonData = JSON.parse(data);
+                    const jsonData = data ? JSON.parse(data) : {};
+                    if (res.statusCode !== 200) {
+                        const msg = jsonData.error || jsonData.status || res.statusMessage || 'HTTP error';
+                        reject(new Error(`HTTP ${res.statusCode}: ${msg}`));
+                        return;
+                    }
                     resolve(jsonData);
                 } catch (error) {
                     reject(new Error('Invalid JSON response'));

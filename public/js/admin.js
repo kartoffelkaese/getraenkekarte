@@ -2120,11 +2120,12 @@ function displayHealthStatus(data) {
     const isHealthy = data.status === 'healthy';
     const statusColor = isHealthy ? 'success' : 'danger';
     const statusIcon = isHealthy ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-    const dbStatus = data.database === 'connected' ? 'Verbunden' : 'Getrennt';
-    const dbColor = data.database === 'connected' ? 'success' : 'danger';
+    const dbConnected = isHealthy && data.database !== 'disconnected';
+    const dbStatus = dbConnected ? 'Verbunden' : 'Getrennt';
+    const dbColor = dbConnected ? 'success' : 'danger';
 
     // Formatiere Uptime
-    const uptime = formatUptime(data.uptime);
+    const uptime = data.uptime != null ? formatUptime(data.uptime) : 'N/A';
     
     // Formatiere Memory
     const memory = data.memory ? formatMemory(data.memory) : 'N/A';
@@ -2220,7 +2221,7 @@ function displayHealthError(data) {
     container.innerHTML = `
         <div class="alert alert-danger">
             <h6><i class="bi bi-exclamation-triangle-fill"></i> System Status Fehler</h6>
-            <p class="mb-0">${data.error || 'Unbekannter Fehler'}</p>
+            <p class="mb-0">${escapeHtml(data.error || data.message || (data.status === 'unhealthy' ? 'Dienst nicht bereit (Datenbank / Health)' : 'Unbekannter Fehler'))}</p>
             <small class="text-light">
                 Zeit: ${new Date().toLocaleString('de-DE')}
             </small>
@@ -2230,9 +2231,13 @@ function displayHealthError(data) {
 
 // Uptime formatieren
 function formatUptime(seconds) {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    if (seconds == null || Number.isNaN(Number(seconds))) {
+        return 'N/A';
+    }
+    const s = Number(seconds);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const minutes = Math.floor((s % 3600) / 60);
     
     if (days > 0) {
         return `${days}d ${hours}h ${minutes}m`;
