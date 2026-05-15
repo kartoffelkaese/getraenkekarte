@@ -1,0 +1,129 @@
+/* Farbgebung + Typografie wie hochzeit-dunkel – nur body.theke-hinten-bilder-dunkel */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+/* Kein schwarzer Rand um die Seite (global styles.css setzt html auf #000) */
+html:has(body.theke-hinten-bilder-dunkel) {
+    background-color: #1a1814;
+}
+
+body.theke-hinten-bilder-dunkel {
+    color: #e8e4dc;
+    background-color: #1a1814;
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(196, 163, 90, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, #1a1814 0%, #252219 100%);
+    background-size: 24px 24px, 100% 100%;
+    background-position: 0 0, 0 0;
+}
+
+/* Rahmen wie hochzeit-dunkel (an Vollbild-Theke-Layout angepasst) */
+body.theke-hinten-bilder-dunkel .fullscreen-container {
+    margin: 8px;
+    height: calc(100vh - 16px);
+    width: calc(100vw - 16px);
+    background: transparent;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+    border: 1px solid rgba(196, 163, 90, 0.25);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Sticky Kategoriezeile wie Hochzeit dunkel – halbtransparent, nicht rein schwarz */
+body.theke-hinten-bilder-dunkel .category-header {
+    background: transparent;
+    position: relative;
+    padding: 0.75rem 0 0.5rem;
+    backdrop-filter: blur(4px);
+}
+
+body.theke-hinten-bilder-dunkel .category-header h2 {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 1.85rem;
+    font-weight: 600;
+    color: #e8e4dc;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: none;
+    border: none;
+    border-bottom: 2px solid #c4a35a;
+    padding-bottom: 0.35rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+body.theke-hinten-bilder-dunkel .category-header h2::before,
+body.theke-hinten-bilder-dunkel .category-header h2::after {
+    content: '\2665'; /* ♥ */
+    font-size: 0.65em;
+    color: #c4a35a;
+    opacity: 0.9;
+    line-height: 1;
+}
+
+body.theke-hinten-bilder-dunkel .card {
+    background-color: #2a2722;
+    border: none;
+    border-left: 3px solid #a50775;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 0 8px 8px 0;
+}
+
+body.theke-hinten-bilder-dunkel .card-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #e8e4dc;
+}
+
+body.theke-hinten-bilder-dunkel .card-title .drink-name {
+    font-family: inherit;
+}
+
+body.theke-hinten-bilder-dunkel .card-title .float-end {
+    color: #c4a35a;
+}
+
+body.theke-hinten-bilder-dunkel .additives-info {
+    font-size: 0.8rem;
+    color: #b0a99e;
+}
+
+/* Bildbereich: kein schwarzer Kasten von .additional-content */
+body.theke-hinten-bilder-dunkel .additional-content {
+    background-color: transparent;
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(196, 163, 90, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+body.theke-hinten-bilder-dunkel .additives-container {
+    background: linear-gradient(180deg, #1a1814 0%, #252219 100%);
+    border-top: 2px solid #c4a35a;
+    box-shadow: 0 -2px 10px rgba(196, 163, 90, 0.1);
+}
+
+body.theke-hinten-bilder-dunkel .additives-content small {
+    color: #b0a99e;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    opacity: 1;
+}
+
+body.theke-hinten-bilder-dunkel .additional-content .text-muted,
+body.theke-hinten-bilder-dunkel .text-muted {
+    color: #b0a99e !important;
+}
+
+body.theke-hinten-bilder-dunkel .additional-content .text-danger {
+    color: #f0a8a0 !important;
+}
+
+body.theke-hinten-bilder-dunkel .bilder-stack-img {
+    background: #2a2722;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}

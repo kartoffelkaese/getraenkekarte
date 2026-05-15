@@ -213,7 +213,7 @@ function createDishCard(dish) {
     
     let imageHtml = '';
     if (dish.image_path) {
-        imageHtml = `<img src="${dish.image_path}" alt="${dish.name}" class="dish-image" loading="lazy">`;
+        imageHtml = `<img src="${safeAssetUrl(dish.image_path)}" alt="${escapeAttr(dish.name)}" class="dish-image" loading="lazy">`;
     }
     
     // Formatiere den Preis
@@ -222,8 +222,8 @@ function createDishCard(dish) {
     card.innerHTML = `
         ${imageHtml}
         <div class="dish-content">
-            <h3 class="dish-title">${dish.name}</h3>
-            ${dish.description ? `<p class="dish-description">${dish.description}</p>` : ''}
+            <h3 class="dish-title">${escapeHtml(dish.name)}</h3>
+            ${dish.description ? `<p class="dish-description">${escapeHtml(dish.description)}</p>` : ''}
             <div class="dish-price">${price} €</div>
         </div>
     `;

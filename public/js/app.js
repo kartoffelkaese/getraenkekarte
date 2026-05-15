@@ -141,7 +141,7 @@ async function loadAdditives() {
         if (additivesContent) {
             additivesContent.innerHTML = `
                 <small>
-                    ${additives.map(a => `${a.code}) ${a.name}`).join(' • ')}
+                    ${additives.map(a => `${escapeHtml(a.code)}) ${escapeHtml(a.name)}`).join(' • ')}
                 </small>
             `;
         }
@@ -339,15 +339,15 @@ function displayDrinks(drinks) {
                     const smallPrice = parseFloat(drink.small_price) || 0;
                     priceHtml = `<span class="float-end">
                         ${formatPrice(preis)} €
-                        <small class="additives-info">(${drink.volume_normal})</small>
+                        <small class="additives-info">(${escapeHtml(drink.volume_normal)})</small>
                         &nbsp;/&nbsp;
                         ${formatPrice(smallPrice)} €
-                        <small class="additives-info">(${drink.volume_small})</small>
+                        <small class="additives-info">(${escapeHtml(drink.volume_small)})</small>
                     </span>`;
                 } else {
                     priceHtml = `<span class="float-end">
                         ${formatPrice(preis)} €
-                        ${drink.volume_normal ? `<small class="additives-info">(${drink.volume_normal})</small>` : ''}
+                        ${drink.volume_normal ? `<small class="additives-info">(${escapeHtml(drink.volume_normal)})</small>` : ''}
                     </span>`;
                 }
             }
@@ -357,8 +357,8 @@ function displayDrinks(drinks) {
                     <div class="card-body">
                         <h5 class="card-title d-flex justify-content-between mb-0">
                             <span class="drink-name">
-                                ${drink.name}
-                                ${drink.additives ? `<small class="additives-info">(${drink.additives.split(', ').map(a => a.split(')')[0]).join(',')})</small>` : ''}
+                                ${escapeHtml(drink.name)}
+                                ${drink.additives ? `<small class="additives-info">(${escapeHtml(drink.additives.split(', ').map(a => a.split(')')[0]).join(','))})</small>` : ''}
                             </span>
                             ${priceHtml}
                         </h5>
@@ -429,8 +429,8 @@ function displayAds(ads) {
         adElement.id = `ad-${ad.id}`;
         const preis = parseFloat(ad.price) || 0;
         adElement.innerHTML = `
-            <img src="${ad.image_path}" alt="${ad.name}" loading="lazy">
-            <div class="drink-name">${ad.name}</div>
+            <img src="${safeAssetUrl(ad.image_path)}" alt="${escapeAttr(ad.name)}" loading="lazy">
+            <div class="drink-name">${escapeHtml(ad.name)}</div>
             ${ad.price ? `<div class="drink-price">${formatPrice(preis)} €</div>` : ''}
         `;
         additionalContent.appendChild(adElement);
@@ -496,7 +496,7 @@ function displayLogo(settings) {
     // Füge CSS-Klasse für Logo-Größe hinzu
     const logoImageClass = 'logo-image' + (settings.logo_size === 'small' ? ' small' : '');
     logoContainer.innerHTML = `
-        <img src="${logoPath}" alt="Logo" class="${logoImageClass}">
+        <img src="${safeAssetUrl(logoPath)}" alt="Logo" class="${escapeAttr(logoImageClass)}">
     `;
     
     // Füge das Logo an der richtigen Position ein

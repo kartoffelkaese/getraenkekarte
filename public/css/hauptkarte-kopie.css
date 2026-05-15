@@ -1,5 +1,9 @@
 /* Overrides nur fuer /hauptkarte-kopie */
 
+html:has(body.hauptkarte-kopie) {
+    background-color: #1a1814;
+}
+
 body.hauptkarte-kopie .drinks-row {
     gap: 1rem;
     max-width: 90%;

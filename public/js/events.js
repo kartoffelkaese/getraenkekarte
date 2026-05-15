@@ -37,6 +37,35 @@ const db = getFirestore(app);
 
 var events = [];
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
+function escapeAttr(str) {
+    return escapeHtml(str).replace(/"/g, '&quot;');
+}
+
+function safeImageUrl(url) {
+    if (!url || typeof url !== 'string') {
+        return '';
+    }
+    if (url.startsWith('/') && !url.includes('..')) {
+        return escapeAttr(url);
+    }
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'https:') {
+            return escapeAttr(url);
+        }
+    } catch {
+        // ignore invalid URLs
+    }
+    return '';
+}
+
 export async function initEvents(containerId) {
     events = [];
     const now = new Date();
@@ -114,10 +143,10 @@ function displayEvents(containerId) {
         
         eventCard.innerHTML = `
             <div class="event-image">
-                <img src="${event.img}" alt="${event.name}">
+                <img src="${safeImageUrl(event.img)}" alt="${escapeAttr(event.name)}">
             </div>
             <div class="event-info">
-                <h3>${event.name}</h3>
+                <h3>${escapeHtml(event.name)}</h3>
                 <p class="event-date">
                     ${event.date.toLocaleDateString('de-DE', dateOptions)}
                 </p>

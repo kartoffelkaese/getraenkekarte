@@ -124,9 +124,21 @@ function findSectionByHeading(headingText) {
 }
 
 function escapeHtml(str) {
+    if (str == null) return '';
     const div = document.createElement('div');
-    div.textContent = str;
+    div.textContent = String(str);
     return div.innerHTML;
+}
+
+function escapeAttr(str) {
+    return escapeHtml(str).replace(/"/g, '&quot;');
+}
+
+function safeAssetUrl(url) {
+    if (!url || typeof url !== 'string' || !url.startsWith('/') || url.includes('..')) {
+        return '';
+    }
+    return escapeAttr(url);
 }
 
 // Links-Tabelle: alle verfügbaren Karten mit URLs
@@ -135,6 +147,7 @@ const CARD_LINKS = [
     { path: '/haupttheke', name: 'Haupttheke' },
     { path: '/theke-hinten', name: 'Theke Hinten' },
     { path: '/theke-hinten-bilder', name: 'Theke Hinten Bilder' },
+    { path: '/theke-hinten-bilder-dunkel', name: 'Theke Hinten Bilder (dunkel)' },
     { path: '/theke-hinten-2', name: 'Theke Hinten (2 Spalten)' },
     { path: '/hochzeit', name: 'Hochzeitskarte' },
     { path: '/hochzeit-dunkel', name: 'Hochzeitskarte (dunkel)' },
@@ -574,9 +587,9 @@ async function displayDrinks(drinks) {
         const preis = parseFloat(drink.preis) || 0;
         
         row.innerHTML = `
-            <td>${drink.name}</td>
+            <td>${escapeHtml(drink.name)}</td>
             <td>${preis.toFixed(2)} €</td>
-            <td>${drink.category_name || '-'}</td>
+            <td>${escapeHtml(drink.category_name || '-')}</td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 
@@ -600,7 +613,7 @@ async function displayDrinks(drinks) {
                         Bearbeiten <span class="additive-count">${drinkAdditives.length}</span>
                     </button>
                     <div class="additive-badges" style="font-size: 0.8rem;">
-                        ${drinkAdditives.map(a => `<span class="additive-badge">${a.code}</span>`).join('')}
+                        ${drinkAdditives.map(a => `<span class="additive-badge">${escapeHtml(a.code)}</span>`).join('')}
                     </div>
                 </div>
             </td>
@@ -629,9 +642,9 @@ function displayAds(ads) {
         const row = document.createElement('tr');
         const preis = parseFloat(ad.price) || 0;
         row.innerHTML = `
-            <td>${ad.name || 'Kein Name'}</td>
+            <td>${escapeHtml(ad.name || 'Kein Name')}</td>
             <td>${ad.price ? preis.toFixed(2) + ' €' : ''}</td>
-            <td>${ad.card_type || 'Standard'}</td>
+            <td>${escapeHtml(ad.card_type || 'Standard')}</td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 
@@ -646,7 +659,7 @@ function displayAds(ads) {
                        value="${ad.sort_order || 0}"
                        onchange="updateAdOrder(${ad.id}, this.value)">
             </td>
-            <td><img src="${ad.image_path}" alt="${ad.name || 'Werbung'}" style="height: 50px;"></td>
+            <td><img src="${safeAssetUrl(ad.image_path)}" alt="${escapeAttr(ad.name || 'Werbung')}" style="height: 50px;"></td>
             <td>
                 <button class="btn btn-danger btn-sm" onclick="deleteAd(${ad.id})">
                     <i class="bi bi-trash"></i> Löschen
@@ -740,8 +753,8 @@ function displayAdditives(additives) {
     additives.forEach(additive => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${additive.code}</td>
-            <td>${additive.name}</td>
+            <td>${escapeHtml(additive.code)}</td>
+            <td>${escapeHtml(additive.name)}</td>
             <td>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" 

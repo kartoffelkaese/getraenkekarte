@@ -97,8 +97,8 @@
                         <div class="card-body">
                             <h5 class="card-title d-flex justify-content-between mb-0">
                                 <span class="drink-name">
-                                    ${drink.name}
-                                    ${drink.additives ? `<small class="additives-info">(${drink.additives.split(', ').map(a => a.split(')')[0]).join(',')})</small>` : ''}
+                                    ${escapeHtml(drink.name)}
+                                    ${drink.additives ? `<small class="additives-info">(${escapeHtml(drink.additives.split(', ').map(a => a.split(')')[0]).join(','))})</small>` : ''}
                                 </span>
                                 ${priceHtml}
                             </h5>

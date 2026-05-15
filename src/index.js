@@ -3,23 +3,118 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mysql = require('mysql2');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const auth = require('./middleware/auth');
+const { requireMutatingApiAuth, verifyCredentials, apiAuth } = require('./middleware/auth');
+const { isProduction, trustProxy, corsOriginValidator, VALID_LOCATIONS } = require('./config/security');
+const { safePathJoin, isValidScheduleCard, resolvePresetPath, isValidPresetFilename, parsePresetCard } = require('./utils/safePath');
+const { apiError } = require('./utils/apiError');
+const { randomImageFilename, imageFileFilter, validateUploadedFile } = require('./utils/uploadValidation');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
+const PRESETS_DIR = path.join(__dirname, '../public/presets');
+
 const app = express();
 const server = http.createServer(app);
+
+if (trustProxy) {
+    app.set('trust proxy', 1);
+}
+
 const io = socketIo(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+        origin: corsOriginValidator,
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
 });
 
-app.use(cors());
-app.use(express.json());
+app.use(helmet({
+    contentSecurityPolicy: isProduction ? undefined : false,
+    crossOriginEmbedderPolicy: false,
+    strictTransportSecurity: false,
+}));
+app.use(cors({ origin: corsOriginValidator, credentials: true }));
+app.use(express.json({ limit: '1mb' }));
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: isProduction ? 300 : 2000,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: isProduction ? 50 : 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api', apiLimiter);
+app.use('/api', requireMutatingApiAuth);
+app.use('/api', (req, res, next) => {
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+        return authLimiter(req, res, next);
+    }
+    next();
+});
+
+app.param('location', (req, res, next, location) => {
+    if (!VALID_LOCATIONS.has(location)) {
+        return res.status(400).json({ error: 'Ungültige Location' });
+    }
+    next();
+});
+
+function validateScheduleConfig(configData) {
+    if (!configData || typeof configData !== 'object') {
+        return 'Ungültige Konfiguration';
+    }
+    if (!isValidScheduleCard(configData.defaultCard)) {
+        return 'Ungültige Default-Karte';
+    }
+    if (configData.rules) {
+        if (!Array.isArray(configData.rules)) {
+            return 'Regeln müssen ein Array sein';
+        }
+        for (const rule of configData.rules) {
+            if (rule.card && !isValidScheduleCard(rule.card)) {
+                return `Ungültige Karte in Regel: ${rule.id || 'unbekannt'}`;
+            }
+        }
+    }
+    return null;
+}
+
+function loadPresetFromCard(currentCard) {
+    const presetPath = resolvePresetPath(PRESETS_DIR, currentCard);
+    if (!presetPath || !fs.existsSync(presetPath)) {
+        return null;
+    }
+    try {
+        return JSON.parse(fs.readFileSync(presetPath, 'utf8'));
+    } catch (error) {
+        console.error('Fehler beim Laden des Presets:', error);
+        return null;
+    }
+}
+
+function activatePresetFromCard(currentCard, activePresets) {
+    const parsed = currentCard.startsWith('preset:')
+        ? parsePresetCard(currentCard)
+        : null;
+    if (!parsed) {
+        return;
+    }
+    const presetData = loadPresetFromCard(currentCard);
+    if (presetData) {
+        activePresets[parsed.location] = { filename: parsed.filename, presetData };
+        console.log(`Preset aktiviert für ${parsed.location}: ${parsed.filename}`);
+    }
+}
 
 // Admin-Bereich mit Authentifizierung
 app.use('/admin.html', auth);
@@ -40,6 +135,10 @@ app.get('/theke-hinten', (req, res) => {
 
 app.get('/theke-hinten-bilder', (req, res) => {
     res.sendFile('theke-hinten-bilder.html', { root: './public' });
+});
+
+app.get('/theke-hinten-bilder-dunkel', (req, res) => {
+    res.sendFile('theke-hinten-bilder-dunkel.html', { root: './public' });
 });
 
 app.get('/theke-hinten-2', (req, res) => {
@@ -127,26 +226,35 @@ app.get('/api/version', (req, res) => {
 // Health Check Endpoint für Datenbankverbindung
 app.get('/api/health', async (req, res) => {
     try {
-        // Teste Datenbankverbindung
         await safeQuery('SELECT 1 as test');
-        
+
+        if (isProduction) {
+            return res.json({
+                status: 'healthy',
+                timestamp: new Date().toISOString(),
+            });
+        }
+
         res.json({
             status: 'healthy',
             database: 'connected',
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
             memory: process.memoryUsage(),
-            connectionStats: connectionStats
+            connectionStats: connectionStats,
         });
     } catch (error) {
         console.error('Health Check Fehler:', error);
-        res.status(503).json({
+        const payload = {
             status: 'unhealthy',
             database: 'disconnected',
-            error: error.message,
             timestamp: new Date().toISOString(),
-            connectionStats: connectionStats
-        });
+        };
+        if (!isProduction) {
+            payload.error = error.message;
+            payload.connectionStats = connectionStats;
+        }
+        res.status(503).json(payload);
     }
 });
 
@@ -262,6 +370,11 @@ app.post('/api/schedule-config', (req, res) => {
             defaultCard,
             rules: rules || []
         };
+
+        const validationError = validateScheduleConfig(configData);
+        if (validationError) {
+            return res.status(400).json({ error: validationError });
+        }
         
         const configPath = path.join(__dirname, '../schedule-1-config.json');
         fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
@@ -335,31 +448,7 @@ app.get('/api/schedule-config/current', (req, res) => {
         
         // Prüfe ob aktuelle Karte ein Preset ist und lade/aktiviere es
         if (currentCard.startsWith('preset:')) {
-            const filename = currentCard.replace('preset:', '');
-            
-            // Extrahiere Location aus Dateinamen
-            let location = null;
-            if (filename.startsWith('haupttheke-')) {
-                location = 'haupttheke';
-            } else if (filename.startsWith('theke-hinten-')) {
-                location = 'theke-hinten';
-            }
-            
-            if (location) {
-                // Lade Preset und aktiviere es
-                const presetPath = path.join(__dirname, '../public/presets', filename);
-                if (fs.existsSync(presetPath)) {
-                    try {
-                        const presetData = JSON.parse(fs.readFileSync(presetPath, 'utf8'));
-                        activePresets[location] = { filename, presetData };
-                        console.log(`Preset aktiviert für ${location}: ${filename}`);
-                    } catch (error) {
-                        console.error('Fehler beim Laden des Presets:', error);
-                    }
-                } else {
-                    console.warn(`Preset-Datei nicht gefunden: ${presetPath}`);
-                }
-            }
+            activatePresetFromCard(currentCard, activePresets);
         } else {
             // Wenn keine Preset-Karte aktiv ist, prüfe ob aktive Presets noch benötigt werden
             // Entferne nur, wenn die Location wirklich nicht mehr als Preset verwendet wird
@@ -436,7 +525,12 @@ app.post('/api/schedule-2-config', (req, res) => {
             defaultCard,
             rules: rules || []
         };
-        
+
+        const validationError = validateScheduleConfig(configData);
+        if (validationError) {
+            return res.status(400).json({ error: validationError });
+        }
+
         const configPath = path.join(__dirname, '../schedule-2-config.json');
         fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
         
@@ -464,31 +558,7 @@ app.get('/api/schedule-2-config/current', (req, res) => {
         
         // Prüfe ob aktuelle Karte ein Preset ist und lade/aktiviere es
         if (currentCard.startsWith('preset:')) {
-            const filename = currentCard.replace('preset:', '');
-            
-            // Extrahiere Location aus Dateinamen
-            let location = null;
-            if (filename.startsWith('haupttheke-')) {
-                location = 'haupttheke';
-            } else if (filename.startsWith('theke-hinten-')) {
-                location = 'theke-hinten';
-            }
-            
-            if (location) {
-                // Lade Preset und aktiviere es
-                const presetPath = path.join(__dirname, '../public/presets', filename);
-                if (fs.existsSync(presetPath)) {
-                    try {
-                        const presetData = JSON.parse(fs.readFileSync(presetPath, 'utf8'));
-                        activePresets[location] = { filename, presetData };
-                        console.log(`Preset aktiviert für ${location}: ${filename} (Schedule-2)`);
-                    } catch (error) {
-                        console.error('Fehler beim Laden des Presets:', error);
-                    }
-                } else {
-                    console.warn(`Preset-Datei nicht gefunden: ${presetPath}`);
-                }
-            }
+            activatePresetFromCard(currentCard, activePresets);
         } else {
             // Wenn keine Preset-Karte aktiv ist, prüfe ob aktive Presets noch benötigt werden
             // Entferne nur, wenn die Location wirklich nicht mehr als Preset verwendet wird
@@ -670,7 +740,9 @@ const dbConfig = {
     // Timeout-Einstellungen
     connectTimeout: 10000,
     // SSL falls nötig
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+    ssl: process.env.DB_SSL === 'true'
+        ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
+        : false
 };
 
 // Erstelle Connection Pool
@@ -810,24 +882,14 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function(req, file, cb) {
-        // Behalte den originalen Dateinamen bei und füge nur einen Zeitstempel als Suffix hinzu
-        const timestamp = Date.now();
-        const originalName = path.parse(file.originalname).name;
-        const extension = path.extname(file.originalname);
-        cb(null, `${originalName}-${timestamp}${extension}`);
+        cb(null, randomImageFilename(file.originalname));
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB Limit
-    fileFilter: function(req, file, cb) {
-        // Erlaube nur Bilder
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
-            return cb(new Error('Nur Bilddateien sind erlaubt!'), false);
-        }
-        cb(null, true);
-    }
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: imageFileFilter,
 });
 
 // === Bilder-API ===
@@ -842,27 +904,23 @@ const imageStorage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function(req, file, cb) {
-        const timestamp = Date.now();
-        const originalName = path.parse(file.originalname).name;
-        const extension = path.extname(file.originalname);
-        cb(null, `${originalName}-${timestamp}${extension}`);
+        cb(null, randomImageFilename(file.originalname));
     }
 });
-const imageUpload = multer({ 
+const imageUpload = multer({
     storage: imageStorage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-    fileFilter: function(req, file, cb) {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-            return cb(new Error('Nur Bilddateien sind erlaubt!'), false);
-        }
-        cb(null, true);
-    }
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: imageFileFilter,
 });
 
 // POST /api/images – Einzelnes Bild hochladen
 app.post('/api/images', imageUpload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Keine Datei hochgeladen.' });
+    }
+    if (!validateUploadedFile(req.file)) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'Ungültiges Bildformat.' });
     }
     res.json({ success: true, filename: req.file.filename });
 });
@@ -871,7 +929,7 @@ app.post('/api/images', imageUpload.single('image'), (req, res) => {
 app.get('/api/images', (req, res) => {
     fs.readdir(uploadDir, (err, files) => {
         if (err) return res.status(500).json({ error: 'Fehler beim Lesen des Upload-Ordners.' });
-        const images = files.filter(f => f.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)).map(filename => ({
+        const images = files.filter(f => f.match(/\.(jpg|jpeg|png|gif|webp)$/i)).map(filename => ({
             id: filename,
             filename,
             url: `/uploads/${filename}`
@@ -886,9 +944,12 @@ app.delete('/api/images/all', (req, res) => {
         if (err) return res.status(500).json({ error: 'Fehler beim Lesen des Upload-Ordners.' });
         let errorCount = 0;
         files.forEach(file => {
-            if (file.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+            if (file.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
                 try {
-                    fs.unlinkSync(path.join(uploadDir, file));
+                    const safeFile = safePathJoin(uploadDir, file);
+                    if (safeFile) {
+                        fs.unlinkSync(safeFile);
+                    }
                 } catch (e) {
                     errorCount++;
                 }
@@ -903,8 +964,10 @@ app.delete('/api/images/all', (req, res) => {
 
 // DELETE /api/images/:id – Einzelnes Bild löschen
 app.delete('/api/images/:id', (req, res) => {
-    const file = req.params.id;
-    const filePath = path.join(uploadDir, file);
+    const filePath = safePathJoin(uploadDir, req.params.id);
+    if (!filePath) {
+        return res.status(400).json({ error: 'Ungültiger Dateiname.' });
+    }
     fs.unlink(filePath, err => {
         if (err) return res.status(404).json({ error: 'Datei nicht gefunden.' });
         res.json({ success: true });
@@ -1006,7 +1069,7 @@ app.get('/api/drinks/:location', async (req, res) => {
         res.json(drinksWithOverrides);
     } catch (err) {
         console.error('Drinks API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1053,7 +1116,7 @@ app.get('/api/categories/:location', async (req, res) => {
         res.json(categoriesWithOverrides || []);
     } catch (err) {
         console.error('Categories API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1073,7 +1136,7 @@ app.post('/api/drinks/toggle/:location', async (req, res) => {
         io.emit('drinkStatusChanged', { id, is_active, location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1093,7 +1156,7 @@ app.post('/api/drinks/toggle-price/:location', async (req, res) => {
         io.emit('drinkPriceChanged', { id, show_price, location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1113,7 +1176,7 @@ app.post('/api/categories/toggle-prices/:location', async (req, res) => {
         io.emit('categoryPricesChanged', { id, show_prices, location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1133,7 +1196,7 @@ app.post('/api/categories/toggle-visibility/:location', async (req, res) => {
         io.emit('categoryVisibilityChanged', { id, is_visible, location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1153,7 +1216,7 @@ app.post('/api/categories/toggle-column-break/:location', async (req, res) => {
         io.emit('categoryColumnBreakChanged', { id, force_column_break, location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1173,7 +1236,7 @@ app.post('/api/categories/update-order/:location', async (req, res) => {
         io.emit('categorySortChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1217,7 +1280,7 @@ app.get('/api/ads/:location', async (req, res) => {
         res.json(adsWithOverrides || []);
     } catch (err) {
         console.error('Ads API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1237,7 +1300,7 @@ app.post('/api/ads/toggle/:location', async (req, res) => {
         io.emit('adsChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1257,7 +1320,7 @@ app.post('/api/ads/update-order/:location', async (req, res) => {
         io.emit('adsChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1294,7 +1357,7 @@ app.get('/api/logo/:location', async (req, res) => {
         res.json(logoData);
     } catch (err) {
         console.error('Logo API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1314,7 +1377,7 @@ app.post('/api/logo/update-order/:location', async (req, res) => {
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1334,7 +1397,7 @@ app.post('/api/logo/toggle/:location', async (req, res) => {
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1354,7 +1417,7 @@ app.post('/api/logo/toggle-column-break/:location', async (req, res) => {
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1384,7 +1447,7 @@ app.post('/api/logo/update-size/:location', async (req, res) => {
         io.emit('logoChanged', { location });
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1400,7 +1463,7 @@ app.get('/api/additives', async (req, res) => {
         res.json(rows || []);
     } catch (err) {
         console.error('Additives API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1418,7 +1481,7 @@ app.get('/api/drink-additives/:drinkId', async (req, res) => {
         res.json(rows || []);
     } catch (err) {
         console.error('Drink Additives API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1440,7 +1503,7 @@ app.post('/api/drink-additives/:drinkId', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Update Drink Additives Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1458,7 +1521,7 @@ app.get('/api/additives/:id', async (req, res) => {
         }
     } catch (err) {
         console.error('Fehler beim Laden des Zusatzstoffs:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1470,7 +1533,7 @@ app.post('/api/additives', async (req, res) => {
         io.emit('additivesChanged');
         res.json({ id: result.insertId });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1485,7 +1548,7 @@ app.put('/api/additives/:id', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Fehler beim Aktualisieren des Zusatzstoffs:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1499,7 +1562,7 @@ app.delete('/api/additives/:id', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Fehler beim Löschen des Zusatzstoffs:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1515,7 +1578,7 @@ app.get('/api/additives-list', async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error('Additives List API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1530,14 +1593,18 @@ app.put('/api/additives/:id/toggle-footer', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Toggle Footer Visibility Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
 // API-Endpunkt zum Hochladen von Bildern
-app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => {
+app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, error: 'Keine Datei hochgeladen' });
+    }
+    if (!validateUploadedFile(req.file)) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ success: false, error: 'Ungültiges Bildformat' });
     }
     
     const { name, price, cardType, isActive, sortOrder } = req.body;
@@ -1567,12 +1634,12 @@ app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => 
         // Lösche die hochgeladene Datei, wenn die Datenbankoperation fehlschlägt
         fs.unlinkSync(req.file.path);
         console.error('Fehler beim Speichern der Bildinformationen:', err);
-        res.status(500).json({ success: false, error: err.message });
+        apiError(res, 500, err);
     }
 });
 
 // API-Endpunkt zum Löschen einer Werbung
-app.delete('/api/ads/:id', auth, async (req, res) => {
+app.delete('/api/ads/:id', async (req, res) => {
     const adId = req.params.id;
     
     try {
@@ -1600,7 +1667,7 @@ app.delete('/api/ads/:id', auth, async (req, res) => {
         res.json({ success: true, message: 'Werbung erfolgreich gelöscht' });
     } catch (err) {
         console.error('Fehler beim Löschen der Werbung:', err);
-        res.status(500).json({ success: false, error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1616,7 +1683,7 @@ app.get('/api/dishes', async (req, res) => {
         res.json(rows || []);
     } catch (err) {
         console.error('Dishes API Error:', err);
-        res.status(500).json({ error: err.message });
+        apiError(res, 500, err);
     }
 });
 
@@ -1640,6 +1707,10 @@ app.post('/api/dishes', upload.single('dishImage'), async (req, res) => {
         let image_path = null;
 
         if (req.file) {
+            if (!validateUploadedFile(req.file)) {
+                fs.unlinkSync(req.file.path);
+                return res.status(400).json({ error: 'Ungültiges Bildformat' });
+            }
             image_path = `/images/${req.file.filename}`;
         }
 
@@ -1661,6 +1732,10 @@ app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
         let image_path = null;
 
         if (req.file) {
+            if (!validateUploadedFile(req.file)) {
+                fs.unlinkSync(req.file.path);
+                return res.status(400).json({ error: 'Ungültiges Bildformat' });
+            }
             image_path = `/images/${req.file.filename}`;
         }
 
@@ -1674,7 +1749,6 @@ app.put('/api/dishes/:id', upload.single('dishImage'), async (req, res) => {
 
         await safeQuery(query, params);
 
-        // Emittiere das Event mit der Location
         io.emit('dishesChanged', { location: 'speisekarte' });
 
         res.json({ success: true });
@@ -1916,7 +1990,7 @@ async function collectCurrentSettings(location) {
 }
 
 // Preset-API Endpunkte
-app.post('/api/presets/:location/save', auth, async (req, res) => {
+app.post('/api/presets/:location/save', async (req, res) => {
     try {
         const location = req.params.location;
         const { name } = req.body;
@@ -1973,7 +2047,7 @@ app.post('/api/presets/:location/save', auth, async (req, res) => {
     }
 });
 
-app.get('/api/presets/:location', auth, async (req, res) => {
+app.get('/api/presets/:location', apiAuth, async (req, res) => {
     try {
         const location = req.params.location;
 
@@ -2023,7 +2097,7 @@ app.get('/api/presets/:location', auth, async (req, res) => {
     }
 });
 
-app.delete('/api/presets/:location/:filename', auth, async (req, res) => {
+app.delete('/api/presets/:location/:filename', async (req, res) => {
     try {
         const location = req.params.location;
         const filename = req.params.filename;
@@ -2038,14 +2112,12 @@ app.delete('/api/presets/:location/:filename', auth, async (req, res) => {
             return res.status(400).json({ error: 'Dateiname gehört nicht zur angegebenen Location' });
         }
 
-        const filePath = path.join(__dirname, '../public/presets', filename);
+        const filePath = safePathJoin(PRESETS_DIR, filename);
 
-        // Prüfe ob Datei existiert
-        if (!fs.existsSync(filePath)) {
+        if (!filePath || !fs.existsSync(filePath)) {
             return res.status(404).json({ error: 'Preset-Datei nicht gefunden' });
         }
 
-        // Lösche Datei
         fs.unlinkSync(filePath);
         
         console.log(`Preset gelöscht: ${filename}`);
@@ -2060,6 +2132,20 @@ app.delete('/api/presets/:location/:filename', auth, async (req, res) => {
     }
 });
 
+function requireSocketAuth(socket) {
+    return verifyCredentials(socket.request);
+}
+
+function guardedSocketEvent(socket, eventName, handler) {
+    socket.on(eventName, (...args) => {
+        if (!requireSocketAuth(socket)) {
+            console.warn(`Socket ${eventName} abgelehnt: nicht authentifiziert (${socket.id})`);
+            return;
+        }
+        handler(...args);
+    });
+}
+
 // Socket.io Verbindung
 io.on('connection', (socket) => {
     console.log('Neue Socket.IO Verbindung:', socket.id);
@@ -2072,45 +2158,46 @@ io.on('connection', (socket) => {
         console.error('Socket.IO Fehler:', error);
     });
 
-    // Socket.IO Event-Handler für Reload-Funktionen
-    socket.on('forceThekeHintenReload', () => {
+    guardedSocketEvent(socket, 'forceThekeHintenReload', () => {
         console.log('Force Theke-Hinten Reload Event empfangen');
         io.emit('forceThekeHintenReload');
     });
 
-    socket.on('forceHauptthekeReload', () => {
+    guardedSocketEvent(socket, 'forceHauptthekeReload', () => {
         console.log('Force Haupttheke Reload Event empfangen');
         io.emit('forceHauptthekeReload');
     });
 
-    socket.on('forceJugendkarteReload', () => {
+    guardedSocketEvent(socket, 'forceJugendkarteReload', () => {
         console.log('Force Jugendkarte Reload Event empfangen');
         io.emit('forceJugendkarteReload');
     });
 
-    socket.on('forceOverviewReload', (data) => {
+    guardedSocketEvent(socket, 'forceOverviewReload', (data) => {
         console.log('Force Overview Reload Event empfangen:', data);
         io.emit('forceOverviewReload', data);
     });
 
-    socket.on('forceScheduleReload', () => {
+    guardedSocketEvent(socket, 'forceScheduleReload', () => {
         console.log('Force Schedule Reload Event empfangen');
         io.emit('forceScheduleReload');
     });
-    
-    socket.on('forceSchedule2Reload', () => {
+
+    guardedSocketEvent(socket, 'forceSchedule2Reload', () => {
         console.log('Force Schedule-2 Reload Event empfangen');
         io.emit('forceSchedule2Reload');
     });
 
     socket.on('updateDrink', async (data) => {
+        if (!requireSocketAuth(socket)) {
+            return;
+        }
         console.log('Update Drink Event empfangen:', {
             socketId: socket.id,
-            location: data.location,
-            drinkId: data.id,
-            isActive: data.is_active
+            location: data?.location,
+            drinkId: data?.id,
+            isActive: data?.is_active,
         });
-        // ... existing code ...
     });
 });
 
