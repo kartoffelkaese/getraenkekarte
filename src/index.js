@@ -7,7 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const auth = require('./middleware/auth');
 const { requireMutatingApiAuth, verifyCredentials, apiAuth } = require('./middleware/auth');
-const { isProduction, trustProxy, corsOriginValidator, VALID_LOCATIONS } = require('./config/security');
+const { isProduction, trustProxy, corsDelegate, VALID_LOCATIONS, getProductionContentSecurityPolicy } = require('./config/security');
 const { safePathJoin, isValidScheduleCard, resolvePresetPath, isValidPresetFilename, parsePresetCard } = require('./utils/safePath');
 const { apiError } = require('./utils/apiError');
 const { randomImageFilename, imageFileFilter, validateUploadedFile } = require('./utils/uploadValidation');
@@ -26,19 +26,15 @@ if (trustProxy) {
 }
 
 const io = socketIo(server, {
-    cors: {
-        origin: corsOriginValidator,
-        methods: ['GET', 'POST'],
-        credentials: true,
-    },
+    cors: corsDelegate,
 });
 
 app.use(helmet({
-    contentSecurityPolicy: isProduction ? undefined : false,
+    contentSecurityPolicy: isProduction ? getProductionContentSecurityPolicy() : false,
     crossOriginEmbedderPolicy: false,
     strictTransportSecurity: false,
 }));
-app.use(cors({ origin: corsOriginValidator, credentials: true }));
+app.use(cors(corsDelegate));
 app.use(express.json({ limit: '1mb' }));
 
 const apiLimiter = rateLimit({
