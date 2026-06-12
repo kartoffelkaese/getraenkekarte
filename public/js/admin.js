@@ -17,114 +17,62 @@ locationInputs.forEach(input => {
     });
 });
 
-// Event-Listener für Location Tabs
-document.querySelectorAll('#locationTabs .nav-link').forEach(tab => {
-    tab.addEventListener('click', function(e) {
-        e.preventDefault();
-        // Aktiven Tab setzen
-        document.querySelectorAll('#locationTabs .nav-link').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Location aktualisieren und Daten neu laden
-        currentLocation = this.dataset.location;
-        
-        // Sichtbarkeit der Sektionen steuern
-        updateSectionVisibility();
-        
-        // Daten laden basierend auf der Location
-        if (currentLocation === 'speisekarte') {
+function handleAdminNavigate(state) {
+    if (!state || !window.AdminNav) return;
+
+    currentLocation = AdminNav.getLegacyLocation();
+    const { group, page, scheduleTab } = state;
+
+    if (group === 'karten') {
+        if (page === 'speisekarte') {
             fetchDishes();
+        } else if (page === 'bilder') {
+            fetchImages();
         } else {
             fetchCategories();
             fetchDrinks();
             fetchLogo();
+            fetchAds();
         }
-        fetchAds();
-    });
-});
-
-// Funktion zum Aktualisieren der Sichtbarkeit der Sektionen
-function updateSectionVisibility() {
-    // Finde die Sektionen anhand ihrer IDs oder spezifischen Strukturen
-    const sections = {
-        'logo': findSectionByHeading('Logo'),
-        'categories': findSectionByHeading('Kategorien'),
-        'ads': findSectionByHeading('Werbung'),
-        'drinks': findSectionByHeading('Getränke'),
-        'speisekarte': document.getElementById('speisekarteSection'),
-        'additives': findSectionByHeading('Zusatzstoffe verwalten'),
-        'bilder': document.getElementById('bilderSection'),
-        'temp-prices': document.getElementById('tempPricesSection'),
-        'settings': document.getElementById('settingsSection'),
-        'schedule': document.getElementById('scheduleSection'),
-        'links': document.getElementById('linksSection')
-    };
-
-    // Alle Sektionen verstecken
-    Object.values(sections).forEach(section => {
-        if (section) section.style.display = 'none';
-    });
-
-    // Sektionen basierend auf der Location anzeigen
-    if (currentLocation === 'temp-prices') {
-        // Nur Temporäre Preise Sektion anzeigen
-        if (sections['temp-prices']) sections['temp-prices'].style.display = 'block';
-        fetchTempPrices(); // Lade temporäre Preise
-    } else if (currentLocation === 'settings') {
-        // Nur Einstellungen-Sektion anzeigen
-        if (sections.settings) sections.settings.style.display = 'block';
-        fetchCycleConfig(); // Lade Cycle-Konfiguration
-        fetchOverviewConfig(); // Lade Overview-Konfiguration
-        loadPresetsIfSettings(); // Lade Presets
-        loadHochzeitConfig(); // Lade Hochzeitskarten-Konfiguration
-    } else if (currentLocation === 'schedule-1') {
-        // Nur Schedule-Sektion anzeigen
-        if (sections.schedule) sections.schedule.style.display = 'block';
-        // Lade die Konfiguration basierend auf aktivem Tab
-        if (currentScheduleTab === 1) {
-            loadScheduleConfig();
-        } else {
+    } else if (group === 'preise' && page === 'temp') {
+        fetchTempPrices();
+    } else if (group === 'anzeige' && page === 'schedule') {
+        currentScheduleTab = scheduleTab;
+        if (scheduleTab === 2) {
             loadSchedule2Config();
+        } else {
+            loadScheduleConfig();
         }
-    } else if (currentLocation === 'links') {
-        // Nur Links-Sektion anzeigen
-        if (sections.links) sections.links.style.display = 'block';
+    } else if (group === 'anzeige' && page === 'cycle') {
+        fetchCycleConfig();
+    } else if (group === 'anzeige' && page === 'overview') {
+        fetchOverviewConfig();
+        if (window.AdminCards) {
+            window.AdminCards.fetchCards().then((cards) => window.AdminCards.populateCardSelects(cards));
+        }
+    } else if (group === 'system' && page === 'status') {
+        if (typeof loadHealthStatus === 'function') {
+            loadHealthStatus();
+        }
+    } else if (group === 'system' && page === 'hochzeit') {
+        loadHochzeitConfig();
+    } else if (group === 'system' && page === 'presets') {
+        loadPresetsIfSettings();
+    } else if (group === 'system' && page === 'links') {
         renderLinksTable();
-    } else if (currentLocation === 'speisekarte') {
-        if (sections.speisekarte) sections.speisekarte.style.display = 'block';
-    } else if (currentLocation === 'jugendliche') {
-        // Für die Jugendkarte: Logo, Kategorien, Getränke und Zusatzstoffe anzeigen
-        if (sections.logo) sections.logo.style.display = 'block';
-        if (sections.categories) sections.categories.style.display = 'block';
-        if (sections.drinks) sections.drinks.style.display = 'block';
-        if (sections.additives) sections.additives.style.display = 'block';
-    } else if (currentLocation === 'bilder') {
-        const bilderSection = document.getElementById('bilderSection');
-        if (bilderSection) bilderSection.style.display = 'block';
-        fetchImages(); // Bilder anzeigen, wenn die Sektion sichtbar ist
-    } else {
-        // Für alle anderen Locations: Alle Sektionen anzeigen
-        if (sections.logo) sections.logo.style.display = 'block';
-        if (sections.categories) sections.categories.style.display = 'block';
-        if (sections.ads) sections.ads.style.display = 'block';
-        if (sections.drinks) sections.drinks.style.display = 'block';
-        if (sections.additives) sections.additives.style.display = 'block';
-    }
-
-    if (typeof loadHealthStatus === 'function') {
-        loadHealthStatus();
     }
 }
 
-// Hilfsfunktion zum Finden einer Sektion anhand ihrer Überschrift
-function findSectionByHeading(headingText) {
-    const headings = document.querySelectorAll('h2');
-    for (const heading of headings) {
-        if (heading.textContent === headingText) {
-            return heading.closest('div');
-        }
-    }
-    return null;
+function applyResponsiveTableLabels(table) {
+    if (!table) return;
+    const headers = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+    table.querySelectorAll('tbody tr').forEach((row) => {
+        row.querySelectorAll('td').forEach((cell, index) => {
+            if (headers[index]) {
+                cell.setAttribute('data-label', headers[index]);
+            }
+        });
+    });
 }
 
 function escapeHtml(str) {
@@ -161,20 +109,11 @@ function copyLinkToClipboard(url) {
 
 // Initialer Load
 document.addEventListener('DOMContentLoaded', function() {
-    currentLocation = document.querySelector('#locationTabs .nav-link.active').dataset.location;
-    
-    // Sichtbarkeit der Sektionen initial setzen
-    updateSectionVisibility();
-    
-    // Daten laden basierend auf der Location
-    if (currentLocation === 'speisekarte') {
-        fetchDishes();
-    } else {
-        fetchCategories();
-        fetchDrinks();
-        fetchLogo();
+    if (window.AdminNav) {
+        AdminNav.onNavigate(handleAdminNavigate);
+        AdminNav.init();
     }
-    fetchAds();
+
     fetchAdditives();
     
     // Initialisiere das Dish-Modal
@@ -585,22 +524,18 @@ async function displayDrinks(drinks) {
         `;
         drinksTableBody.appendChild(row);
     }
+    applyResponsiveTableLabels(drinksTableBody.closest('table'));
 }
 
 // Funktion zum Anzeigen der Werbungen
 function displayAds(ads) {
     const adsTableBody = document.getElementById('adsTableBody');
-    const adsSection = document.querySelector('div.mb-4 h2').textContent === 'Werbung' 
-        ? adsTableBody.closest('.mb-4')
-        : null;
-    
-    // Zeige die Werbungssektion nur für nicht-Jugendkarten oder wenn es Jugendkarten-Werbungen gibt
-    if (currentLocation === 'jugendliche' && (!Array.isArray(ads) || ads.length === 0)) {
-        if (adsSection) adsSection.style.display = 'none';
+    if (!adsTableBody) return;
+
+    if (currentLocation === 'jugendliche') {
         return;
     }
-    
-    if (adsSection) adsSection.style.display = 'block';
+
     adsTableBody.innerHTML = '';
     
     ads.forEach(ad => {
@@ -633,6 +568,7 @@ function displayAds(ads) {
         `;
         adsTableBody.appendChild(row);
     });
+    applyResponsiveTableLabels(adsTableBody.closest('table'));
 }
 
 // Zusatzstoff-Verwaltung
@@ -1351,6 +1287,7 @@ function displayDishes(dishes) {
         `;
         tbody.appendChild(row);
     });
+    applyResponsiveTableLabels(tbody.closest('table'));
 }
 
 // Funktion zum Filtern der Gerichte
@@ -1792,6 +1729,7 @@ function displayTempPricesTable() {
         `;
         tbody.appendChild(row);
     });
+    applyResponsiveTableLabels(tbody.closest('table'));
 }
 
 // Funktion zum Setzen eines temporären Preises
@@ -2052,8 +1990,11 @@ let currentScheduleTab = 1; // 1 oder 2
 
 // Wechsle zwischen Schedule 1 und 2 Tabs
 function switchScheduleTab(scheduleNumber) {
+    if (window.AdminNav) {
+        AdminNav.switchScheduleTab(scheduleNumber);
+        return;
+    }
     currentScheduleTab = scheduleNumber;
-    
     if (scheduleNumber === 1) {
         loadScheduleConfig();
         stopSchedule2StatusUpdates();
@@ -2200,10 +2141,10 @@ function displayRulesList() {
 
     if (scheduleConfig.rules.length === 0) {
         rulesList.innerHTML = `
-            <div class="text-center text-light">
-                <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6c757d;"></i>
-                <p class="mt-2 text-white">Keine Regeln definiert</p>
-                <button class="btn btn-success" onclick="showAddRuleModal()">
+            <div class="admin-empty-state">
+                <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                <p class="mt-2 mb-3">Keine Regeln definiert</p>
+                <button class="btn btn-primary" onclick="showAddRuleModal()">
                     <i class="bi bi-plus-circle"></i> Erste Regel hinzufügen
                 </button>
             </div>
@@ -2217,6 +2158,7 @@ function displayRulesList() {
         const ruleType = rule.type === 'weekly' ? 'Wöchentlich' : 'Datum';
         const ruleDescription = getRuleDescription(rule);
         const ruleColor = rule.type === 'weekly' ? 'primary' : 'success';
+        const ruleCardClass = rule.type === 'weekly' ? 'admin-rule-card--weekly' : 'admin-rule-card--date';
         
         // Prüfe ob es ein Preset ist
         const isPreset = rule.card.startsWith('preset:');
@@ -2226,16 +2168,16 @@ function displayRulesList() {
         
         html += `
             <div class="col-md-6 mb-3">
-                <div class="card border-${ruleColor}">
+                <div class="card admin-rule-card ${ruleCardClass}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h6 class="card-title text-white">
+                                <h6 class="card-title">
                                     <span class="badge bg-${ruleColor}">${ruleType}</span>
                                     ${cardDisplay}
                                 </h6>
-                                <p class="card-text small text-light">${ruleDescription}</p>
-                                <small class="text-light">Zeit: ${rule.startTime} - ${rule.endTime}</small>
+                                <p class="card-text small">${ruleDescription}</p>
+                                <small class="text-muted">Zeit: ${rule.startTime} - ${rule.endTime}</small>
                             </div>
                             <div class="btn-group-vertical btn-group-sm">
                                 <button class="btn btn-outline-primary" onclick="editRule('${rule.id}')" title="Bearbeiten">
@@ -2606,10 +2548,10 @@ function displayRulesList2() {
 
     if (schedule2Config.rules.length === 0) {
         rulesList.innerHTML = `
-            <div class="text-center text-light">
-                <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6c757d;"></i>
-                <p class="mt-2 text-white">Keine Regeln definiert</p>
-                <button class="btn btn-success" onclick="showAddRuleModal2()">
+            <div class="admin-empty-state">
+                <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                <p class="mt-2 mb-3">Keine Regeln definiert</p>
+                <button class="btn btn-primary" onclick="showAddRuleModal2()">
                     <i class="bi bi-plus-circle"></i> Erste Regel hinzufügen
                 </button>
             </div>
@@ -2623,6 +2565,7 @@ function displayRulesList2() {
         const ruleType = rule.type === 'weekly' ? 'Wöchentlich' : 'Datum';
         const ruleDescription = getRuleDescription(rule);
         const ruleColor = rule.type === 'weekly' ? 'primary' : 'success';
+        const ruleCardClass = rule.type === 'weekly' ? 'admin-rule-card--weekly' : 'admin-rule-card--date';
         
         // Prüfe ob es ein Preset ist
         const isPreset = rule.card.startsWith('preset:');
@@ -2632,16 +2575,16 @@ function displayRulesList2() {
         
         html += `
             <div class="col-md-6 mb-3">
-                <div class="card border-${ruleColor}">
+                <div class="card admin-rule-card ${ruleCardClass}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h6 class="card-title text-white">
+                                <h6 class="card-title">
                                     <span class="badge bg-${ruleColor}">${ruleType}</span>
                                     ${cardDisplay}
                                 </h6>
-                                <p class="card-text small text-light">${ruleDescription}</p>
-                                <small class="text-light">Zeit: ${rule.startTime} - ${rule.endTime}</small>
+                                <p class="card-text small">${ruleDescription}</p>
+                                <small class="text-muted">Zeit: ${rule.startTime} - ${rule.endTime}</small>
                             </div>
                             <div class="btn-group-vertical btn-group-sm">
                                 <button class="btn btn-outline-primary" onclick="editRule2('${rule.id}')" title="Bearbeiten">
@@ -2778,7 +2721,7 @@ async function forceSchedule2Reload() {
 
 // Lade Presets beim Wechsel zum Settings Tab
 function loadPresetsIfSettings() {
-    if (currentLocation === 'settings') {
+    if (currentLocation === 'presets') {
         const presetLocation = document.getElementById('presetLocation');
         if (presetLocation) {
             loadPresets(presetLocation.value);
@@ -2856,7 +2799,7 @@ async function loadPresets(location) {
             <div class="spinner-border spinner-border-sm text-primary" role="status">
                 <span class="visually-hidden">Lade...</span>
             </div>
-            <p class="mt-2" style="color: #e0e0e0;">Lade Presets...</p>
+            <p class="mt-2 admin-loading-text">Lade Presets...</p>
         </div>
     `;
     
@@ -2888,7 +2831,7 @@ function displayPresetsList(presets, location) {
     if (!presets || presets.length === 0) {
         presetsList.innerHTML = `
             <div class="text-center">
-                <p class="mt-2" style="color: #e0e0e0;">Keine Presets gespeichert</p>
+                <p class="mt-2 admin-loading-text">Keine Presets gespeichert</p>
                 <small style="color: #999;">Speichere ein Preset, um es hier zu sehen</small>
             </div>
         `;
@@ -2908,10 +2851,10 @@ function displayPresetsList(presets, location) {
         });
         
         html += `
-            <div class="list-group-item bg-dark border-secondary mb-2">
+            <div class="list-group-item mb-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1">
-                        <h6 class="mb-1" style="color: #fff;">${preset.name}</h6>
+                        <h6 class="mb-1 admin-preset-item">${preset.name}</h6>
                         <small class="text-muted">Erstellt: ${formattedDate}</small>
                     </div>
                     <div>

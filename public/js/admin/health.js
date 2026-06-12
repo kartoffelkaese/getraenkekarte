@@ -6,7 +6,7 @@
     let isAutoRefreshActive = false;
 
     function loadHealthStatus() {
-        if (typeof currentLocation !== 'undefined' && currentLocation === 'settings') {
+        if (typeof currentLocation !== 'undefined' && currentLocation === 'status') {
             refreshHealthStatus();
         }
     }
@@ -21,7 +21,7 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Lade...</span>
                 </div>
-                <p class="mt-2" style="color: #e0e0e0;">Lade System Status...</p>
+                <p class="mt-2 admin-loading-text">Lade System Status...</p>
             </div>
         `;
 
@@ -57,14 +57,14 @@
             <div class="col-md-6">
                 <div class="card border-${statusColor}">
                     <div class="card-body">
-                        <h6 class="card-title text-white">
+                        <h6 class="card-title">
                             <i class="bi ${statusIcon} text-${statusColor}"></i>
                             System Status
                         </h6>
                         <p class="card-text">
                             <span class="badge bg-${statusColor}">${data.status.toUpperCase()}</span>
                         </p>
-                        <small class="text-light">
+                        <small class="text-muted">
                             Letzte Aktualisierung: ${new Date(data.timestamp).toLocaleString('de-DE')}
                         </small>
                     </div>
@@ -73,14 +73,14 @@
             <div class="col-md-6">
                 <div class="card border-${dbColor}">
                     <div class="card-body">
-                        <h6 class="card-title text-white">
+                        <h6 class="card-title">
                             <i class="bi bi-database text-${dbColor}"></i>
                             Datenbank
                         </h6>
                         <p class="card-text">
                             <span class="badge bg-${dbColor}">${dbStatus}</span>
                         </p>
-                        <small class="text-light">
+                        <small class="text-muted">
                             ${data.connectionStats ? `Verbindungen: ${data.connectionStats.activeConnections}/${data.connectionStats.totalConnections}` : 'Stats nicht verfügbar'}
                         </small>
                     </div>
@@ -89,21 +89,21 @@
         </div>
         <div class="row mt-3">
             <div class="col-md-4">
-                <div class="card"><div class="card-body text-center">
-                    <h6 class="card-title text-white"><i class="bi bi-clock"></i> Laufzeit</h6>
-                    <p class="card-text h5 text-white">${uptime}</p>
+                <div class="card admin-metric-card"><div class="card-body text-center">
+                    <h6 class="card-title"><i class="bi bi-clock"></i> Laufzeit</h6>
+                    <p class="card-text h5 mb-0">${uptime}</p>
                 </div></div>
             </div>
             <div class="col-md-4">
-                <div class="card"><div class="card-body text-center">
-                    <h6 class="card-title text-white"><i class="bi bi-memory"></i> Speicher</h6>
-                    <p class="card-text h5 text-white">${memory}</p>
+                <div class="card admin-metric-card"><div class="card-body text-center">
+                    <h6 class="card-title"><i class="bi bi-memory"></i> Speicher</h6>
+                    <p class="card-text h5 mb-0">${memory}</p>
                 </div></div>
             </div>
             <div class="col-md-4">
-                <div class="card"><div class="card-body text-center">
-                    <h6 class="card-title text-white"><i class="bi bi-activity"></i> Verbindungen</h6>
-                    <p class="card-text h5 text-white">
+                <div class="card admin-metric-card"><div class="card-body text-center">
+                    <h6 class="card-title"><i class="bi bi-activity"></i> Verbindungen</h6>
+                    <p class="card-text h5 mb-0">
                         ${data.connectionStats ? `${data.connectionStats.activeConnections}/${data.connectionStats.totalConnections}` : 'N/A'}
                     </p>
                 </div></div>
@@ -119,7 +119,7 @@
         <div class="alert alert-danger">
             <h6><i class="bi bi-exclamation-triangle-fill"></i> System Status Fehler</h6>
             <p class="mb-0">${escapeHtml(data.error || data.message || (data.status === 'unhealthy' ? 'Dienst nicht bereit (Datenbank / Health)' : 'Unbekannter Fehler'))}</p>
-            <small class="text-light">Zeit: ${new Date().toLocaleString('de-DE')}</small>
+            <small class="text-muted">Zeit: ${new Date().toLocaleString('de-DE')}</small>
         </div>
     `;
     }

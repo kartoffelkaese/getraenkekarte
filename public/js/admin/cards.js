@@ -76,6 +76,10 @@
         </tr>`;
             })
             .join('');
+
+        if (typeof applyResponsiveTableLabels === 'function') {
+            applyResponsiveTableLabels(tbody.closest('table'));
+        }
     }
 
     async function initAdminCards() {

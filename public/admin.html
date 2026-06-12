@@ -8,91 +8,129 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/admin.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container admin-container">
-        <h1>Getränkekarte Admin</h1>
-        <div class="version-info">
-            <small id="versionDisplay">Lade Version...</small>
+<body class="admin-page-body">
+    <div class="admin-shell">
+        <!-- Desktop Sidebar -->
+        <aside class="admin-sidebar d-none d-xl-flex" id="adminSidebar">
+            <div class="admin-sidebar-brand">
+                <h1>Getränkekarte Admin</h1>
+                <div class="version-info"><small id="versionDisplay">Lade Version...</small></div>
+            </div>
+            <nav class="admin-sidebar-nav">
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">Karten</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="haupttheke"><i class="bi bi-cup-straw"></i> Haupttheke</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="theke-hinten"><i class="bi bi-cup-hot"></i> Theke Hinten</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="jugendliche"><i class="bi bi-people"></i> Jugendkarte</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="speisekarte"><i class="bi bi-egg-fried"></i> Speisekarte</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="bilder"><i class="bi bi-images"></i> Bilder</button>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">Preise</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="temp"><i class="bi bi-tag"></i> Temporäre Preise</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="theke-presets"><i class="bi bi-bookmark"></i> Theke-Hinten Presets</button>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">Anzeige</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="anzeige" data-nav-page="schedule"><i class="bi bi-calendar-week"></i> Schedule</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="anzeige" data-nav-page="cycle"><i class="bi bi-arrow-repeat"></i> Cycle</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="anzeige" data-nav-page="overview"><i class="bi bi-display"></i> Overview</button>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">System</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="status"><i class="bi bi-heart-pulse"></i> Status &amp; Reload</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="hochzeit"><i class="bi bi-gem"></i> Hochzeitskarten</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="presets"><i class="bi bi-bookmarks"></i> Presets</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="links"><i class="bi bi-link-45deg"></i> Links</button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile Offcanvas Sidebar -->
+        <div class="offcanvas offcanvas-start d-xl-none" tabindex="-1" id="adminSidebarOffcanvas" aria-labelledby="adminSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="adminSidebarLabel">Navigation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Schließen"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <div class="admin-sidebar-brand px-3 pb-2">
+                    <small id="versionDisplayMobile" class="text-secondary">Lade Version...</small>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">Karten</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="haupttheke"><i class="bi bi-cup-straw"></i> Haupttheke</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="theke-hinten"><i class="bi bi-cup-hot"></i> Theke Hinten</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="jugendliche"><i class="bi bi-people"></i> Jugendkarte</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="speisekarte"><i class="bi bi-egg-fried"></i> Speisekarte</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="karten" data-nav-page="bilder"><i class="bi bi-images"></i> Bilder</button>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">Preise</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="temp"><i class="bi bi-tag"></i> Temporäre Preise</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="theke-presets"><i class="bi bi-bookmark"></i> Theke-Hinten Presets</button>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">Anzeige</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="anzeige" data-nav-page="schedule"><i class="bi bi-calendar-week"></i> Schedule</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="anzeige" data-nav-page="cycle"><i class="bi bi-arrow-repeat"></i> Cycle</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="anzeige" data-nav-page="overview"><i class="bi bi-display"></i> Overview</button>
+                </div>
+                <div class="admin-nav-group">
+                    <div class="admin-nav-group-title">System</div>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="status"><i class="bi bi-heart-pulse"></i> Status &amp; Reload</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="hochzeit"><i class="bi bi-gem"></i> Hochzeitskarten</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="presets"><i class="bi bi-bookmarks"></i> Presets</button>
+                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="links"><i class="bi bi-link-45deg"></i> Links</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Karten-Auswahl als Tabs -->
-        <ul class="nav nav-tabs mb-4" id="locationTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="haupttheke-tab" data-bs-toggle="tab" 
-                        data-location="haupttheke" type="button" role="tab">
-                    Haupttheke
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="theke-hinten-tab" data-bs-toggle="tab" 
-                        data-location="theke-hinten" type="button" role="tab">
-                    Theke Hinten
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="jugendliche-tab" data-bs-toggle="tab" 
-                        data-location="jugendliche" type="button" role="tab">
-                    Jugendkarte
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="speisekarte-tab" data-bs-toggle="tab" 
-                        data-location="speisekarte" type="button" role="tab">
-                    Speisekarte
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="bilder-tab" data-bs-toggle="tab" 
-                        data-location="bilder" type="button" role="tab">
-                    Bilder
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="temp-prices-tab" data-bs-toggle="tab" 
-                        data-location="temp-prices" type="button" role="tab">
-                    Temporäre Preise
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" 
-                        data-location="settings" type="button" role="tab">
-                    Einstellungen
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="schedule-tab" data-bs-toggle="tab" 
-                        data-location="schedule-1" type="button" role="tab">
-                    Schedule
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="links-tab" data-bs-toggle="tab" 
-                        data-location="links" type="button" role="tab">
-                    Links
-                </button>
-            </li>
-        </ul>
-        
-        <!-- Einstellungen Sektion -->
-        <div id="settingsSection" style="display: none;">
-            <h2>Einstellungen</h2>
-            
-            <!-- Cycle-Konfiguration -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Cycle-Konfiguration</h3>
+        <div class="admin-body">
+        <header class="admin-mobile-header d-xl-none">
+            <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebarOffcanvas" aria-label="Menü">
+                <i class="bi bi-list"></i>
+            </button>
+            <h1 id="adminMobileTitle">Getränkekarte Admin</h1>
+        </header>
+
+        <main class="admin-main">
+            <div class="admin-page-header">
+                <nav class="admin-breadcrumb" id="adminBreadcrumb" aria-label="Brotkrumen"></nav>
+                <h2 class="admin-page-title" id="adminPageTitle">Haupttheke</h2>
+                <p class="admin-page-desc" id="adminPageDesc"></p>
+            </div>
+
+            <div class="admin-subnav" id="cardSubnav" style="display: none;">
+                <ul class="nav nav-pills py-2 gap-1" id="cardSubnavPills" role="tablist"></ul>
+            </div>
+
+            <div class="admin-subnav" id="scheduleSubnav" style="display: none;">
+                <ul class="nav nav-pills py-2 gap-1" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" type="button" data-schedule-tab="1">Schedule 1</button></li>
+                    <li class="nav-item"><button class="nav-link" type="button" data-schedule-tab="2">Schedule 2</button></li>
+                </ul>
+            </div>
+
+            <div class="admin-content admin-container">
+
+        <!-- Cycle -->
+        <div id="cyclePage" class="admin-page">
+            <div class="mb-4">
+                <h3 class="admin-section-heading">Cycle-Konfiguration</h3>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle</p>
+                                <h5 class="card-title">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
+                                <p class="card-text">Konfiguration für /cycle</p>
                                 <div class="mb-3">
-                                    <label for="standardFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
+                                    <label for="standardFirstTime" class="form-label">Erste Anzeige (Sekunden)</label>
                                     <input type="number" class="form-control" id="standardFirstTime" value="15" min="5" max="300">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="standardSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
+                                    <label for="standardSecondTime" class="form-label">Zweite Anzeige (Sekunden)</label>
                                     <input type="number" class="form-control" id="standardSecondTime" value="15" min="5" max="300">
                                 </div>
                                 <button class="btn btn-primary" onclick="saveCycleConfig('standard')">
@@ -104,14 +142,14 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /cycle-jugend</p>
+                                <h5 class="card-title">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
+                                <p class="card-text">Konfiguration für /cycle-jugend</p>
                                 <div class="mb-3">
-                                    <label for="jugendFirstTime" class="form-label" style="color: #fff;">Erste Anzeige (Sekunden)</label>
+                                    <label for="jugendFirstTime" class="form-label">Erste Anzeige (Sekunden)</label>
                                     <input type="number" class="form-control" id="jugendFirstTime" value="15" min="5" max="300">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="jugendSecondTime" class="form-label" style="color: #fff;">Zweite Anzeige (Sekunden)</label>
+                                    <label for="jugendSecondTime" class="form-label">Zweite Anzeige (Sekunden)</label>
                                     <input type="number" class="form-control" id="jugendSecondTime" value="15" min="5" max="300">
                                 </div>
                                 <button class="btn btn-primary" onclick="saveCycleConfig('jugend')">
@@ -124,8 +162,8 @@
                 <div class="mt-4">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Cycle-URLs</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
+                            <h5 class="card-title">Cycle-URLs</h5>
+                            <p class="card-text">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
                             <div class="d-flex gap-2 flex-wrap">
                                 <a href="/cycle" target="_blank" class="btn btn-outline-primary">
                                     <i class="bi bi-link-45deg"></i> /cycle
@@ -138,18 +176,20 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Overview-Konfiguration -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Overview-Konfiguration</h3>
+        <!-- Overview -->
+        <div id="overviewPage" class="admin-page">
+            <div class="mb-4">
+                <h3 class="admin-section-heading">Overview-Konfiguration</h3>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Overview 1</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-1</p>
+                                <h5 class="card-title">Overview 1</h5>
+                                <p class="card-text">Konfiguration für /overview-1</p>
                                 <div class="mb-3">
-                                    <label for="overview1Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
+                                    <label for="overview1Card" class="form-label">Anzuzeigende Karte</label>
                                     <select class="form-select" id="overview1Card">
                                         <option value="haupttheke">Haupttheke</option>
                                         <option value="theke-hinten">Theke Hinten</option>
@@ -172,7 +212,7 @@
                                     <button class="btn btn-primary" onclick="saveOverviewConfig('overview-1')">
                                         <i class="bi bi-save"></i> Speichern
                                     </button>
-                                    <button class="btn btn-info" onclick="forceOverviewReload('overview-1')">
+                                    <button class="btn btn-outline-secondary" onclick="forceOverviewReload('overview-1')">
                                         <i class="bi bi-arrow-clockwise"></i> Reload
                                     </button>
                                 </div>
@@ -182,10 +222,10 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Overview 2</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Konfiguration für /overview-2</p>
+                                <h5 class="card-title">Overview 2</h5>
+                                <p class="card-text">Konfiguration für /overview-2</p>
                                 <div class="mb-3">
-                                    <label for="overview2Card" class="form-label" style="color: #fff;">Anzuzeigende Karte</label>
+                                    <label for="overview2Card" class="form-label">Anzuzeigende Karte</label>
                                     <select class="form-select" id="overview2Card">
                                         <option value="haupttheke">Haupttheke</option>
                                         <option value="theke-hinten">Theke Hinten</option>
@@ -208,7 +248,7 @@
                                     <button class="btn btn-primary" onclick="saveOverviewConfig('overview-2')">
                                         <i class="bi bi-save"></i> Speichern
                                     </button>
-                                    <button class="btn btn-info" onclick="forceOverviewReload('overview-2')">
+                                    <button class="btn btn-outline-secondary" onclick="forceOverviewReload('overview-2')">
                                         <i class="bi bi-arrow-clockwise"></i> Reload
                                     </button>
                                 </div>
@@ -219,8 +259,8 @@
                 <div class="mt-4">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Overview-URLs</h5>
-                            <p class="card-text" style="color: #e0e0e0;">Verwenden Sie diese URLs für die Overview-Karten:</p>
+                            <h5 class="card-title">Overview-URLs</h5>
+                            <p class="card-text">Verwenden Sie diese URLs für die Overview-Karten:</p>
                             <div class="d-flex gap-2 flex-wrap">
                                 <a href="/overview-1" target="_blank" class="btn btn-outline-primary">
                                     <i class="bi bi-link-45deg"></i> /overview-1
@@ -233,16 +273,18 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Health Status -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">System Status</h3>
+        <!-- Status & Reload -->
+        <div id="statusPage" class="admin-page">
+            <div class="mb-4">
+                <h3 class="admin-section-heading">System Status</h3>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="card-title" style="color: #fff;">Datenbank & System Health</h5>
+                                    <h5 class="card-title">Datenbank & System Health</h5>
                                     <div>
                                         <button class="btn btn-outline-primary btn-sm" onclick="refreshHealthStatus()">
                                             <i class="bi bi-arrow-clockwise"></i> Aktualisieren
@@ -259,7 +301,7 @@
                                         <div class="spinner-border text-primary" role="status">
                                             <span class="visually-hidden">Lade...</span>
                                         </div>
-                                        <p class="mt-2" style="color: #e0e0e0;">Lade System Status...</p>
+                                        <p class="mt-2">Lade System Status...</p>
                                     </div>
                                 </div>
                             </div>
@@ -268,16 +310,15 @@
                 </div>
             </div>
 
-            <!-- Reload-Steuerung -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">Karten neu starten</h3>
+            <div class="mb-4">
+                <h3 class="admin-section-heading">Karten neu starten</h3>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Haupttheke</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
-                                <button class="btn btn-info" onclick="forceHauptthekeReload()">
+                                <h5 class="card-title">Haupttheke</h5>
+                                <p class="card-text">Sendet ein Reload-Signal an alle Haupttheke-Karten</p>
+                                <button class="btn btn-outline-secondary" onclick="forceHauptthekeReload()">
                                     <i class="bi bi-arrow-clockwise"></i> Haupttheke neu starten
                                 </button>
                             </div>
@@ -286,9 +327,9 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Jugendkarte</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Sendet ein Reload-Signal an alle Jugendkarte-Karten</p>
-                                <button class="btn btn-info" onclick="forceJugendkarteReload()">
+                                <h5 class="card-title">Jugendkarte</h5>
+                                <p class="card-text">Sendet ein Reload-Signal an alle Jugendkarte-Karten</p>
+                                <button class="btn btn-outline-secondary" onclick="forceJugendkarteReload()">
                                     <i class="bi bi-arrow-clockwise"></i> Jugendkarte neu starten
                                 </button>
                             </div>
@@ -296,18 +337,20 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Hochzeitskarten-Schriftgröße -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #c4a35a; padding-bottom: 10px;">Hochzeitskarten</h3>
+        <!-- Hochzeitskarten -->
+        <div id="hochzeitPage" class="admin-page">
+            <div class="mb-4">
+                <h3 class="admin-section-heading">Hochzeitskarten</h3>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Schriftgröße</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Gilt für alle Hochzeitskarten.</p>
+                                <h5 class="card-title">Schriftgröße</h5>
+                                <p class="card-text">Gilt für alle Hochzeitskarten.</p>
                                 <div class="mb-3">
-                                    <label for="hochzeitFontSize" class="form-label" style="color: #fff;">Schriftgröße</label>
+                                    <label for="hochzeitFontSize" class="form-label">Schriftgröße</label>
                                     <select class="form-select" id="hochzeitFontSize">
                                         <option value="large">Groß</option>
                                         <option value="larger">Größer</option>
@@ -322,25 +365,28 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Preset-Verwaltung -->
-            <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #17a2b8; padding-bottom: 10px;">Preset-Verwaltung</h3>
+        <!-- Globale Presets -->
+        <div id="presetsPage" class="admin-page">
+            <div class="mb-4">
+                <h3 class="admin-section-heading">Preset-Verwaltung</h3>
+                <p class="text-muted mb-3">Speichere die aktuellen Einstellungen einer Karte als wiederverwendbares Preset.</p>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Preset speichern</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Speichere die aktuellen Einstellungen einer Karte als Preset</p>
+                                <h5 class="card-title">Preset speichern</h5>
+                                <p class="card-text">Speichere die aktuellen Einstellungen einer Karte als Preset</p>
                                 <div class="mb-3">
-                                    <label for="presetLocation" class="form-label" style="color: #fff;">Karte</label>
+                                    <label for="presetLocation" class="form-label">Karte</label>
                                     <select class="form-select" id="presetLocation">
                                         <option value="haupttheke">Haupttheke</option>
                                         <option value="theke-hinten">Theke Hinten</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="presetName" class="form-label" style="color: #fff;">Preset-Name</label>
+                                    <label for="presetName" class="form-label">Preset-Name</label>
                                     <input type="text" class="form-control" id="presetName" placeholder="z.B. Abendpreset">
                                 </div>
                                 <button class="btn btn-primary" onclick="savePreset()">
@@ -352,58 +398,36 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Gespeicherte Presets</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Liste aller Presets für die ausgewählte Karte</p>
+                                <h5 class="card-title">Gespeicherte Presets</h5>
+                                <p class="card-text">Liste aller Presets für die ausgewählte Karte</p>
                                 <div id="presetsList">
                                     <div class="text-center">
-                                        <p class="mt-2" style="color: #e0e0e0;">Wähle eine Karte aus</p>
+                                        <p class="mt-2">Wähle eine Karte aus</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
         </div>
 
-        </div>
-
-        <!-- Schedule Sektion -->
-        <div id="scheduleSection" style="display: none;">
-            <h2>Schedule-Verwaltung</h2>
-            
-            <!-- Tabs für Schedule 1 und 2 -->
-            <ul class="nav nav-tabs mb-4" id="scheduleTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="schedule1-tab" data-bs-toggle="tab" 
-                            data-bs-target="#schedule1-pane" type="button" role="tab" 
-                            aria-controls="schedule1-pane" aria-selected="true" onclick="switchScheduleTab(1)">
-                        Schedule 1
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="schedule2-tab" data-bs-toggle="tab" 
-                            data-bs-target="#schedule2-pane" type="button" role="tab" 
-                            aria-controls="schedule2-pane" aria-selected="false" onclick="switchScheduleTab(2)">
-                        Schedule 2
-                    </button>
-                </li>
-            </ul>
-            
-            <!-- Tab Content -->
+        <!-- Schedule -->
+        <div id="schedulePage" class="admin-page">
             <div class="tab-content" id="scheduleTabContent">
                 <!-- Schedule 1 Tab -->
                 <div class="tab-pane fade show active" id="schedule1-pane" role="tabpanel" aria-labelledby="schedule1-tab">
                     <!-- Default-Karte Konfiguration -->
             <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Standard-Karte</h3>
+                <h3 class="admin-section-heading">Standard-Karte</h3>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Fallback-Karte</h5>
-                                <p class="card-text" style="color: #e0e0e0;">Wird angezeigt, wenn keine Regel zutrifft</p>
+                                <h5 class="card-title">Fallback-Karte</h5>
+                                <p class="card-text">Wird angezeigt, wenn keine Regel zutrifft</p>
                                 <div class="mb-3">
-                                    <label for="defaultCardSelect" class="form-label" style="color: #fff;">Standard-Karte</label>
+                                    <label for="defaultCardSelect" class="form-label">Standard-Karte</label>
                                     <select class="form-select" id="defaultCardSelect">
                                         <option value="haupttheke">Haupttheke</option>
                                         <option value="hauptkarte-kopie">Hauptkarte Kopie</option>
@@ -434,12 +458,12 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #fff;">Aktionen</h5>
+                                <h5 class="card-title">Aktionen</h5>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <button class="btn btn-info" onclick="forceScheduleReload()">
+                                    <button class="btn btn-outline-secondary" onclick="forceScheduleReload()">
                                         <i class="bi bi-arrow-clockwise"></i> Schedule neu starten
                                     </button>
-                                    <button class="btn btn-success" onclick="showAddRuleModal()">
+                                    <button class="btn btn-primary" onclick="showAddRuleModal()">
                                         <i class="bi bi-plus-circle"></i> Neue Regel
                                     </button>
                                 </div>
@@ -451,29 +475,29 @@
 
             <!-- Aktuelle Karte Status -->
             <div class="mb-5">
-                <h3 style="color: #fff; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">Aktueller Status</h3>
+                <h3 class="admin-section-heading">Aktueller Status</h3>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="card bg-dark border-warning">
+                        <div class="card admin-metric-card">
                             <div class="card-body text-center">
-                                <h5 class="card-title text-white">
-                                    <i class="bi bi-play-circle text-warning"></i>
+                                <h6 class="card-title">
+                                    <i class="bi bi-play-circle"></i>
                                     Aktuelle Karte
-                                </h5>
-                                <p class="card-text h4 text-warning fw-bold" id="currentScheduleCard">Lade...</p>
-                                <small class="text-light" id="scheduleLastUpdate">Letzte Aktualisierung: --:--</small>
+                                </h6>
+                                <p class="card-text h4 mb-1" id="currentScheduleCard">Lade...</p>
+                                <small class="text-muted" id="scheduleLastUpdate">Letzte Aktualisierung: --:--</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-dark border-info">
+                        <div class="card admin-metric-card">
                             <div class="card-body text-center">
-                                <h5 class="card-title text-white">
-                                    <i class="bi bi-clock text-info"></i>
+                                <h6 class="card-title">
+                                    <i class="bi bi-clock"></i>
                                     Nächste Prüfung
-                                </h5>
-                                <p class="card-text h5 text-info fw-bold" id="nextScheduleCheck">--:--</p>
-                                <small class="text-light">Automatische Überprüfung alle 60s</small>
+                                </h6>
+                                <p class="card-text h5 mb-1" id="nextScheduleCheck">--:--</p>
+                                <small class="text-muted">Automatische Überprüfung alle 60s</small>
                             </div>
                         </div>
                     </div>
@@ -482,7 +506,7 @@
 
                     <!-- Regeln-Liste -->
                     <div class="mb-5">
-                        <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Schedule-Regeln</h3>
+                        <h3 class="admin-section-heading">Schedule-Regeln</h3>
                         <div class="card">
                             <div class="card-body">
                                 <div id="rulesList">
@@ -490,7 +514,7 @@
                                         <div class="spinner-border text-primary" role="status">
                                             <span class="visually-hidden">Lade...</span>
                                         </div>
-                                        <p class="mt-2" style="color: #e0e0e0;">Lade Regeln...</p>
+                                        <p class="mt-2">Lade Regeln...</p>
                                     </div>
                                 </div>
                             </div>
@@ -502,15 +526,15 @@
                 <div class="tab-pane fade" id="schedule2-pane" role="tabpanel" aria-labelledby="schedule2-tab">
                     <!-- Default-Karte Konfiguration -->
                     <div class="mb-5">
-                        <h3 style="color: #fff; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Standard-Karte</h3>
+                        <h3 class="admin-section-heading">Standard-Karte</h3>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h5 class="card-title" style="color: #fff;">Fallback-Karte</h5>
-                                        <p class="card-text" style="color: #e0e0e0;">Wird angezeigt, wenn keine Regel zutrifft</p>
+                                        <h5 class="card-title">Fallback-Karte</h5>
+                                        <p class="card-text">Wird angezeigt, wenn keine Regel zutrifft</p>
                                         <div class="mb-3">
-                                            <label for="defaultCardSelect2" class="form-label" style="color: #fff;">Standard-Karte</label>
+                                            <label for="defaultCardSelect2" class="form-label">Standard-Karte</label>
                                             <select class="form-select" id="defaultCardSelect2">
                                                 <option value="haupttheke">Haupttheke</option>
                                                 <option value="hauptkarte-kopie">Hauptkarte Kopie</option>
@@ -541,12 +565,12 @@
                             <div class="col-md-6">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h5 class="card-title" style="color: #fff;">Aktionen</h5>
+                                        <h5 class="card-title">Aktionen</h5>
                                         <div class="d-flex gap-2 flex-wrap">
-                                            <button class="btn btn-info" onclick="forceSchedule2Reload()">
+                                            <button class="btn btn-outline-secondary" onclick="forceSchedule2Reload()">
                                                 <i class="bi bi-arrow-clockwise"></i> Schedule-2 neu starten
                                             </button>
-                                            <button class="btn btn-success" onclick="showAddRuleModal2()">
+                                            <button class="btn btn-primary" onclick="showAddRuleModal2()">
                                                 <i class="bi bi-plus-circle"></i> Neue Regel
                                             </button>
                                         </div>
@@ -558,29 +582,29 @@
 
                     <!-- Aktuelle Karte Status -->
                     <div class="mb-5">
-                        <h3 style="color: #fff; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">Aktueller Status</h3>
+                        <h3 class="admin-section-heading">Aktueller Status</h3>
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="card bg-dark border-warning">
+                                <div class="card admin-metric-card">
                                     <div class="card-body text-center">
-                                        <h5 class="card-title text-white">
-                                            <i class="bi bi-play-circle text-warning"></i>
+                                        <h6 class="card-title">
+                                            <i class="bi bi-play-circle"></i>
                                             Aktuelle Karte
-                                        </h5>
-                                        <p class="card-text h4 text-warning fw-bold" id="currentSchedule2Card">Lade...</p>
-                                        <small class="text-light" id="schedule2LastUpdate">Letzte Aktualisierung: --:--</small>
+                                        </h6>
+                                        <p class="card-text h4 mb-1" id="currentSchedule2Card">Lade...</p>
+                                        <small class="text-muted" id="schedule2LastUpdate">Letzte Aktualisierung: --:--</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="card bg-dark border-info">
+                                <div class="card admin-metric-card">
                                     <div class="card-body text-center">
-                                        <h5 class="card-title text-white">
-                                            <i class="bi bi-clock text-info"></i>
+                                        <h6 class="card-title">
+                                            <i class="bi bi-clock"></i>
                                             Nächste Prüfung
-                                        </h5>
-                                        <p class="card-text h5 text-info fw-bold" id="nextSchedule2Check">--:--</p>
-                                        <small class="text-light">Automatische Überprüfung alle 60s</small>
+                                        </h6>
+                                        <p class="card-text h5 mb-1" id="nextSchedule2Check">--:--</p>
+                                        <small class="text-muted">Automatische Überprüfung alle 60s</small>
                                     </div>
                                 </div>
                             </div>
@@ -589,7 +613,7 @@
 
                     <!-- Regeln-Liste -->
                     <div class="mb-5">
-                        <h3 style="color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Schedule-Regeln</h3>
+                        <h3 class="admin-section-heading">Schedule-Regeln</h3>
                         <div class="card">
                             <div class="card-body">
                                 <div id="rulesList2">
@@ -597,7 +621,7 @@
                                         <div class="spinner-border text-primary" role="status">
                                             <span class="visually-hidden">Lade...</span>
                                         </div>
-                                        <p class="mt-2" style="color: #e0e0e0;">Lade Regeln...</p>
+                                        <p class="mt-2">Lade Regeln...</p>
                                     </div>
                                 </div>
                             </div>
@@ -605,21 +629,23 @@
                     </div>
                 </div>
             </div>
+            <span id="schedule1-tab" class="d-none"></span>
+            <span id="schedule2-tab" class="d-none"></span>
         </div>
 
-        <!-- Links Sektion -->
-        <div id="linksSection" style="display: none;">
-            <h2>Verfügbare Karten-Links</h2>
-            <p class="text-muted mb-4">Alle verfügbaren Karten und deren URLs. Klicken Sie auf den Link um zu öffnen oder nutzen Sie die Schaltfläche zum Kopieren.</p>
-            <div class="card">
+        <!-- Links -->
+        <div id="linksPage" class="admin-page">
+            <div class="admin-panel">
+            <p class="text-muted mb-3">Alle verfügbaren Karten und deren URLs. Klicken Sie auf den Link um zu öffnen oder nutzen Sie die Schaltfläche zum Kopieren.</p>
+            <div class="card border-0 shadow-none">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover admin-responsive-table">
                             <thead>
                                 <tr>
-                                    <th style="color: #fff;">Karte</th>
-                                    <th style="color: #fff;">URL</th>
-                                    <th style="color: #fff; width: 140px;">Aktionen</th>
+                                    <th>Karte</th>
+                                    <th>URL</th>
+                                    <th style="width: 140px;">Aktionen</th>
                                 </tr>
                             </thead>
                             <tbody id="linksTableBody">
@@ -629,12 +655,13 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
 
-        <!-- Temporäre Preise Sektion -->
-        <div id="tempPricesSection" style="display: none;">
-            <h2>Temporäre Preise (Theke Hinten)</h2>
-            <div class="alert alert-info">
+        <!-- Temporäre Preise -->
+        <div id="tempPricesPage" class="admin-page">
+        <div id="tempPricesSection" class="admin-panel">
+            <div class="alert alert-info mb-0">
                 <i class="bi bi-info-circle"></i>
                 <strong>Hinweis:</strong> Diese Einstellungen gelten für beide Theke-Hinten Karten (mit und ohne Bilder).
             </div>
@@ -647,11 +674,11 @@
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="tempPricesActive" 
                                        onchange="toggleTempPricesActive(this.checked)">
-                                <label class="form-check-label" for="tempPricesActive" style="color: white;">
+                                <label class="form-check-label" for="tempPricesActive">
                                     Temporäre Preise aktivieren
                                 </label>
                             </div>
-                            <p class="card-text" style="color: white;">
+                            <p class="card-text">
                                 Wenn aktiviert, werden die unten definierten Preise anstelle der Datenbank-Preise angezeigt.
                             </p>
                         </div>
@@ -662,13 +689,13 @@
                         <div class="card-body">
                             <h5 class="card-title">Aktionen</h5>
                             <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-success" onclick="saveTempPrices()">
+                                <button class="btn btn-primary" onclick="saveTempPrices()">
                                     <i class="bi bi-save"></i> Speichern
                                 </button>
-                                <button class="btn btn-info" onclick="forceReloadThekeHinten()">
+                                <button class="btn btn-outline-secondary" onclick="forceReloadThekeHinten()">
                                     <i class="bi bi-arrow-clockwise"></i> Reload Karten
                                 </button>
-                                <button class="btn btn-warning" onclick="resetTempPrices()">
+                                <button class="btn btn-outline-secondary" onclick="resetTempPrices()">
                                     <i class="bi bi-arrow-clockwise"></i> Zurücksetzen
                                 </button>
                                 <button class="btn btn-danger" onclick="clearTempPrices()">
@@ -693,7 +720,7 @@
                             </div>
                         </div>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table admin-responsive-table">
                                 <thead>
                                     <tr>
                                         <th>Getränk</th>
@@ -711,11 +738,12 @@
                 </div>
             </div>
         </div>
+        </div>
 
-        <!-- Theke-Hinten Presets Sektion -->
-        <div id="thekePresetsSection" style="display: none;">
-            <h2>Theke-Hinten Presets</h2>
-            <div class="alert alert-info">
+        <!-- Theke-Hinten Presets -->
+        <div id="thekePresetsPage" class="admin-page">
+        <div id="thekePresetsSection" class="admin-panel">
+            <div class="alert alert-info mb-0">
                 <i class="bi bi-info-circle"></i>
                 <strong>Hinweis:</strong> Presets überschreiben die Datenbank-Einstellungen. Temporäre Preise haben Vorrang vor Presets.
             </div>
@@ -724,16 +752,16 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Preset-Aktivierung</h5>
+                            <h5 class="card-title">Preset-Aktivierung</h5>
                             <div class="form-check form-switch mb-3">
                                 <input class="form-check-input" type="checkbox" id="thekePresetsActive" 
                                        onchange="toggleThekePresetsActive(this.checked)">
-                                <label class="form-check-label" for="thekePresetsActive" style="color: white;">
+                                <label class="form-check-label" for="thekePresetsActive">
                                     Presets aktivieren
                                 </label>
                             </div>
                             <div class="mb-3">
-                                <label for="activePresetSelect" class="form-label" style="color: #fff;">Aktives Preset</label>
+                                <label for="activePresetSelect" class="form-label">Aktives Preset</label>
                                 <select class="form-select" id="activePresetSelect" onchange="updateActivePreset()">
                                     <option value="">Kein Preset ausgewählt</option>
                                 </select>
@@ -747,15 +775,15 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title" style="color: #fff;">Preset-Verwaltung</h5>
+                            <h5 class="card-title">Preset-Verwaltung</h5>
                             <button class="btn btn-success mb-3" onclick="showCreatePresetModal()">
                                 <i class="bi bi-plus-circle"></i> Neues Preset erstellen
                             </button>
-                            <div id="presetsList">
+                            <div id="thekePresetsList">
                                 <p class="text-muted">Keine Presets vorhanden</p>
                             </div>
                             <div class="mt-3">
-                                <button class="btn btn-info" onclick="forceThekeHintenReload()">
+                                <button class="btn btn-outline-secondary" onclick="forceThekeHintenReload()">
                                     <i class="bi bi-arrow-clockwise"></i> Reload Karten
                                 </button>
                             </div>
@@ -764,12 +792,15 @@
                 </div>
             </div>
         </div>
+        </div>
 
-        <!-- Kategorien-Sektion -->
-        <div class="mb-4">
-            <h2>Logo</h2>
+        <!-- Karten-Inhalte -->
+        <div id="cardContentPage" class="admin-page active">
+
+        <div class="admin-section active" data-admin-section="logo" data-admin-card="haupttheke theke-hinten jugendliche">
+            <div class="admin-panel">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table admin-responsive-table">
                     <thead>
                         <tr>
                             <th>Element</th>
@@ -815,13 +846,13 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
-        <!-- Kategorien-Sektion -->
-        <div class="mb-4">
-            <h2>Kategorien</h2>
+        <div class="admin-section" data-admin-section="kategorien" data-admin-card="haupttheke theke-hinten jugendliche">
+            <div class="admin-panel">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table admin-responsive-table">
                     <thead>
                         <tr>
                             <th>Kategorie</th>
@@ -836,13 +867,13 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
-        <!-- Werbung -->
-        <div class="mb-4">
-            <h2>Werbung</h2>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="input-group" style="max-width: 300px;">
+        <div class="admin-section" data-admin-section="werbung" data-admin-card="haupttheke theke-hinten">
+            <div class="admin-panel">
+            <div class="admin-table-toolbar">
+                <div class="input-group">
                     <input type="text" class="form-control" id="adSearchInput" placeholder="Werbung suchen...">
                     <button class="btn btn-outline-secondary" type="button" id="clearAdSearch">
                         <i class="bi bi-x"></i>
@@ -853,7 +884,7 @@
                 </button>
             </div>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table admin-responsive-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -870,12 +901,12 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
-        <!-- Getränke-Sektion -->
-        <div>
-            <h2>Getränke</h2>
-            <div class="mb-3">
+        <div class="admin-section" data-admin-section="getraenke" data-admin-card="haupttheke theke-hinten jugendliche">
+            <div class="admin-panel">
+            <div class="admin-table-toolbar">
                 <div class="input-group">
                     <input type="text" class="form-control" id="drinkSearchInput" placeholder="Getränke suchen...">
                     <button class="btn btn-outline-secondary" type="button" id="clearDrinkSearch">
@@ -884,7 +915,7 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table admin-responsive-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -900,21 +931,24 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
-        <!-- Speisekarten-Sektion -->
-        <div id="speisekarteSection" style="display: none;">
-            <h2>Speisekarte</h2>
-            <div class="mb-3">
+        <div id="speisekarteSection" class="admin-section" data-admin-section="gerichte" data-admin-card="speisekarte">
+            <div class="admin-panel">
+            <div class="admin-table-toolbar">
                 <div class="input-group">
                     <input type="text" class="form-control" id="dishSearchInput" placeholder="Gerichte suchen...">
                     <button class="btn btn-outline-secondary" type="button" id="clearDishSearch">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
+                <button class="btn btn-primary" onclick="showAddDishModal()">
+                    <i class="bi bi-plus-circle"></i> Neues Gericht
+                </button>
             </div>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table admin-responsive-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -931,12 +965,69 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-3">
-                <button class="btn btn-primary" onclick="showAddDishModal()">
-                    <i class="bi bi-plus-circle"></i> Neues Gericht hinzufügen
-                </button>
             </div>
         </div>
+
+        <div class="admin-section" data-admin-section="zusatzstoffe" data-admin-card="haupttheke theke-hinten jugendliche">
+            <div class="admin-panel">
+            <div class="admin-table-toolbar">
+                <div></div>
+                <button class="btn btn-primary" onclick="showAddAdditiveModal()">
+                    <i class="bi bi-plus-circle"></i> Neuer Zusatzstoff
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table admin-responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Im Footer anzeigen</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="additivesTableBody">
+                        <!-- Zusatzstoffe werden hier dynamisch eingefügt -->
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+
+        </div><!-- /cardContentPage -->
+
+        <div id="bilderPage" class="admin-page">
+        <div id="bilderSection" class="admin-panel">
+            <form id="imageUploadForm" class="mb-0">
+                <div class="mb-2">
+                    <label for="imageFile" class="form-label">Bild auswählen</label>
+                    <input type="file" class="form-control" id="imageFile" accept="image/*" required multiple>
+                </div>
+                <button type="submit" class="btn btn-primary">Bilder hochladen</button>
+            </form>
+            <div class="progress mb-2" id="imageUploadProgress" style="display:none; height: 22px;">
+                <div class="progress-bar" role="progressbar" style="width:0%"></div>
+            </div>
+            <div class="mb-2" id="imagesCountInfo" style="font-size: 0.95rem; color: #555;"></div>
+            <div class="mb-2">
+                <button class="btn btn-danger" id="deleteAllImagesBtn"><i class="bi bi-trash"></i> Alle Bilder löschen</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table admin-responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Vorschau</th>
+                            <th>Dateiname</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="imagesTableBody">
+                        <!-- Bilder werden hier dynamisch eingefügt -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div><!-- /bilderPage -->
 
         <!-- Modal für Gericht hinzufügen/bearbeiten -->
         <div class="modal fade" id="dishModal" tabindex="-1">
@@ -979,31 +1070,6 @@
                         <button type="button" class="btn btn-primary" onclick="saveDish()">Speichern</button>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Zusatzstoffe-Sektion -->
-        <div class="mt-4">
-            <h2>Zusatzstoffe verwalten</h2>
-            <div class="mb-3">
-                <button class="btn btn-primary" onclick="showAddAdditiveModal()">
-                    <i class="bi bi-plus-circle"></i> Neuer Zusatzstoff
-                </button>
-            </div>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Name</th>
-                            <th>Im Footer anzeigen</th>
-                            <th>Aktionen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="additivesTableBody">
-                        <!-- Zusatzstoffe werden hier dynamisch eingefügt -->
-                    </tbody>
-                </table>
             </div>
         </div>
 
@@ -1068,42 +1134,9 @@
             </div>
         </div>
 
-        <!-- Bilder-Sektion -->
-        <div id="bilderSection" style="display: none;">
-            <h2>Bilder verwalten</h2>
-            <form id="imageUploadForm" class="mb-3">
-                <div class="mb-2">
-                    <label for="imageFile" class="form-label">Bild auswählen</label>
-                    <input type="file" class="form-control" id="imageFile" accept="image/*" required multiple>
-                </div>
-                <button type="submit" class="btn btn-primary">Bilder hochladen</button>
-            </form>
-            <div class="progress mb-2" id="imageUploadProgress" style="display:none; height: 22px;">
-                <div class="progress-bar" role="progressbar" style="width:0%"></div>
-            </div>
-            <div class="mb-2" id="imagesCountInfo" style="font-size: 0.95rem; color: #555;"></div>
-            <div class="mb-2">
-                <button class="btn btn-danger" id="deleteAllImagesBtn"><i class="bi bi-trash"></i> Alle Bilder löschen</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Vorschau</th>
-                            <th>Dateiname</th>
-                            <th>Aktionen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="imagesTableBody">
-                        <!-- Bilder werden hier dynamisch eingefügt -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- Regel-Editor Modal -->
         <div class="modal fade" id="ruleModal" tabindex="-1" aria-labelledby="ruleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ruleModalLabel">Schedule-Regel bearbeiten</h5>
@@ -1227,13 +1260,17 @@
             </div>
         </div>
 
-    </div>
+            </div><!-- /.admin-content -->
+        </main>
+        </div><!-- /.admin-body -->
+    </div><!-- /.admin-shell -->
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/admin/cards.js"></script>
     <script src="/js/admin/health.js"></script>
+    <script src="/js/admin/nav.js"></script>
     <script src="/js/admin.js"></script>
     
     <script>
@@ -1242,23 +1279,24 @@
             try {
                 const response = await fetch('/api/version');
                 const versionData = await response.json();
-                const versionDisplay = document.getElementById('versionDisplay');
-                if (versionDisplay) {
-                    versionDisplay.textContent = `Version ${versionData.version} (${versionData.buildDate})`;
-                }
+                const versionText = `Version ${versionData.version} (${versionData.buildDate})`;
+                ['versionDisplay', 'versionDisplayMobile'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = versionText;
+                });
             } catch (error) {
                 console.error('Fehler beim Laden der Version:', error);
-                const versionDisplay = document.getElementById('versionDisplay');
-                if (versionDisplay) {
-                    versionDisplay.textContent = 'Error loading version';
-                }
+                ['versionDisplay', 'versionDisplayMobile'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = 'Error loading version';
+                });
             }
         });
     </script>
 
     <!-- Modal für Bild-Upload -->
     <div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-fullscreen-sm-down">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="imageUploadModalLabel">Werbebild hochladen</h5>
