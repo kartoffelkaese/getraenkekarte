@@ -145,31 +145,7 @@ function corsDelegate(req, callback) {
     return callback(new Error('CORS not allowed'));
 }
 
-const VALID_LOCATIONS = new Set([
-    'haupttheke',
-    'hauptkarte-kopie',
-    'theke-hinten',
-    'theke-hinten-bilder',
-    'theke-hinten-bilder-dunkel',
-    'theke-hinten-2',
-    'hochzeit',
-    'hochzeit-dunkel',
-    'hochzeit-3spalten',
-    'hochzeit-dunkel-3spalten',
-    'jugendliche',
-    'speisekarte',
-    'bilder',
-    'overview-1',
-    'overview-2',
-    'schedule-1',
-    'schedule-2',
-    'cycle',
-    'cycle-jugend',
-    'screensaver',
-]);
-
-/** Erlaubte Karten für Schedule (Default + Regeln): gleiche Slugs wie Öffentliche Karten-Routen */
-const VALID_SCHEDULE_CARDS = new Set(VALID_LOCATIONS);
+const { VALID_LOCATIONS, VALID_SCHEDULE_CARDS } = require('./cards');
 
 /** Reverse-Proxy: Standard in Produktion TRUST_PROXY=true (express-rate-limit / Client-IP). */
 function resolveTrustProxy() {

@@ -1,14 +1,18 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const mysql = require('mysql2');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const auth = require('./middleware/auth');
 const { requireMutatingApiAuth, verifyCredentials, apiAuth } = require('./middleware/auth');
 const { isProduction, trustProxy, corsDelegate, VALID_LOCATIONS, getProductionContentSecurityPolicy } = require('./config/security');
-const { safePathJoin, isValidScheduleCard, resolvePresetPath, isValidPresetFilename, parsePresetCard } = require('./utils/safePath');
+const { registerPageRoutes } = require('./routes/pages');
+const { registerCardsApiRoutes } = require('./routes/cardsApi');
+const { registerScheduleRoutes } = require('./routes/schedule');
+const { registerHealthRoutes } = require('./routes/health');
+const { safeQuery } = require('./db/pool');
+const { safePathJoin, isValidScheduleCard, resolvePresetPath, parsePresetCard } = require('./utils/safePath');
 const { apiError } = require('./utils/apiError');
 const { randomImageFilename, imageFileFilter, validateUploadedFile } = require('./utils/uploadValidation');
 const multer = require('multer');
@@ -17,6 +21,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const PRESETS_DIR = path.join(__dirname, '../public/presets');
+let activePresets = {};
 
 const app = express();
 const server = http.createServer(app);
@@ -112,98 +117,20 @@ function activatePresetFromCard(currentCard, activePresets) {
     }
 }
 
+registerScheduleRoutes(app, {
+    io,
+    validateScheduleConfig,
+    activatePresetFromCard,
+    activePresets,
+});
+
 // Admin-Bereich mit Authentifizierung
 app.use('/admin.html', auth);
 app.use('/js/admin.js', auth);
+app.use('/js/admin', auth);
 
-// Routen für die verschiedenen Karten
-app.get('/haupttheke', (req, res) => {
-    res.sendFile('haupttheke.html', { root: './public' });
-});
-
-app.get('/hauptkarte-kopie', (req, res) => {
-    res.sendFile('hauptkarte-kopie.html', { root: './public' });
-});
-
-app.get('/theke-hinten', (req, res) => {
-    res.sendFile('theke-hinten.html', { root: './public' });
-});
-
-app.get('/theke-hinten-bilder', (req, res) => {
-    res.sendFile('theke-hinten-bilder.html', { root: './public' });
-});
-
-app.get('/theke-hinten-bilder-dunkel', (req, res) => {
-    res.sendFile('theke-hinten-bilder-dunkel.html', { root: './public' });
-});
-
-app.get('/theke-hinten-2', (req, res) => {
-    res.sendFile('theke-hinten-2.html', { root: './public' });
-});
-
-app.get('/hochzeit', (req, res) => {
-    res.sendFile('hochzeit.html', { root: './public' });
-});
-
-app.get('/hochzeit-dunkel', (req, res) => {
-    res.sendFile('hochzeit-dunkel.html', { root: './public' });
-});
-
-app.get('/hochzeit-3spalten', (req, res) => {
-    res.sendFile('hochzeit-3spalten.html', { root: './public' });
-});
-
-app.get('/hochzeit-dunkel-3spalten', (req, res) => {
-    res.sendFile('hochzeit-dunkel-3spalten.html', { root: './public' });
-});
-
-app.get('/bilder', (req, res) => {
-    res.sendFile('bilder.html', { root: './public' });
-});
-
-app.get('/jugendliche', (req, res) => {
-    res.sendFile('jugendliche.html', { root: './public' });
-});
-
-app.get('/overview-1', (req, res) => {
-    res.sendFile('overview-1.html', { root: './public' });
-});
-
-app.get('/overview-2', (req, res) => {
-    res.sendFile('overview-2.html', { root: './public' });
-});
-
-app.get('/schedule-1', (req, res) => {
-    res.sendFile('schedule-1.html', { root: './public' });
-});
-
-app.get('/schedule-2', (req, res) => {
-    res.sendFile('schedule-2.html', { root: './public' });
-});
-
-// Umleitung von / auf /haupttheke
-app.get('/', (req, res) => {
-    res.redirect('/haupttheke');
-});
-
-// Route für die Speisekarte
-app.get('/speisekarte', (req, res) => {
-    res.sendFile('speisekarte.html', { root: './public' });
-});
-
-// Route für den automatischen Wechsel
-app.get('/cycle', (req, res) => {
-    res.sendFile('cycle.html', { root: './public' });
-});
-
-// Route für den automatischen Wechsel (Jugend)
-app.get('/cycle-jugend', (req, res) => {
-    res.sendFile('cycle-jugend.html', { root: './public' });
-});
-
-app.get('/screensaver', (req, res) => {
-    res.sendFile('screensaver.html', { root: './public' });
-});
+registerPageRoutes(app);
+registerCardsApiRoutes(app);
 
 // Statische Dateien
 app.use(express.static('public'));
@@ -219,33 +146,7 @@ app.get('/api/version', (req, res) => {
     }
 });
 
-// Health Check Endpoint für Datenbankverbindung
-app.get('/api/health', async (req, res) => {
-    try {
-        await safeQuery('SELECT 1 as test');
-
-        res.json({
-            status: 'healthy',
-            database: 'connected',
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
-            memory: process.memoryUsage(),
-            connectionStats,
-        });
-    } catch (error) {
-        console.error('Health Check Fehler:', error);
-        const payload = {
-            status: 'unhealthy',
-            database: 'disconnected',
-            timestamp: new Date().toISOString(),
-            connectionStats,
-        };
-        if (!isProduction) {
-            payload.error = error.message;
-        }
-        res.status(503).json(payload);
-    }
-});
+registerHealthRoutes(app);
 
 // API-Endpunkte für Cycle-Konfiguration
 app.get('/api/cycle-config', (req, res) => {
@@ -326,59 +227,6 @@ app.post('/api/overview-config/:overview', (req, res) => {
     }
 });
 
-// Schedule-Konfiguration API
-app.get('/api/schedule-config', (req, res) => {
-    try {
-        const configPath = path.join(__dirname, '../schedule-1-config.json');
-        
-        if (fs.existsSync(configPath)) {
-            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            res.json(configData);
-        } else {
-            // Fallback-Konfiguration
-            res.json({
-                defaultCard: 'cycle',
-                rules: []
-            });
-        }
-    } catch (error) {
-        console.error('Fehler beim Laden der Schedule-Konfiguration:', error);
-        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
-    }
-});
-
-app.post('/api/schedule-config', (req, res) => {
-    try {
-        const { defaultCard, rules } = req.body;
-        
-        if (!defaultCard) {
-            return res.status(400).json({ error: 'Default-Karte ist erforderlich' });
-        }
-        
-        const configData = {
-            defaultCard,
-            rules: rules || []
-        };
-
-        const validationError = validateScheduleConfig(configData);
-        if (validationError) {
-            return res.status(400).json({ error: validationError });
-        }
-        
-        const configPath = path.join(__dirname, '../schedule-1-config.json');
-        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
-        
-        // Sende Socket.IO Event
-        io.emit('scheduleConfigChanged', configData);
-        
-        res.json({ message: 'Schedule-Konfiguration gespeichert', config: configData });
-        
-    } catch (error) {
-        console.error('Fehler beim Speichern der Schedule-Konfiguration:', error);
-        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
-    }
-});
-
 // API-Endpunkte für Hochzeitskarten-Schriftgröße
 app.get('/api/hochzeit-config', (req, res) => {
     try {
@@ -421,173 +269,6 @@ app.post('/api/hochzeit-config', (req, res) => {
     } catch (error) {
         console.error('Fehler beim Speichern der Hochzeitskarten-Konfiguration:', error);
         res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
-    }
-});
-
-app.get('/api/schedule-config/current', (req, res) => {
-    try {
-        const configPath = path.join(__dirname, '../schedule-1-config.json');
-        let configData = { defaultCard: 'cycle', rules: [] };
-        
-        if (fs.existsSync(configPath)) {
-            configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        }
-        
-        const currentCard = calculateCurrentCard(configData);
-        
-        // Prüfe ob aktuelle Karte ein Preset ist und lade/aktiviere es
-        if (currentCard.startsWith('preset:')) {
-            activatePresetFromCard(currentCard, activePresets);
-        } else {
-            // Wenn keine Preset-Karte aktiv ist, prüfe ob aktive Presets noch benötigt werden
-            // Entferne nur, wenn die Location wirklich nicht mehr als Preset verwendet wird
-            Object.keys(activePresets).forEach(loc => {
-                // Prüfe ob Location in einer aktiven Regel als Preset verwendet wird
-                const hasActivePresetRule = configData.rules.some(rule => {
-                    if (!rule.card || !rule.card.startsWith('preset:')) return false;
-                    
-                    const ruleFilename = rule.card.replace('preset:', '');
-                    if (!ruleFilename.startsWith(`${loc}-`)) return false;
-                    
-                    // Prüfe ob diese Regel gerade aktiv ist
-                    const now = new Date();
-                    const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-                    const currentDay = berlinTime.getDay();
-                    const currentTime = berlinTime.toTimeString().slice(0, 5);
-                    const currentDate = berlinTime.toISOString().split('T')[0];
-                    
-                    if (rule.type === 'weekly' && rule.days && rule.days.includes(currentDay)) {
-                        return isTimeInRange(currentTime, rule.startTime, rule.endTime);
-                    } else if (rule.type === 'date') {
-                        if (isDateInRange(currentDate, rule.startDate, rule.endDate)) {
-                            return isTimeInRange(currentTime, rule.startTime, rule.endTime);
-                        }
-                    }
-                    return false;
-                });
-                
-                if (!hasActivePresetRule) {
-                    delete activePresets[loc];
-                    console.log(`Preset deaktiviert für ${loc} (keine aktive Regel)`);
-                }
-            });
-        }
-        
-        res.json({ currentCard, config: configData });
-        
-    } catch (error) {
-        console.error('Fehler beim Berechnen der aktuellen Karte:', error);
-        res.status(500).json({ error: 'Fehler beim Berechnen der aktuellen Karte' });
-    }
-});
-
-// Schedule-2-Konfiguration API
-app.get('/api/schedule-2-config', (req, res) => {
-    try {
-        const configPath = path.join(__dirname, '../schedule-2-config.json');
-        
-        if (fs.existsSync(configPath)) {
-            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            res.json(configData);
-        } else {
-            // Fallback-Konfiguration
-            res.json({
-                defaultCard: 'cycle',
-                rules: []
-            });
-        }
-    } catch (error) {
-        console.error('Fehler beim Laden der Schedule-2-Konfiguration:', error);
-        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
-    }
-});
-
-app.post('/api/schedule-2-config', (req, res) => {
-    try {
-        const { defaultCard, rules } = req.body;
-        
-        if (!defaultCard) {
-            return res.status(400).json({ error: 'Default-Karte ist erforderlich' });
-        }
-        
-        const configData = {
-            defaultCard,
-            rules: rules || []
-        };
-
-        const validationError = validateScheduleConfig(configData);
-        if (validationError) {
-            return res.status(400).json({ error: validationError });
-        }
-
-        const configPath = path.join(__dirname, '../schedule-2-config.json');
-        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
-        
-        // Sende Socket.IO Event
-        io.emit('schedule2ConfigChanged', configData);
-        
-        res.json({ message: 'Schedule-2-Konfiguration gespeichert', config: configData });
-        
-    } catch (error) {
-        console.error('Fehler beim Speichern der Schedule-2-Konfiguration:', error);
-        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
-    }
-});
-
-app.get('/api/schedule-2-config/current', (req, res) => {
-    try {
-        const configPath = path.join(__dirname, '../schedule-2-config.json');
-        let configData = { defaultCard: 'cycle', rules: [] };
-        
-        if (fs.existsSync(configPath)) {
-            configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        }
-        
-        const currentCard = calculateCurrentCard(configData);
-        
-        // Prüfe ob aktuelle Karte ein Preset ist und lade/aktiviere es
-        if (currentCard.startsWith('preset:')) {
-            activatePresetFromCard(currentCard, activePresets);
-        } else {
-            // Wenn keine Preset-Karte aktiv ist, prüfe ob aktive Presets noch benötigt werden
-            // Entferne nur, wenn die Location wirklich nicht mehr als Preset verwendet wird
-            Object.keys(activePresets).forEach(loc => {
-                // Prüfe ob Location in einer aktiven Regel als Preset verwendet wird
-                const hasActivePresetRule = configData.rules.some(rule => {
-                    if (!rule.card || !rule.card.startsWith('preset:')) return false;
-                    
-                    const ruleFilename = rule.card.replace('preset:', '');
-                    if (!ruleFilename.startsWith(`${loc}-`)) return false;
-                    
-                    // Prüfe ob diese Regel gerade aktiv ist
-                    const now = new Date();
-                    const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-                    const currentDay = berlinTime.getDay();
-                    const currentTime = berlinTime.toTimeString().slice(0, 5);
-                    const currentDate = berlinTime.toISOString().split('T')[0];
-                    
-                    if (rule.type === 'weekly' && rule.days && rule.days.includes(currentDay)) {
-                        return isTimeInRange(currentTime, rule.startTime, rule.endTime);
-                    } else if (rule.type === 'date') {
-                        if (isDateInRange(currentDate, rule.startDate, rule.endDate)) {
-                            return isTimeInRange(currentTime, rule.startTime, rule.endTime);
-                        }
-                    }
-                    return false;
-                });
-                
-                if (!hasActivePresetRule) {
-                    delete activePresets[loc];
-                    console.log(`Preset deaktiviert für ${loc} (keine aktive Regel)`);
-                }
-            });
-        }
-        
-        res.json({ currentCard, config: configData });
-        
-    } catch (error) {
-        console.error('Fehler beim Berechnen der aktuellen Karte (Schedule-2):', error);
-        res.status(500).json({ error: 'Fehler beim Berechnen der aktuellen Karte' });
     }
 });
 
@@ -710,107 +391,6 @@ app.delete('/api/price-overrides/:location', (req, res) => {
     }
 });
 
-
-// Datenbank-Verbindung mit Connection Pool und Auto-Reconnect
-const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    // Connection Pool Einstellungen
-    connectionLimit: 10,
-    waitForConnections: true,
-    queueLimit: 0,
-    // Auto-Reconnect Einstellungen
-    keepAliveInitialDelay: 0,
-    enableKeepAlive: true,
-    // Retry-Einstellungen
-    // (App-seitig umgesetzt in safeQuery)
-    // Timeout-Einstellungen
-    connectTimeout: 10000,
-    // SSL falls nötig
-    ssl: process.env.DB_SSL === 'true'
-        ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
-        : false
-};
-
-// Erstelle Connection Pool
-const db = mysql.createPool(dbConfig).promise();
-
-// Connection Pool Event-Handler
-db.on('connection', (connection) => {
-    console.log('✅ Neue Datenbankverbindung erstellt:', connection.threadId);
-});
-
-db.on('error', (err) => {
-    console.error('❌ Datenbank Pool Fehler:', err);
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        console.log('🔄 Verbindung verloren, Pool wird automatisch neue Verbindung erstellen');
-    }
-});
-
-// Connection Monitoring
-let connectionStats = {
-    totalConnections: 0,
-    activeConnections: 0,
-    failedConnections: 0,
-    lastError: null,
-    lastErrorTime: null
-};
-
-// Erweitere Event-Handler für Monitoring
-db.on('connection', (connection) => {
-    connectionStats.totalConnections++;
-    connectionStats.activeConnections++;
-    console.log(`📊 DB Stats: Total=${connectionStats.totalConnections}, Active=${connectionStats.activeConnections}`);
-});
-
-db.on('error', (err) => {
-    connectionStats.failedConnections++;
-    connectionStats.lastError = err.message;
-    connectionStats.lastErrorTime = new Date().toISOString();
-    console.error(`📊 DB Error Stats: Failed=${connectionStats.failedConnections}, Last=${connectionStats.lastErrorTime}`);
-});
-
-// Periodisches Connection Monitoring (alle 5 Minuten)
-setInterval(async () => {
-    try {
-        await safeQuery('SELECT 1 as heartbeat');
-        console.log('💓 Datenbank Heartbeat erfolgreich');
-    } catch (error) {
-        console.error('💔 Datenbank Heartbeat fehlgeschlagen:', error.message);
-    }
-}, 5 * 60 * 1000); // 5 Minuten
-
-// Hilfsfunktion für sichere Datenbankabfragen mit Retry
-async function safeQuery(sql, params = []) {
-    let retries = 0;
-    const maxRetries = 3;
-    
-    while (retries < maxRetries) {
-        try {
-            const result = await db.query(sql, params);
-            return result;
-        } catch (error) {
-            retries++;
-            console.error(`Datenbankabfrage Fehler (Versuch ${retries}/${maxRetries}):`, error.message);
-            
-            if (error.code === 'ECONNREFUSED' || 
-                error.code === 'PROTOCOL_CONNECTION_LOST' || 
-                error.message.includes('connection is in closed state') ||
-                error.message.includes('Can\'t add new command when connection is in closed state')) {
-                
-                if (retries < maxRetries) {
-                    console.log(`Warte ${retries * 1000}ms vor erneutem Versuch...`);
-                    await new Promise(resolve => setTimeout(resolve, retries * 1000));
-                    continue;
-                }
-            }
-            
-            throw error;
-        }
-    }
-}
 
 // Erstelle die dishes-Tabelle, falls sie nicht existiert
 safeQuery(`
@@ -939,7 +519,7 @@ app.delete('/api/images/all', (req, res) => {
                     if (safeFile) {
                         fs.unlinkSync(safeFile);
                     }
-                } catch (e) {
+                } catch {
                     errorCount++;
                 }
             }
@@ -1786,80 +1366,6 @@ app.put('/api/dishes/:id/order', async (req, res) => {
         res.status(500).json({ error: 'Fehler beim Aktualisieren der Reihenfolge' });
     }
 });
-
-// Schedule-Berechnungslogik
-function calculateCurrentCard(config) {
-    const now = new Date();
-    const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-    
-    const currentDay = berlinTime.getDay(); // 0 = Sonntag, 1 = Montag, etc.
-    const currentTime = berlinTime.toTimeString().slice(0, 5); // HH:MM Format
-    const currentDate = berlinTime.toISOString().split('T')[0]; // YYYY-MM-DD Format
-    
-    console.log(`Schedule-Berechnung: Tag=${currentDay}, Zeit=${currentTime}, Datum=${currentDate}`);
-    
-    // Sortiere Regeln nach Priorität: Spezifische Daten > Wöchentliche Regeln
-    const sortedRules = [...(config.rules || [])].sort((a, b) => {
-        if (a.type === 'date' && b.type === 'weekly') return -1;
-        if (a.type === 'weekly' && b.type === 'date') return 1;
-        return 0;
-    });
-    
-    // Prüfe jede Regel
-    for (const rule of sortedRules) {
-        if (rule.type === 'weekly') {
-            // Wöchentliche Regel
-            if (rule.days && rule.days.includes(currentDay)) {
-                if (isTimeInRange(currentTime, rule.startTime, rule.endTime)) {
-                    console.log(`Wöchentliche Regel gefunden: ${rule.id} -> ${rule.card}`);
-                    return rule.card;
-                }
-            }
-        } else if (rule.type === 'date') {
-            // Spezifische Datumsregel
-            if (isDateInRange(currentDate, rule.startDate, rule.endDate)) {
-                if (isTimeInRange(currentTime, rule.startTime, rule.endTime)) {
-                    console.log(`Datumsregel gefunden: ${rule.id} -> ${rule.card}`);
-                    return rule.card;
-                }
-            }
-        }
-    }
-    
-    // Fallback auf Default-Karte
-    console.log(`Keine Regel gefunden, verwende Default: ${config.defaultCard}`);
-    return config.defaultCard || 'cycle';
-}
-
-function isTimeInRange(currentTime, startTime, endTime) {
-    const current = timeToMinutes(currentTime);
-    const start = timeToMinutes(startTime);
-    const end = timeToMinutes(endTime);
-    
-    if (start <= end) {
-        // Normale Zeit (z.B. 09:00 - 17:00)
-        return current >= start && current <= end;
-    } else {
-        // Über Mitternacht (z.B. 22:00 - 06:00)
-        return current >= start || current <= end;
-    }
-}
-
-function isDateInRange(currentDate, startDate, endDate) {
-    if (!endDate) {
-        // Nur Start-Datum (einzelner Tag)
-        return currentDate === startDate;
-    }
-    return currentDate >= startDate && currentDate <= endDate;
-}
-
-function timeToMinutes(timeString) {
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-// Preset-Verwaltung: State Management (temporäre Anwendung ohne DB-Änderungen)
-let activePresets = {}; // { location: { filename, presetData } }
 
 // Preset-Verwaltung: Hilfsfunktionen
 function ensurePresetsDirectory() {

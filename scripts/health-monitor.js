@@ -75,7 +75,7 @@ function makeRequest(url) {
                         return;
                     }
                     resolve(jsonData);
-                } catch (error) {
+                } catch {
                     reject(new Error('Invalid JSON response'));
                 }
             });
@@ -103,7 +103,7 @@ async function restartApplication() {
     
     try {
         await new Promise((resolve, reject) => {
-            exec(`pm2 restart ${config.pm2AppName}`, (error, stdout, stderr) => {
+            exec(`pm2 restart ${config.pm2AppName}`, (error, stdout, _stderr) => {
                 if (error) {
                     console.error('❌ PM2 Restart Fehler:', error);
                     reject(error);

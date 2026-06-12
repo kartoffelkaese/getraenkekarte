@@ -110,6 +110,10 @@ function updateSectionVisibility() {
         if (sections.drinks) sections.drinks.style.display = 'block';
         if (sections.additives) sections.additives.style.display = 'block';
     }
+
+    if (typeof loadHealthStatus === 'function') {
+        loadHealthStatus();
+    }
 }
 
 // Hilfsfunktion zum Finden einer Sektion anhand ihrer Überschrift
@@ -141,49 +145,10 @@ function safeAssetUrl(url) {
     return escapeAttr(url);
 }
 
-// Links-Tabelle: alle verfügbaren Karten mit URLs
-const CARD_LINKS = [
-    { path: '/', name: 'Haupttheke (Start)' },
-    { path: '/haupttheke', name: 'Haupttheke' },
-    { path: '/theke-hinten', name: 'Theke Hinten' },
-    { path: '/theke-hinten-bilder', name: 'Theke Hinten Bilder' },
-    { path: '/theke-hinten-bilder-dunkel', name: 'Theke Hinten Bilder (dunkel)' },
-    { path: '/theke-hinten-2', name: 'Theke Hinten (2 Spalten)' },
-    { path: '/hochzeit', name: 'Hochzeitskarte' },
-    { path: '/hochzeit-dunkel', name: 'Hochzeitskarte (dunkel)' },
-    { path: '/hochzeit-3spalten', name: 'Hochzeitskarte (3 Spalten)' },
-    { path: '/hochzeit-dunkel-3spalten', name: 'Hochzeitskarte dunkel (3 Spalten)' },
-    { path: '/jugendliche', name: 'Jugendkarte' },
-    { path: '/speisekarte', name: 'Speisekarte' },
-    { path: '/bilder', name: 'Bilder' },
-    { path: '/cycle', name: 'Cycle (Haupttheke ↔ Speisekarte)' },
-    { path: '/cycle-jugend', name: 'Cycle Jugend' },
-    { path: '/overview-1', name: 'Overview 1' },
-    { path: '/overview-2', name: 'Overview 2' },
-    { path: '/schedule-1', name: 'Schedule 1' },
-    { path: '/schedule-2', name: 'Schedule 2' },
-    { path: '/screensaver', name: 'Screensaver' }
-];
-
 function renderLinksTable() {
-    const tbody = document.getElementById('linksTableBody');
-    if (!tbody) return;
-    const baseUrl = window.location.origin;
-    tbody.innerHTML = CARD_LINKS.map(card => {
-        const url = baseUrl + card.path;
-        return `<tr>
-            <td>${escapeHtml(card.name)}</td>
-            <td><code class="text-info">${escapeHtml(url)}</code></td>
-            <td>
-                <a href="${escapeHtml(url)}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="Öffnen">
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </a>
-                <button class="btn btn-sm btn-outline-secondary" onclick="copyLinkToClipboard(this.dataset.url)" data-url="${escapeHtml(url)}" title="Kopieren">
-                    <i class="bi bi-clipboard"></i>
-                </button>
-            </td>
-        </tr>`;
-    }).join('');
+    if (window.AdminCards) {
+        window.AdminCards.fetchCards().then((cards) => window.AdminCards.renderLinksTable(cards));
+    }
 }
 
 function copyLinkToClipboard(url) {
@@ -1844,7 +1809,7 @@ async function setTempPrice(drinkId) {
     }
     
     // Hole das Getränk aus allDrinks um die ursprünglichen Werte zu bekommen
-    const drink = allDrinks.find(d => d.id == drinkId);
+    const drink = allDrinks.find((d) => Number(d.id) === Number(drinkId));
     if (drink) {
         tempPricesData.drinks[drinkId] = { 
             preis: price,
@@ -2001,6 +1966,11 @@ socket.on('priceOverridesChanged', (data) => {
 // Funktion zum Laden der Overview-Konfiguration
 async function fetchOverviewConfig() {
     try {
+        if (window.AdminCards) {
+            const cards = await window.AdminCards.fetchCards();
+            window.AdminCards.populateCardSelects(cards);
+        }
+
         // Lade Overview-1 Konfiguration
         const response1 = await fetch('/api/overview-config/overview-1');
         const config1 = await response1.json();
@@ -2072,219 +2042,6 @@ socket.on('overviewConfigChanged', (data) => {
 
 // === Health Status Management ===
 
-let autoRefreshInterval = null;
-let isAutoRefreshActive = false;
-
-// Lade Health Status beim Wechsel zum Settings Tab
-function loadHealthStatus() {
-    if (currentLocation === 'settings') {
-        refreshHealthStatus();
-    }
-}
-
-// Health Status aktualisieren
-async function refreshHealthStatus() {
-    const container = document.getElementById('healthStatusContainer');
-    if (!container) return;
-
-    try {
-        // Zeige Loading-Spinner
-        container.innerHTML = `
-            <div class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Lade...</span>
-                </div>
-                <p class="mt-2" style="color: #e0e0e0;">Lade System Status...</p>
-            </div>
-        `;
-
-        const response = await fetch('/api/health');
-        const healthData = await response.json();
-
-        if (response.ok) {
-            displayHealthStatus(healthData);
-        } else {
-            displayHealthError(healthData);
-        }
-    } catch (error) {
-        console.error('Health Status Fehler:', error);
-        displayHealthError({ error: 'Verbindung zum Server fehlgeschlagen' });
-    }
-}
-
-// Health Status anzeigen
-function displayHealthStatus(data) {
-    const container = document.getElementById('healthStatusContainer');
-    if (!container) return;
-
-    const isHealthy = data.status === 'healthy';
-    const statusColor = isHealthy ? 'success' : 'danger';
-    const statusIcon = isHealthy ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-    const dbConnected = isHealthy && data.database !== 'disconnected';
-    const dbStatus = dbConnected ? 'Verbunden' : 'Getrennt';
-    const dbColor = dbConnected ? 'success' : 'danger';
-
-    // Formatiere Uptime
-    const uptime = data.uptime != null ? formatUptime(data.uptime) : 'N/A';
-    
-    // Formatiere Memory
-    const memory = data.memory ? formatMemory(data.memory) : 'N/A';
-
-    container.innerHTML = `
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card border-${statusColor}">
-                    <div class="card-body">
-                        <h6 class="card-title text-white">
-                            <i class="bi ${statusIcon} text-${statusColor}"></i>
-                            System Status
-                        </h6>
-                        <p class="card-text">
-                            <span class="badge bg-${statusColor}">${data.status.toUpperCase()}</span>
-                        </p>
-                        <small class="text-light">
-                            Letzte Aktualisierung: ${new Date(data.timestamp).toLocaleString('de-DE')}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card border-${dbColor}">
-                    <div class="card-body">
-                        <h6 class="card-title text-white">
-                            <i class="bi bi-database text-${dbColor}"></i>
-                            Datenbank
-                        </h6>
-                        <p class="card-text">
-                            <span class="badge bg-${dbColor}">${dbStatus}</span>
-                        </p>
-                        <small class="text-light">
-                            ${data.connectionStats ? `Verbindungen: ${data.connectionStats.activeConnections}/${data.connectionStats.totalConnections}` : 'Stats nicht verfügbar'}
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                            <h6 class="card-title text-white">
-                                <i class="bi bi-clock"></i>
-                                Laufzeit
-                            </h6>
-                        <p class="card-text h5 text-white">${uptime}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                            <h6 class="card-title text-white">
-                                <i class="bi bi-memory"></i>
-                                Speicher
-                            </h6>
-                        <p class="card-text h5 text-white">${memory}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6 class="card-title text-white">
-                            <i class="bi bi-activity"></i>
-                            Verbindungen
-                        </h6>
-                        <p class="card-text h5 text-white">
-                            ${data.connectionStats ? 
-                                `${data.connectionStats.activeConnections}/${data.connectionStats.totalConnections}` : 
-                                'N/A'
-                            }
-                        </p>
-                        ${data.connectionStats && data.connectionStats.failedConnections > 0 ? 
-                            `<small class="text-danger">Fehler: ${data.connectionStats.failedConnections}</small>` : 
-                            ''
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Health Error anzeigen
-function displayHealthError(data) {
-    const container = document.getElementById('healthStatusContainer');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div class="alert alert-danger">
-            <h6><i class="bi bi-exclamation-triangle-fill"></i> System Status Fehler</h6>
-            <p class="mb-0">${escapeHtml(data.error || data.message || (data.status === 'unhealthy' ? 'Dienst nicht bereit (Datenbank / Health)' : 'Unbekannter Fehler'))}</p>
-            <small class="text-light">
-                Zeit: ${new Date().toLocaleString('de-DE')}
-            </small>
-        </div>
-    `;
-}
-
-// Uptime formatieren
-function formatUptime(seconds) {
-    if (seconds == null || Number.isNaN(Number(seconds))) {
-        return 'N/A';
-    }
-    const s = Number(seconds);
-    const days = Math.floor(s / 86400);
-    const hours = Math.floor((s % 86400) / 3600);
-    const minutes = Math.floor((s % 3600) / 60);
-    
-    if (days > 0) {
-        return `${days}d ${hours}h ${minutes}m`;
-    } else if (hours > 0) {
-        return `${hours}h ${minutes}m`;
-    } else {
-        return `${minutes}m`;
-    }
-}
-
-// Memory formatieren
-function formatMemory(memory) {
-    const usedMB = Math.round(memory.heapUsed / 1024 / 1024);
-    const totalMB = Math.round(memory.heapTotal / 1024 / 1024);
-    return `${usedMB}MB / ${totalMB}MB`;
-}
-
-// Auto-Refresh umschalten
-function toggleAutoRefresh() {
-    const icon = document.getElementById('autoRefreshIcon');
-    const text = document.getElementById('autoRefreshText');
-    
-    if (isAutoRefreshActive) {
-        // Stoppe Auto-Refresh
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-        isAutoRefreshActive = false;
-        icon.className = 'bi bi-play-circle';
-        text.textContent = 'Auto-Refresh';
-        showNotification('Auto-Refresh gestoppt', 'info');
-    } else {
-        // Starte Auto-Refresh
-        autoRefreshInterval = setInterval(refreshHealthStatus, 10000); // Alle 10 Sekunden
-        isAutoRefreshActive = true;
-        icon.className = 'bi bi-pause-circle';
-        text.textContent = 'Stoppen';
-        showNotification('Auto-Refresh gestartet (10s)', 'success');
-    }
-}
-
-// Erweitere updateSectionVisibility um Health Status zu laden
-const originalUpdateSectionVisibility = updateSectionVisibility;
-updateSectionVisibility = function() {
-    originalUpdateSectionVisibility();
-    loadHealthStatus();
-};
-
 // === Schedule Management ===
 
 let scheduleConfig = { defaultCard: 'cycle', rules: [] };
@@ -2310,6 +2067,11 @@ function switchScheduleTab(scheduleNumber) {
 async function loadScheduleConfig() {
     if (currentLocation === 'schedule-1') {
         try {
+            if (window.AdminCards) {
+                const cards = await window.AdminCards.fetchCards();
+                window.AdminCards.populateCardSelects(cards);
+            }
+
             const response = await fetch('/api/schedule-config');
             scheduleConfig = await response.json();
             
@@ -2342,6 +2104,11 @@ async function loadScheduleConfig() {
 async function loadSchedule2Config() {
     if (currentLocation === 'schedule-1') {
         try {
+            if (window.AdminCards) {
+                const cards = await window.AdminCards.fetchCards();
+                window.AdminCards.populateCardSelects(cards);
+            }
+
             const response = await fetch('/api/schedule-2-config');
             schedule2Config = await response.json();
             
@@ -3293,7 +3060,7 @@ async function saveHochzeitFontSize() {
         });
         
         if (response.ok) {
-            const data = await response.json();
+            await response.json();
             showNotification('Hochzeitskarten-Schriftgröße gespeichert', 'success');
         } else {
             const data = await response.json();

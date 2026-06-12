@@ -1,0 +1,190 @@
+body.speisekarte-page {
+    background-color: #000000;
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+body.speisekarte-page #sparklesCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+body.speisekarte-page .menu-container {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    padding: 40px 20px 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+body.speisekarte-page .speisekarte-hinweis {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    background-color: #111111;
+    border-top: 1px solid #a50775;
+    box-shadow: 0 -4px 12px rgba(165, 7, 117, 0.15);
+    padding: 0.5rem 1rem;
+    text-align: center;
+}
+
+body.speisekarte-page .speisekarte-hinweis small {
+    color: #999999;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: block;
+}
+
+body.speisekarte-page .logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+body.speisekarte-page .logo-container img {
+    max-width: 180px;
+    height: auto;
+}
+
+body.speisekarte-page .menu-title {
+    font-size: 3rem;
+    font-weight: 300;
+    margin: 0 0 50px;
+    color: #ffffff;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    position: relative;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+body.speisekarte-page .menu-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: #a50775;
+    margin: 15px auto;
+}
+
+body.speisekarte-page .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    padding: 20px 0;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+body.speisekarte-page .dish-card {
+    background: #111111;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    border: none;
+    border-left: 3px solid #a50775;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body.speisekarte-page .dish-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+body.speisekarte-page .dish-content {
+    padding: 30px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+body.speisekarte-page .dish-title {
+    font-size: 1.8rem;
+    font-weight: 300;
+    margin-bottom: 15px;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+body.speisekarte-page .dish-description {
+    color: #999999;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 1.2rem;
+    flex: 1;
+}
+
+body.speisekarte-page .dish-price {
+    font-size: 1.7rem;
+    font-weight: 500;
+    color: #a50775;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    body.speisekarte-page .menu-container {
+        padding: 20px 10px 3.5rem;
+    }
+
+    body.speisekarte-page .speisekarte-hinweis small {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    body.speisekarte-page .menu-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        padding: 0 15px;
+    }
+
+    body.speisekarte-page .dish-card {
+        max-width: 100%;
+    }
+
+    body.speisekarte-page .dish-image {
+        height: 250px;
+    }
+
+    body.speisekarte-page .dish-content {
+        padding: 25px;
+    }
+
+    body.speisekarte-page .menu-title {
+        font-size: 2rem;
+        letter-spacing: 2px;
+    }
+
+    body.speisekarte-page .dish-title {
+        font-size: 1.5rem;
+    }
+
+    body.speisekarte-page .dish-description {
+        font-size: 1.1rem;
+    }
+
+    body.speisekarte-page .dish-price {
+        font-size: 1.4rem;
+    }
+}

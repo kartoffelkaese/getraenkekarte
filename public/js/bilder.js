@@ -11,7 +11,7 @@ async function fetchAndDisplayImages() {
             return;
         }
         startImageStack(images);
-    } catch (err) {
+    } catch {
         additionalContent.innerHTML = '<div class="text-center text-danger fs-1">Fehler beim Laden der Bilder</div>';
     }
 }
@@ -32,7 +32,7 @@ function startImageStack(images) {
     function preloadImageSizes(images, callback) {
         let loaded = 0;
         const imagesWithSize = images.map(img => ({ ...img }));
-        imagesWithSize.forEach((img, idx) => {
+        imagesWithSize.forEach((img) => {
             const temp = new window.Image();
             temp.onload = function() {
                 img._isLandscape = temp.width > temp.height;

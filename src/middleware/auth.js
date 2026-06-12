@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 const basicAuth = require('basic-auth');
-require('dotenv').config();
 
 function safeEqual(a, b) {
     if (typeof a !== 'string' || typeof b !== 'string') {

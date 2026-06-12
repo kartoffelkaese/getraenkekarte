@@ -3,7 +3,6 @@ const socket = io({
     reconnectionAttempts: 5,
     reconnectionDelay: 1000
 });
-const drinksList = document.getElementById('drinksList');
 const currentLocation = document.body.dataset.location;
 
 // Globale Variablen für Animation Management
