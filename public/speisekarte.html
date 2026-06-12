@@ -32,10 +32,28 @@
             position: relative;
             z-index: 1;
             flex: 1;
-            padding: 40px 20px;
+            padding: 40px 20px 4rem;
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
+        }
+        .speisekarte-hinweis {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2;
+            background-color: #111111;
+            border-top: 1px solid #a50775;
+            box-shadow: 0 -4px 12px rgba(165, 7, 117, 0.15);
+            padding: 0.5rem 1rem;
+            text-align: center;
+        }
+        .speisekarte-hinweis small {
+            color: #999999;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: block;
         }
         .logo-container {
             text-align: center;
@@ -122,7 +140,11 @@
         }
         @media (max-width: 768px) {
             .menu-container {
-                padding: 20px 10px;
+                padding: 20px 10px 3.5rem;
+            }
+            .speisekarte-hinweis small {
+                font-size: 0.8rem;
+                line-height: 1.4;
             }
             .menu-grid {
                 grid-template-columns: 1fr;
@@ -164,6 +186,10 @@
         <div class="menu-grid" id="menuContent">
             <!-- Hier werden die Gerichte dynamisch eingefügt -->
         </div>
+    </div>
+
+    <div class="speisekarte-hinweis" role="note" aria-label="Hinweis zu Zusatzstoffen">
+        <small>Eine Liste der Zusatzstoffe und Allergene ist an der Bar erhältlich.</small>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
