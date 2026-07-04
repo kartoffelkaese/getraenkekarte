@@ -1,6 +1,6 @@
 {
   "name": "getraenkekarte",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "main": "src/index.js",
   "engines": {
     "node": ">=22.16.0",
@@ -27,20 +27,20 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
-    "multer": "^2.1.1",
+    "multer": "^2.2.0",
     "mysql2": "^3.22.5",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0",
-    "eslint": "^9.21.0",
-    "eslint-config-prettier": "^10.0.1",
-    "globals": "^16.0.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
     "nodemon": "^3.1.14",
-    "prettier": "^3.5.1"
+    "prettier": "^3.9.4"
   },
   "allowScripts": {
     "fsevents@2.3.3": true,
-    "esbuild@0.25.12": true
+    "esbuild@0.28.1": true
   }
 }

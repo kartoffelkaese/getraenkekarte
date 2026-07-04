@@ -1,0 +1,157 @@
+/* Italienische Nacht – Theme für /italienische-nacht (Full-HD TV) */
+
+:root {
+    --it-green: #009246;
+    --it-white: #f5f5f0;
+    --it-red: #ce2b37;
+    --it-accent-duration: 18s;
+}
+
+@keyframes it-tricolor-breathe {
+    0%,
+    100% {
+        opacity: 0.82;
+        filter: brightness(0.94);
+    }
+
+    50% {
+        opacity: 1;
+        filter: brightness(1.06);
+    }
+}
+
+html:has(body.italienische-nacht) {
+    background-color: #0a0a0a;
+}
+
+body.italienische-nacht {
+    background-color: #0a0a0a;
+    color: var(--it-white);
+    --bg-dark: #0a0a0a;
+    --bg-card: #0a0a0a;
+    --text-primary: var(--it-white);
+    --text-secondary: #b8b8b8;
+    --border-color: rgba(245, 245, 240, 0.12);
+}
+
+/* Tricolor top border – full viewport width */
+body.italienische-nacht::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(
+        to right,
+        var(--it-green) 33.33%,
+        var(--it-white) 33.33% 66.66%,
+        var(--it-red) 66.66%
+    );
+    z-index: 1100;
+    pointer-events: none;
+    animation: it-tricolor-breathe var(--it-accent-duration) ease-in-out infinite;
+}
+
+/* Category headers – minimal, no pink accent */
+body.italienische-nacht .category-header h2 {
+    letter-spacing: 0.06em;
+    border-bottom-color: rgba(245, 245, 240, 0.2) !important;
+    text-shadow: none;
+}
+
+/* Drink cards – column-specific Italian accent borders */
+body.italienische-nacht .card {
+    background-color: #0a0a0a;
+    border: none;
+    box-shadow: none;
+    margin-bottom: 0.12rem;
+}
+
+body.italienische-nacht .left-column .card {
+    border-left: 3px solid var(--it-green);
+}
+
+body.italienische-nacht .middle-column .card {
+    border-left: 3px solid var(--it-white);
+}
+
+body.italienische-nacht .right-column .card {
+    border-left: 3px solid var(--it-red);
+}
+
+body.italienische-nacht .additives-info {
+    opacity: 0.85;
+}
+
+/* Additives footer – tricolor glow nur innerhalb des Footers */
+body.italienische-nacht .additives-container {
+    background-color: #0a0a0a;
+    border-top: none;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+body.italienische-nacht .additives-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        rgba(0, 146, 70, 0.4) 0%,
+        rgba(0, 146, 70, 0.4) 33.33%,
+        rgba(245, 245, 240, 0.22) 33.33% 66.66%,
+        rgba(206, 43, 55, 0.4) 66.66%
+    );
+    mask-image: linear-gradient(to bottom, black 0%, transparent 55%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+    animation: it-tricolor-breathe var(--it-accent-duration) ease-in-out infinite;
+}
+
+body.italienische-nacht .additives-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+        to right,
+        var(--it-green) 33.33%,
+        var(--it-white) 33.33% 66.66%,
+        var(--it-red) 66.66%
+    );
+    pointer-events: none;
+    z-index: 1;
+    animation: it-tricolor-breathe var(--it-accent-duration) ease-in-out infinite;
+}
+
+body.italienische-nacht .additives-content {
+    position: relative;
+    z-index: 2;
+}
+
+body.italienische-nacht .additives-content small {
+    color: var(--text-secondary);
+}
+
+/* Ad area – subtle, stays functional */
+body.italienische-nacht .additional-content {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.italienische-nacht::before,
+    body.italienische-nacht .additives-container::before,
+    body.italienische-nacht .additives-container::after {
+        animation: none;
+        filter: none;
+    }
+
+    body.italienische-nacht .additives-container::before {
+        opacity: 0;
+    }
+}
