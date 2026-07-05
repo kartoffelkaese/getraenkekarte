@@ -31,7 +31,7 @@ function isBilderSeite() {
 
 // Hilfsfunktion: Seiten ohne Werbebereich
 function isWerbefreiSeite() {
-    return isBilderSeite() || window.location.pathname.includes('hauptkarte-kopie');
+    return isBilderSeite();
 }
 
 // Lade die Daten beim Start

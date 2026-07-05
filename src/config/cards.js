@@ -3,7 +3,6 @@
  */
 const CARDS = [
     { slug: 'haupttheke', label: 'Haupttheke', html: 'haupttheke.html', scheduleable: true, overviewSelectable: true, presetLocation: true, inLinks: true, linkLabel: 'Haupttheke' },
-    { slug: 'hauptkarte-kopie', label: 'Hauptkarte Kopie', html: 'hauptkarte-kopie.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Hauptkarte Kopie' },
     { slug: 'italienische-nacht', label: 'Italienische Nacht', html: 'italienische-nacht.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Italienische Nacht' },
     { slug: 'theke-hinten', label: 'Theke Hinten', html: 'theke-hinten.html', scheduleable: true, overviewSelectable: true, presetLocation: true, inLinks: true, linkLabel: 'Theke Hinten' },
     { slug: 'theke-hinten-bilder', label: 'Theke Hinten Bilder', html: 'theke-hinten-bilder.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Theke Hinten Bilder' },

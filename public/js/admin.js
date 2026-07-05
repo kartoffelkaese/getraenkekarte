@@ -6,6 +6,19 @@ const speisekarteSection = document.getElementById('speisekarteSection');
 let currentLocation = 'haupttheke';
 let dishModal;
 
+function setCheckboxSilently(element, checked) {
+    if (!element) return;
+    element.dataset.suppressChange = '1';
+    element.checked = Boolean(checked);
+    requestAnimationFrame(() => {
+        delete element.dataset.suppressChange;
+    });
+}
+
+function isCheckboxSuppressed(element) {
+    return element?.dataset.suppressChange === '1';
+}
+
 // Event-Listener für Location-Wechsel
 locationInputs.forEach(input => {
     input.addEventListener('change', (e) => {
@@ -29,10 +42,26 @@ function handleAdminNavigate(state) {
         } else if (page === 'bilder') {
             fetchImages();
         } else {
-            fetchCategories();
-            fetchDrinks();
-            fetchLogo();
-            fetchAds();
+            const sub = state.sub || 'logo';
+            switch (sub) {
+                case 'kategorien':
+                    fetchCategories();
+                    break;
+                case 'logo':
+                    fetchLogo();
+                    break;
+                case 'werbung':
+                    if (page !== 'jugendliche') {
+                        fetchAds();
+                    }
+                    break;
+                case 'getraenke':
+                    fetchDrinks();
+                    break;
+                case 'zusatzstoffe':
+                    fetchAdditives();
+                    break;
+            }
         }
     } else if (group === 'preise' && page === 'temp') {
         fetchTempPrices();
@@ -135,51 +164,26 @@ document.addEventListener('DOMContentLoaded', function() {
 // Socket.io Events
 socket.on('drinkStatusChanged', ({ id, is_active, location }) => {
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#switch-${id}`);
-        if (switchElement) {
-            switchElement.checked = is_active;
-        }
+        setCheckboxSilently(document.querySelector(`#switch-${id}`), is_active);
     }
 });
 
 socket.on('drinkPriceChanged', ({ id, show_price, location }) => {
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#price-switch-${id}`);
-        if (switchElement) {
-            switchElement.checked = show_price;
-        }
+        setCheckboxSilently(document.querySelector(`#price-switch-${id}`), show_price);
     }
 });
 
 socket.on('categoryPricesChanged', ({ id, show_prices, location }) => {
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#category-price-switch-${id}`);
-        if (switchElement) {
-            switchElement.checked = show_prices;
-        }
+        setCheckboxSilently(document.querySelector(`#category-price-switch-${id}`), show_prices);
     }
 });
 
 socket.on('categoryVisibilityChanged', ({ id, is_visible, location }) => {
-    console.log('=== Socket.IO Kategorie-Sichtbarkeit Event empfangen ===');
-    console.log('Event Daten:', { id, is_visible, location, currentLocation });
-    
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
-        console.log('Switch Element gefunden:', !!switchElement);
-        
-        if (switchElement) {
-            console.log('Alter Switch-Status:', switchElement.checked);
-            switchElement.checked = is_visible;
-            console.log('Neuer Switch-Status:', switchElement.checked);
-        } else {
-            console.warn('Switch Element nicht gefunden für ID:', id);
-        }
-    } else {
-        console.log('Event ignoriert - falsche Location');
+        setCheckboxSilently(document.querySelector(`#category-visibility-switch-${id}`), is_visible);
     }
-    
-    console.log('=== Socket.IO Event Handler Ende ===');
 });
 
 socket.on('categorySortChanged', ({ location }) => {
@@ -190,10 +194,7 @@ socket.on('categorySortChanged', ({ location }) => {
 
 socket.on('categoryColumnBreakChanged', ({ id, force_column_break, location }) => {
     if (location === currentLocation) {
-        const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
-        if (switchElement) {
-            switchElement.checked = force_column_break;
-        }
+        setCheckboxSilently(document.querySelector(`#category-column-break-switch-${id}`), force_column_break);
     }
 });
 
@@ -336,21 +337,14 @@ async function fetchDrinkAdditives(drinkId) {
 
 // Funktion zum Anzeigen der Kategorien
 function displayCategories(categories) {
-    console.log('=== Kategorien Anzeigen Start ===');
-    console.log('Eingangskategorien:', categories);
-    
     const tbody = document.getElementById('categoriesTableBody');
-    console.log('TBody Element gefunden:', !!tbody);
-    
     if (!tbody) {
-        console.error('Kategorien-TBody nicht gefunden!');
         return;
     }
-    
+
     tbody.innerHTML = '';
-    
+
     categories.forEach(category => {
-        console.log('Verarbeite Kategorie:', category);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${category.name}</td>
@@ -387,10 +381,9 @@ function displayCategories(categories) {
             </td>
         `;
         tbody.appendChild(tr);
-        console.log('Kategorie hinzugefügt:', category.id);
     });
-    
-    console.log('=== Kategorien Anzeigen Ende ===');
+
+    applyResponsiveTableLabels(tbody.closest('table'));
 }
 
 let additiveSelectionModal;
@@ -482,11 +475,18 @@ function filterDrinks(searchTerm) {
 
 // Funktion zum Anzeigen der Getränke
 async function displayDrinks(drinks) {
+    if (!drinksTableBody) return;
+
     drinksTableBody.innerHTML = '';
-    allAdditives = await fetch('/api/additives').then(res => res.json());
-    
-    for (const drink of drinks) {
-        const drinkAdditives = await fetchDrinkAdditives(drink.id);
+
+    const [additivesList, ...drinkAdditivesList] = await Promise.all([
+        fetch('/api/additives').then((res) => res.json()),
+        ...drinks.map((drink) => fetchDrinkAdditives(drink.id)),
+    ]);
+    allAdditives = additivesList;
+
+    drinks.forEach((drink, index) => {
+        const drinkAdditives = drinkAdditivesList[index] || [];
         const row = document.createElement('tr');
         const preis = parseFloat(drink.preis) || 0;
         
@@ -523,7 +523,7 @@ async function displayDrinks(drinks) {
             </td>
         `;
         drinksTableBody.appendChild(row);
-    }
+    });
     applyResponsiveTableLabels(drinksTableBody.closest('table'));
 }
 
@@ -744,92 +744,68 @@ async function toggleDrinkPrice(id, show_price) {
 
 // Funktion zum Aktualisieren des Status einer Kategorie
 async function toggleCategoryVisibility(id, isVisible) {
+    const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
+    if (isCheckboxSuppressed(switchElement)) {
+        return;
+    }
+
     try {
-        console.log('=== Kategorie-Sichtbarkeit Toggle Start ===');
-        console.log('Parameter:', { id, isVisible, currentLocation });
-        
+        if (switchElement) {
+            switchElement.disabled = true;
+        }
+
         const response = await fetch(`/api/categories/toggle-visibility/${currentLocation}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ id, is_visible: isVisible })
         });
-        
-        console.log('Server-Antwort Status:', response.status);
-        
+
         if (!response.ok) {
             throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
         }
-        
-        const result = await response.json();
-        console.log('Server-Antwort Daten:', result);
-        
-        // Sende das Event mit der Location
-        console.log('Sende Socket.IO Event:', { id, isVisible, location: currentLocation });
-        socket.emit('categoryVisibilityChanged', { id, is_visible: isVisible, location: currentLocation });
-        
-        // Überprüfe den Switch-Status
-        const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
-        console.log('Switch Element gefunden:', !!switchElement);
-        if (switchElement) {
-            console.log('Aktueller Switch-Status:', switchElement.checked);
-        }
-        
-        console.log('=== Kategorie-Sichtbarkeit Toggle Ende ===');
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Kategorie-Sichtbarkeit:', error);
-        // Bei Fehler Switch zurücksetzen
-        const switchElement = document.querySelector(`#category-visibility-switch-${id}`);
+        setCheckboxSilently(switchElement, !isVisible);
+    } finally {
         if (switchElement) {
-            console.log('Setze Switch zurück auf:', !isVisible);
-            switchElement.checked = !isVisible;
+            switchElement.disabled = false;
         }
     }
 }
 
 // Funktion zum Aktualisieren der Preisanzeige einer Kategorie
 async function toggleCategoryPrices(id, showPrices) {
+    const switchElement = document.querySelector(`#category-price-switch-${id}`);
+    if (isCheckboxSuppressed(switchElement)) {
+        return;
+    }
+
     try {
-        console.log('=== Kategorie-Preisanzeige Toggle Start ===');
-        console.log('Parameter:', { id, showPrices, currentLocation });
-        
+        if (switchElement) {
+            switchElement.disabled = true;
+        }
+
         const response = await fetch(`/api/categories/toggle-prices/${currentLocation}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ id, show_prices: showPrices })
         });
-        
-        console.log('Server-Antwort Status:', response.status);
-        
+
         if (!response.ok) {
             throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
         }
-        
-        const result = await response.json();
-        console.log('Server-Antwort Daten:', result);
-        
-        // Sende das Event mit der Location
-        console.log('Sende Socket.IO Event:', { id, showPrices, location: currentLocation });
-        socket.emit('categoryPricesChanged', { id, show_prices: showPrices, location: currentLocation });
-        
-        // Überprüfe den Switch-Status
-        const switchElement = document.querySelector(`#category-price-switch-${id}`);
-        console.log('Switch Element gefunden:', !!switchElement);
-        if (switchElement) {
-            console.log('Aktueller Switch-Status:', switchElement.checked);
-        }
-        
-        console.log('=== Kategorie-Preisanzeige Toggle Ende ===');
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Kategorie-Preisanzeige:', error);
-        // Bei Fehler Switch zurücksetzen
-        const switchElement = document.querySelector(`#category-price-switch-${id}`);
+        setCheckboxSilently(switchElement, !showPrices);
+    } finally {
         if (switchElement) {
-            console.log('Setze Switch zurück auf:', !showPrices);
-            switchElement.checked = !showPrices;
+            switchElement.disabled = false;
         }
     }
 }
@@ -857,46 +833,34 @@ async function updateCategoryOrder(id, sort_order) {
 
 // Funktion zum Umschalten des Spaltenumbruchs einer Kategorie
 async function toggleCategoryColumnBreak(id, force_column_break) {
+    const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
+    if (isCheckboxSuppressed(switchElement)) {
+        return;
+    }
+
     try {
-        console.log('=== Kategorie-Spaltenumbruch Toggle Start ===');
-        console.log('Parameter:', { id, force_column_break, currentLocation });
-        
+        if (switchElement) {
+            switchElement.disabled = true;
+        }
+
         const response = await fetch(`/api/categories/toggle-column-break/${currentLocation}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ id, force_column_break })
         });
-        
-        console.log('Server-Antwort Status:', response.status);
-        
+
         if (!response.ok) {
             throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
         }
-        
-        const result = await response.json();
-        console.log('Server-Antwort Daten:', result);
-        
-        // Sende das Event mit der Location
-        console.log('Sende Socket.IO Event:', { id, force_column_break, location: currentLocation });
-        socket.emit('categoryColumnBreakChanged', { id, force_column_break, location: currentLocation });
-        
-        // Überprüfe den Switch-Status
-        const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
-        console.log('Switch Element gefunden:', !!switchElement);
-        if (switchElement) {
-            console.log('Aktueller Switch-Status:', switchElement.checked);
-        }
-        
-        console.log('=== Kategorie-Spaltenumbruch Toggle Ende ===');
     } catch (error) {
         console.error('Fehler beim Aktualisieren des Kategorie-Spaltenumbruchs:', error);
-        // Bei Fehler Switch zurücksetzen
-        const switchElement = document.querySelector(`#category-column-break-switch-${id}`);
+        setCheckboxSilently(switchElement, !force_column_break);
+    } finally {
         if (switchElement) {
-            console.log('Setze Switch zurück auf:', !force_column_break);
-            switchElement.checked = !force_column_break;
+            switchElement.disabled = false;
         }
     }
 }
