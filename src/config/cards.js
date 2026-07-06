@@ -4,6 +4,7 @@
 const CARDS = [
     { slug: 'haupttheke', label: 'Haupttheke', html: 'haupttheke.html', scheduleable: true, overviewSelectable: true, presetLocation: true, inLinks: true, linkLabel: 'Haupttheke' },
     { slug: 'italienische-nacht', label: 'Italienische Nacht', html: 'italienische-nacht.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Italienische Nacht' },
+    { slug: 'weihnachten', label: 'Weihnachtskarte', html: 'weihnachten.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Weihnachtskarte' },
     { slug: 'theke-hinten', label: 'Theke Hinten', html: 'theke-hinten.html', scheduleable: true, overviewSelectable: true, presetLocation: true, inLinks: true, linkLabel: 'Theke Hinten' },
     { slug: 'theke-hinten-bilder', label: 'Theke Hinten Bilder', html: 'theke-hinten-bilder.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Theke Hinten Bilder' },
     { slug: 'theke-hinten-bilder-dunkel', label: 'Theke Hinten Bilder (dunkel)', html: 'theke-hinten-bilder-dunkel.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Theke Hinten Bilder (dunkel)' },
