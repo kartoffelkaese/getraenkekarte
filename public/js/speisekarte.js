@@ -6,6 +6,7 @@ function debugLog(...args) {
 
 const canvas = document.getElementById('sparklesCanvas');
 const ctx = canvas.getContext('2d');
+const isWeihnachtenSpeisekarte = document.body.classList.contains('weihnachten-speisekarte');
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -40,7 +41,9 @@ class Sparkle {
     draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(165, 7, 117, ${this.opacity})`;
+        ctx.fillStyle = isWeihnachtenSpeisekarte
+            ? `rgba(255, 255, 255, ${this.opacity})`
+            : `rgba(165, 7, 117, ${this.opacity})`;
         ctx.fill();
     }
 }

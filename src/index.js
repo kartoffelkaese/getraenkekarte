@@ -18,7 +18,7 @@ const { randomImageFilename, imageFileFilter, validateUploadedFile } = require('
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { isCycleSelectableCard, normalizeCycleConfig } = require('./config/cards');
+const { isCycleSelectableCard, isCycleSelectableSpeisekarte, normalizeCycleConfig } = require('./config/cards');
 require('dotenv').config();
 
 const PRESETS_DIR = path.join(__dirname, '../public/presets');
@@ -269,9 +269,9 @@ app.post('/api/hochzeit-config', (req, res) => {
 
 app.post('/api/cycle-config', (req, res) => {
     try {
-        const { type, firstTime, secondTime, card } = req.body;
+        const { type, firstTime, secondTime, card, speisekarteCard } = req.body;
 
-        if (!type || !firstTime || !secondTime || !card) {
+        if (!type || !firstTime || !secondTime || !card || !speisekarteCard) {
             return res.status(400).json({ error: 'Alle Felder sind erforderlich' });
         }
 
@@ -281,6 +281,10 @@ app.post('/api/cycle-config', (req, res) => {
 
         if (!isCycleSelectableCard(card)) {
             return res.status(400).json({ error: 'Ungültige Karte für Cycle' });
+        }
+
+        if (!isCycleSelectableSpeisekarte(speisekarteCard)) {
+            return res.status(400).json({ error: 'Ungültige Speisekarte für Cycle' });
         }
 
         if (firstTime < 5 || firstTime > 300 || secondTime < 5 || secondTime > 300) {
@@ -296,6 +300,7 @@ app.post('/api/cycle-config', (req, res) => {
 
         config[type] = {
             card,
+            speisekarteCard,
             firstTime: parseInt(firstTime, 10),
             secondTime: parseInt(secondTime, 10),
         };
@@ -307,6 +312,7 @@ app.post('/api/cycle-config', (req, res) => {
         io.emit('cycleConfigChanged', {
             type,
             card,
+            speisekarteCard,
             firstTime: parseInt(firstTime, 10),
             secondTime: parseInt(secondTime, 10),
         });

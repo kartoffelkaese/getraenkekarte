@@ -16,6 +16,7 @@ const CARDS = [
     { slug: 'jugendliche', label: 'Jugendkarte', html: 'jugendliche.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Jugendkarte' },
     { slug: 'weihnachten-jugendliche', label: 'Weihnachtskarte Jugend', html: 'weihnachten-jugendliche.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Weihnachtskarte Jugend' },
     { slug: 'speisekarte', label: 'Speisekarte', html: 'speisekarte.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Speisekarte' },
+    { slug: 'weihnachten-speisekarte', label: 'Weihnachts-Speisekarte', html: 'weihnachten-speisekarte.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Weihnachts-Speisekarte' },
     { slug: 'bilder', label: 'Bilder', html: 'bilder.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Bilder' },
     { slug: 'overview-1', label: 'Overview 1', html: 'overview-1.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Overview 1' },
     { slug: 'overview-2', label: 'Overview 2', html: 'overview-2.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Overview 2' },
@@ -32,6 +33,7 @@ const VALID_SCHEDULE_CARDS = new Set(CARDS.map((c) => c.slug));
 
 const CYCLE_EXCLUDED_SLUGS = new Set([
     'speisekarte',
+    'weihnachten-speisekarte',
     'cycle-1',
     'cycle-2',
     'schedule-1',
@@ -41,10 +43,17 @@ const CYCLE_EXCLUDED_SLUGS = new Set([
     'screensaver',
 ]);
 
+const CYCLE_SPEISEKARTE_SLUGS = new Set([
+    'speisekarte',
+    'weihnachten-speisekarte',
+]);
+
 const CYCLE_DEFAULT_CARDS = {
     standard: 'haupttheke',
     jugend: 'jugendliche',
 };
+
+const CYCLE_DEFAULT_SPEISEKARTE = 'speisekarte';
 
 function getCycleSelectableCards() {
     return CARDS.filter((c) => c.html && !CYCLE_EXCLUDED_SLUGS.has(c.slug));
@@ -54,18 +63,40 @@ function isCycleSelectableCard(slug) {
     return getCycleSelectableCards().some((c) => c.slug === slug);
 }
 
+function getCycleSelectableSpeisekarten() {
+    return CARDS.filter((c) => CYCLE_SPEISEKARTE_SLUGS.has(c.slug));
+}
+
+function isCycleSelectableSpeisekarte(slug) {
+    return CYCLE_SPEISEKARTE_SLUGS.has(slug);
+}
+
 function normalizeCycleConfig(raw = {}) {
     const selectable = new Set(getCycleSelectableCards().map((c) => c.slug));
     const defaults = {
-        standard: { card: CYCLE_DEFAULT_CARDS.standard, firstTime: 15, secondTime: 15 },
-        jugend: { card: CYCLE_DEFAULT_CARDS.jugend, firstTime: 15, secondTime: 10 },
+        standard: {
+            card: CYCLE_DEFAULT_CARDS.standard,
+            speisekarteCard: CYCLE_DEFAULT_SPEISEKARTE,
+            firstTime: 15,
+            secondTime: 15,
+        },
+        jugend: {
+            card: CYCLE_DEFAULT_CARDS.jugend,
+            speisekarteCard: CYCLE_DEFAULT_SPEISEKARTE,
+            firstTime: 15,
+            secondTime: 10,
+        },
     };
 
     return ['standard', 'jugend'].reduce((acc, type) => {
         const entry = raw[type] || {};
         const card = selectable.has(entry.card) ? entry.card : defaults[type].card;
+        const speisekarteCard = isCycleSelectableSpeisekarte(entry.speisekarteCard)
+            ? entry.speisekarteCard
+            : defaults[type].speisekarteCard;
         acc[type] = {
             card,
+            speisekarteCard,
             firstTime: entry.firstTime ?? defaults[type].firstTime,
             secondTime: entry.secondTime ?? defaults[type].secondTime,
         };
@@ -98,10 +129,13 @@ module.exports = {
     VALID_LOCATIONS,
     VALID_SCHEDULE_CARDS,
     CYCLE_DEFAULT_CARDS,
+    CYCLE_DEFAULT_SPEISEKARTE,
     getCardsForApi,
     getPageCards,
     getPresetLocations,
     getCycleSelectableCards,
+    getCycleSelectableSpeisekarten,
     isCycleSelectableCard,
+    isCycleSelectableSpeisekarte,
     normalizeCycleConfig,
 };

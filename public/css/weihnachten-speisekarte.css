@@ -1,0 +1,99 @@
+/* Weihnachts-Speisekarte – Theme für /weihnachten-speisekarte */
+
+:root {
+    --xmas-red: #8f0b21;
+    --xmas-green: #1e6b3c;
+    --xmas-green-soft: rgba(30, 107, 60, 0.45);
+    --xmas-red-soft: rgba(196, 30, 58, 0.4);
+    --xmas-white: #f5f5f0;
+    --xmas-glow-duration: 18s;
+}
+
+@keyframes xmas-glow-breathe {
+    0%,
+    100% {
+        opacity: 0.82;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+html:has(body.weihnachten-speisekarte) {
+    background-color: #0a0a0a;
+}
+
+body.speisekarte-page.weihnachten-speisekarte {
+    background-color: #0a0a0a;
+    color: var(--xmas-white);
+}
+
+body.speisekarte-page.weihnachten-speisekarte .menu-title::after {
+    width: 100%;
+    max-width: 120px;
+    height: 2px;
+    background: var(--xmas-green);
+}
+
+body.speisekarte-page.weihnachten-speisekarte .dish-card {
+    background: #0a0a0a;
+    border-left: 3px solid var(--xmas-green);
+}
+
+body.speisekarte-page.weihnachten-speisekarte .dish-price {
+    color: var(--xmas-green);
+}
+
+body.speisekarte-page.weihnachten-speisekarte .dish-description {
+    color: #b8b8b8;
+}
+
+body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis {
+    background-color: #0a0a0a;
+    border-top: none;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--xmas-red-soft);
+    mask-image: linear-gradient(to bottom, black 0%, transparent 55%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+    animation: xmas-glow-breathe var(--xmas-glow-duration) ease-in-out infinite;
+}
+
+body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--xmas-red);
+    pointer-events: none;
+    z-index: 2;
+    animation: xmas-glow-breathe var(--xmas-glow-duration) ease-in-out infinite;
+}
+
+body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis small {
+    position: relative;
+    z-index: 3;
+    color: #b8b8b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis::before,
+    body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis::after {
+        animation: none;
+    }
+
+    body.speisekarte-page.weihnachten-speisekarte .speisekarte-hinweis::before {
+        opacity: 0.6;
+    }
+}

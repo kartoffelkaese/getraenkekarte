@@ -1,11 +1,13 @@
 {
   "standard": {
     "card": "haupttheke",
+    "speisekarteCard": "speisekarte",
     "firstTime": 30,
-    "secondTime": 6
+    "secondTime": 8
   },
   "jugend": {
     "card": "jugendliche",
+    "speisekarteCard": "speisekarte",
     "firstTime": 30,
     "secondTime": 6
   }

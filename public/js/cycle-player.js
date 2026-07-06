@@ -5,7 +5,6 @@
         return;
     }
 
-    const SPEISEKARTE_SLUG = 'speisekarte';
     const container = document.querySelector('.cycle-container');
     if (!container) {
         console.error('Cycle-Player: .cycle-container nicht gefunden');
@@ -13,7 +12,12 @@
     }
 
     let currentFrame = null;
-    let cycleConfig = { card: cycleType === 'standard' ? 'haupttheke' : 'jugendliche', firstTime: 15, secondTime: 15 };
+    let cycleConfig = {
+        card: cycleType === 'standard' ? 'haupttheke' : 'jugendliche',
+        speisekarteCard: 'speisekarte',
+        firstTime: 15,
+        secondTime: 15,
+    };
     let cycleIntervalId = null;
     let cycleTimeouts = [];
 
@@ -35,10 +39,10 @@
         return frame;
     }
 
-    function buildFrames(cardSlug) {
+    function buildFrames(cardSlug, speisekarteSlug) {
         container.innerHTML = '';
         container.appendChild(createFrame(cardSlug));
-        container.appendChild(createFrame(SPEISEKARTE_SLUG));
+        container.appendChild(createFrame(speisekarteSlug));
     }
 
     function getFrame(slug) {
@@ -54,6 +58,7 @@
             console.error('Fehler beim Laden der Cycle-Konfiguration:', error);
             cycleConfig = {
                 card: cycleType === 'standard' ? 'haupttheke' : 'jugendliche',
+                speisekarteCard: 'speisekarte',
                 firstTime: 15,
                 secondTime: cycleType === 'standard' ? 15 : 10,
             };
@@ -62,7 +67,9 @@
 
     function switchFrame() {
         getFrame(currentFrame).classList.remove('active');
-        currentFrame = currentFrame === cycleConfig.card ? SPEISEKARTE_SLUG : cycleConfig.card;
+        currentFrame = currentFrame === cycleConfig.card
+            ? cycleConfig.speisekarteCard
+            : cycleConfig.card;
         getFrame(currentFrame).classList.add('active');
     }
 
@@ -76,7 +83,7 @@
     }
 
     function startCycle() {
-        const { firstTime, secondTime, card } = cycleConfig;
+        const { firstTime, secondTime, card, speisekarteCard } = cycleConfig;
         const cycleDuration = (firstTime + secondTime) * 1000;
 
         cycleTimeouts.push(setTimeout(() => {
@@ -86,7 +93,7 @@
         }, firstTime * 1000));
 
         cycleTimeouts.push(setTimeout(() => {
-            if (currentFrame === SPEISEKARTE_SLUG) {
+            if (currentFrame === speisekarteCard) {
                 switchFrame();
             }
         }, cycleDuration));
@@ -95,7 +102,7 @@
     async function initCycle() {
         clearCycleTimers();
         await loadCycleConfig();
-        buildFrames(cycleConfig.card);
+        buildFrames(cycleConfig.card, cycleConfig.speisekarteCard);
         currentFrame = cycleConfig.card;
         getFrame(currentFrame).classList.add('active');
 

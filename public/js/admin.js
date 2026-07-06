@@ -1579,15 +1579,27 @@ function fillCycleCardSelect(select, cards, selectedValue) {
 // Funktion zum Laden der Cycle-Konfiguration
 async function fetchCycleConfig() {
     try {
-        const [configResponse, cardsResponse] = await Promise.all([
+        const [configResponse, cardsResponse, speisekartenResponse] = await Promise.all([
             fetch('/api/cycle-config'),
             fetch('/api/cycle-selectable-cards'),
+            fetch('/api/cycle-selectable-speisekarten'),
         ]);
         const config = await configResponse.json();
         const cards = await cardsResponse.json();
+        const speisekarten = await speisekartenResponse.json();
 
         fillCycleCardSelect(document.getElementById('standardCard'), cards, config.standard.card);
         fillCycleCardSelect(document.getElementById('jugendCard'), cards, config.jugend.card);
+        fillCycleCardSelect(
+            document.getElementById('standardSpeisekarteCard'),
+            speisekarten,
+            config.standard.speisekarteCard
+        );
+        fillCycleCardSelect(
+            document.getElementById('jugendSpeisekarteCard'),
+            speisekarten,
+            config.jugend.speisekarteCard
+        );
 
         document.getElementById('standardFirstTime').value = config.standard.firstTime;
         document.getElementById('standardSecondTime').value = config.standard.secondTime;
@@ -1602,16 +1614,18 @@ async function fetchCycleConfig() {
 // Funktion zum Speichern der Cycle-Konfiguration
 async function saveCycleConfig(type) {
     try {
-        let firstTime, secondTime, card;
+        let firstTime, secondTime, card, speisekarteCard;
 
         if (type === 'standard') {
             firstTime = document.getElementById('standardFirstTime').value;
             secondTime = document.getElementById('standardSecondTime').value;
             card = document.getElementById('standardCard').value;
+            speisekarteCard = document.getElementById('standardSpeisekarteCard').value;
         } else if (type === 'jugend') {
             firstTime = document.getElementById('jugendFirstTime').value;
             secondTime = document.getElementById('jugendSecondTime').value;
             card = document.getElementById('jugendCard').value;
+            speisekarteCard = document.getElementById('jugendSpeisekarteCard').value;
         } else {
             throw new Error('Ungültiger Cycle-Typ');
         }
@@ -1624,6 +1638,7 @@ async function saveCycleConfig(type) {
             body: JSON.stringify({
                 type: type,
                 card: card,
+                speisekarteCard: speisekarteCard,
                 firstTime: parseInt(firstTime, 10),
                 secondTime: parseInt(secondTime, 10)
             })
