@@ -18,6 +18,7 @@ const { randomImageFilename, imageFileFilter, validateUploadedFile } = require('
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { isCycleSelectableCard, normalizeCycleConfig } = require('./config/cards');
 require('dotenv').config();
 
 const PRESETS_DIR = path.join(__dirname, '../public/presets');
@@ -152,17 +153,11 @@ registerHealthRoutes(app);
 app.get('/api/cycle-config', (req, res) => {
     try {
         const configPath = path.join(__dirname, '../cycle-config.json');
+        let raw = {};
         if (fs.existsSync(configPath)) {
-            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            res.json(configData);
-        } else {
-            // Standard-Konfiguration
-            const defaultConfig = {
-                standard: { firstTime: 15, secondTime: 15 },
-                jugend: { firstTime: 15, secondTime: 10 }
-            };
-            res.json(defaultConfig);
+            raw = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         }
+        res.json(normalizeCycleConfig(raw));
     } catch (error) {
         console.error('Fehler beim Laden der Cycle-Konfiguration:', error);
         res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
@@ -274,34 +269,47 @@ app.post('/api/hochzeit-config', (req, res) => {
 
 app.post('/api/cycle-config', (req, res) => {
     try {
-        const { type, firstTime, secondTime } = req.body;
-        
-        if (!type || !firstTime || !secondTime) {
+        const { type, firstTime, secondTime, card } = req.body;
+
+        if (!type || !firstTime || !secondTime || !card) {
             return res.status(400).json({ error: 'Alle Felder sind erforderlich' });
         }
-        
+
+        if (type !== 'standard' && type !== 'jugend') {
+            return res.status(400).json({ error: 'Ungültiger Cycle-Typ' });
+        }
+
+        if (!isCycleSelectableCard(card)) {
+            return res.status(400).json({ error: 'Ungültige Karte für Cycle' });
+        }
+
         if (firstTime < 5 || firstTime > 300 || secondTime < 5 || secondTime > 300) {
             return res.status(400).json({ error: 'Zeiten müssen zwischen 5 und 300 Sekunden liegen' });
         }
-        
+
         const configPath = path.join(__dirname, '../cycle-config.json');
         let config = {};
-        
-        // Lade bestehende Konfiguration
+
         if (fs.existsSync(configPath)) {
             config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         }
-        
-        // Aktualisiere Konfiguration
-        config[type] = { firstTime: parseInt(firstTime), secondTime: parseInt(secondTime) };
-        
-        // Speichere Konfiguration
-        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-        
+
+        config[type] = {
+            card,
+            firstTime: parseInt(firstTime, 10),
+            secondTime: parseInt(secondTime, 10),
+        };
+
+        fs.writeFileSync(configPath, JSON.stringify(normalizeCycleConfig(config), null, 2));
+
         res.json({ success: true, message: 'Cycle-Konfiguration gespeichert' });
-        
-        // Sende Socket.IO Event für Cycle-Reload
-        io.emit('cycleConfigChanged', { type, firstTime, secondTime });
+
+        io.emit('cycleConfigChanged', {
+            type,
+            card,
+            firstTime: parseInt(firstTime, 10),
+            secondTime: parseInt(secondTime, 10),
+        });
     } catch (error) {
         console.error('Fehler beim Speichern der Cycle-Konfiguration:', error);
         res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });

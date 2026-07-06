@@ -1,10 +1,12 @@
 {
-  "jugend": {
-    "firstTime": 30,
-    "secondTime": 10
-  },
   "standard": {
+    "card": "haupttheke",
     "firstTime": 30,
-    "secondTime": 10
+    "secondTime": 6
+  },
+  "jugend": {
+    "card": "jugendliche",
+    "firstTime": 30,
+    "secondTime": 6
   }
 }

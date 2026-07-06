@@ -35,7 +35,7 @@ describe('calculateCurrentCard', () => {
 
     it('bevorzugt Datumsregeln vor Wochenregeln', () => {
         const config = {
-            defaultCard: 'cycle',
+            defaultCard: 'cycle-1',
             rules: [
                 {
                     id: 'weekly',

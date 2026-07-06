@@ -67,7 +67,7 @@ function calculateCurrentCard(config, now = new Date()) {
         }
     }
 
-    return config.defaultCard || 'cycle';
+    return config.defaultCard || 'cycle-1';
 }
 
 module.exports = {

@@ -123,8 +123,12 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title">Standard Cycle (Haupttheke ↔ Speisekarte)</h5>
-                                <p class="card-text">Konfiguration für /cycle</p>
+                                <h5 class="card-title">Cycle 1 (Karte ↔ Speisekarte)</h5>
+                                <p class="card-text">Konfiguration für /cycle-1 – die Speisekarte ist immer fest enthalten.</p>
+                                <div class="mb-3">
+                                    <label for="standardCard" class="form-label">Anzuzeigende Karte</label>
+                                    <select class="form-select" id="standardCard"></select>
+                                </div>
                                 <div class="mb-3">
                                     <label for="standardFirstTime" class="form-label">Erste Anzeige (Sekunden)</label>
                                     <input type="number" class="form-control" id="standardFirstTime" value="15" min="5" max="300">
@@ -142,8 +146,12 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title">Jugend Cycle (Jugendkarte ↔ Speisekarte)</h5>
-                                <p class="card-text">Konfiguration für /cycle-jugend</p>
+                                <h5 class="card-title">Cycle 2 (Karte ↔ Speisekarte)</h5>
+                                <p class="card-text">Konfiguration für /cycle-2 – die Speisekarte ist immer fest enthalten.</p>
+                                <div class="mb-3">
+                                    <label for="jugendCard" class="form-label">Anzuzeigende Karte</label>
+                                    <select class="form-select" id="jugendCard"></select>
+                                </div>
                                 <div class="mb-3">
                                     <label for="jugendFirstTime" class="form-label">Erste Anzeige (Sekunden)</label>
                                     <input type="number" class="form-control" id="jugendFirstTime" value="15" min="5" max="300">
@@ -165,11 +173,11 @@
                             <h5 class="card-title">Cycle-URLs</h5>
                             <p class="card-text">Verwenden Sie diese URLs für die automatischen Wechsel:</p>
                             <div class="d-flex gap-2 flex-wrap">
-                                <a href="/cycle" target="_blank" class="btn btn-outline-primary">
-                                    <i class="bi bi-link-45deg"></i> /cycle
+                                <a href="/cycle-1" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-link-45deg"></i> /cycle-1
                                 </a>
-                                <a href="/cycle-jugend" target="_blank" class="btn btn-outline-primary">
-                                    <i class="bi bi-link-45deg"></i> /cycle-jugend
+                                <a href="/cycle-2" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-link-45deg"></i> /cycle-2
                                 </a>
                             </div>
                         </div>
@@ -204,8 +212,8 @@
                                         <option value="speisekarte">Speisekarte</option>
                                         <option value="bilder">Bilder</option>
                                         <option value="screensaver">Screensaver</option>
-                                        <option value="cycle">Cycle-Haupttheke</option>
-                                        <option value="cycle-jugend">Cycle-Jugend</option>
+                                        <option value="cycle-1">Cycle 1</option>
+                                        <option value="cycle-2">Cycle 2</option>
                                     </select>
                                 </div>
                                 <div class="d-flex gap-2">
@@ -240,8 +248,8 @@
                                         <option value="speisekarte">Speisekarte</option>
                                         <option value="bilder">Bilder</option>
                                         <option value="screensaver">Screensaver</option>
-                                        <option value="cycle">Cycle-Haupttheke</option>
-                                        <option value="cycle-jugend">Cycle-Jugend</option>
+                                        <option value="cycle-1">Cycle 1</option>
+                                        <option value="cycle-2">Cycle 2</option>
                                     </select>
                                 </div>
                                 <div class="d-flex gap-2">
@@ -444,8 +452,8 @@
                                         <option value="speisekarte">Speisekarte</option>
                                         <option value="bilder">Bilder</option>
                                         <option value="screensaver">Screensaver</option>
-                                        <option value="cycle">Cycle-Haupttheke</option>
-                                        <option value="cycle-jugend">Cycle-Jugend</option>
+                                        <option value="cycle-1">Cycle 1</option>
+                                        <option value="cycle-2">Cycle 2</option>
                                         <option value="overview-1">Overview 1</option>
                                         <option value="overview-2">Overview 2</option>
                                     </select>
@@ -552,8 +560,8 @@
                                                 <option value="speisekarte">Speisekarte</option>
                                                 <option value="bilder">Bilder</option>
                                                 <option value="screensaver">Screensaver</option>
-                                                <option value="cycle">Cycle-Haupttheke</option>
-                                                <option value="cycle-jugend">Cycle-Jugend</option>
+                                                <option value="cycle-1">Cycle 1</option>
+                                                <option value="cycle-2">Cycle 2</option>
                                                 <option value="overview-1">Overview 1</option>
                                                 <option value="overview-2">Overview 2</option>
                                             </select>
@@ -1247,8 +1255,8 @@
                                     <option value="speisekarte">Speisekarte</option>
                                     <option value="bilder">Bilder</option>
                                     <option value="screensaver">Screensaver</option>
-                                    <option value="cycle">Cycle-Haupttheke</option>
-                                    <option value="cycle-jugend">Cycle-Jugend</option>
+                                    <option value="cycle-1">Cycle 1</option>
+                                    <option value="cycle-2">Cycle 2</option>
                                     <option value="overview-1">Overview 1</option>
                                     <option value="overview-2">Overview 2</option>
                                 </select>

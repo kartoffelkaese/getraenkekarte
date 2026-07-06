@@ -36,7 +36,7 @@
 
     function resolveFrameSlug(cardSlug) {
         if (cardSlug.startsWith('preset:')) {
-            return extractLocationFromPreset(cardSlug) || 'cycle';
+            return extractLocationFromPreset(cardSlug) || 'cycle-1';
         }
         return cardSlug;
     }
@@ -104,8 +104,8 @@
             newFrame.classList.add('active');
             scheduleFrameUnload();
         } else {
-            currentCard = 'cycle';
-            const fallbackFrame = loadFrame('cycle');
+            currentCard = 'cycle-1';
+            const fallbackFrame = loadFrame('cycle-1');
             if (fallbackFrame) {
                 fallbackFrame.classList.add('active');
             }

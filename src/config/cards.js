@@ -21,14 +21,57 @@ const CARDS = [
     { slug: 'overview-2', label: 'Overview 2', html: 'overview-2.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Overview 2' },
     { slug: 'schedule-1', label: 'Schedule 1', html: 'schedule-1.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Schedule 1' },
     { slug: 'schedule-2', label: 'Schedule 2', html: 'schedule-2.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Schedule 2' },
-    { slug: 'cycle', label: 'Cycle-Haupttheke', html: 'cycle.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Cycle (Haupttheke ↔ Speisekarte)' },
-    { slug: 'cycle-jugend', label: 'Cycle-Jugend', html: 'cycle-jugend.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Cycle Jugend' },
+    { slug: 'cycle-1', label: 'Cycle 1', html: 'cycle-1.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Cycle 1' },
+    { slug: 'cycle-2', label: 'Cycle 2', html: 'cycle-2.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Cycle 2' },
     { slug: 'screensaver', label: 'Screensaver', html: 'screensaver.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Screensaver' },
 ];
 
 const VALID_LOCATIONS = new Set(CARDS.map((c) => c.slug));
 /** Gleiche Slugs wie bisher: alle registrierten Karten (inkl. Schedule/Overview als Ziel). */
 const VALID_SCHEDULE_CARDS = new Set(CARDS.map((c) => c.slug));
+
+const CYCLE_EXCLUDED_SLUGS = new Set([
+    'speisekarte',
+    'cycle-1',
+    'cycle-2',
+    'schedule-1',
+    'schedule-2',
+    'overview-1',
+    'overview-2',
+    'screensaver',
+]);
+
+const CYCLE_DEFAULT_CARDS = {
+    standard: 'haupttheke',
+    jugend: 'jugendliche',
+};
+
+function getCycleSelectableCards() {
+    return CARDS.filter((c) => c.html && !CYCLE_EXCLUDED_SLUGS.has(c.slug));
+}
+
+function isCycleSelectableCard(slug) {
+    return getCycleSelectableCards().some((c) => c.slug === slug);
+}
+
+function normalizeCycleConfig(raw = {}) {
+    const selectable = new Set(getCycleSelectableCards().map((c) => c.slug));
+    const defaults = {
+        standard: { card: CYCLE_DEFAULT_CARDS.standard, firstTime: 15, secondTime: 15 },
+        jugend: { card: CYCLE_DEFAULT_CARDS.jugend, firstTime: 15, secondTime: 10 },
+    };
+
+    return ['standard', 'jugend'].reduce((acc, type) => {
+        const entry = raw[type] || {};
+        const card = selectable.has(entry.card) ? entry.card : defaults[type].card;
+        acc[type] = {
+            card,
+            firstTime: entry.firstTime ?? defaults[type].firstTime,
+            secondTime: entry.secondTime ?? defaults[type].secondTime,
+        };
+        return acc;
+    }, {});
+}
 
 function getCardsForApi() {
     return CARDS.map(({ slug, label, scheduleable, overviewSelectable, inLinks, linkLabel }) => ({
@@ -54,7 +97,11 @@ module.exports = {
     CARDS,
     VALID_LOCATIONS,
     VALID_SCHEDULE_CARDS,
+    CYCLE_DEFAULT_CARDS,
     getCardsForApi,
     getPageCards,
     getPresetLocations,
+    getCycleSelectableCards,
+    isCycleSelectableCard,
+    normalizeCycleConfig,
 };

@@ -1562,13 +1562,33 @@ socket.on('error', (error) => {
 
 // === Cycle-Verwaltung ===
 
+function fillCycleCardSelect(select, cards, selectedValue) {
+    if (!select) return;
+    select.innerHTML = '';
+    cards.forEach((card) => {
+        const option = document.createElement('option');
+        option.value = card.slug;
+        option.textContent = card.label;
+        select.appendChild(option);
+    });
+    if (selectedValue && [...select.options].some((o) => o.value === selectedValue)) {
+        select.value = selectedValue;
+    }
+}
+
 // Funktion zum Laden der Cycle-Konfiguration
 async function fetchCycleConfig() {
     try {
-        const response = await fetch('/api/cycle-config');
-        const config = await response.json();
-        
-        // Fülle die Formulare mit den aktuellen Werten
+        const [configResponse, cardsResponse] = await Promise.all([
+            fetch('/api/cycle-config'),
+            fetch('/api/cycle-selectable-cards'),
+        ]);
+        const config = await configResponse.json();
+        const cards = await cardsResponse.json();
+
+        fillCycleCardSelect(document.getElementById('standardCard'), cards, config.standard.card);
+        fillCycleCardSelect(document.getElementById('jugendCard'), cards, config.jugend.card);
+
         document.getElementById('standardFirstTime').value = config.standard.firstTime;
         document.getElementById('standardSecondTime').value = config.standard.secondTime;
         document.getElementById('jugendFirstTime').value = config.jugend.firstTime;
@@ -1582,18 +1602,20 @@ async function fetchCycleConfig() {
 // Funktion zum Speichern der Cycle-Konfiguration
 async function saveCycleConfig(type) {
     try {
-        let firstTime, secondTime;
-        
+        let firstTime, secondTime, card;
+
         if (type === 'standard') {
             firstTime = document.getElementById('standardFirstTime').value;
             secondTime = document.getElementById('standardSecondTime').value;
+            card = document.getElementById('standardCard').value;
         } else if (type === 'jugend') {
             firstTime = document.getElementById('jugendFirstTime').value;
             secondTime = document.getElementById('jugendSecondTime').value;
+            card = document.getElementById('jugendCard').value;
         } else {
             throw new Error('Ungültiger Cycle-Typ');
         }
-        
+
         const response = await fetch('/api/cycle-config', {
             method: 'POST',
             headers: {
@@ -1601,19 +1623,20 @@ async function saveCycleConfig(type) {
             },
             body: JSON.stringify({
                 type: type,
-                firstTime: parseInt(firstTime),
-                secondTime: parseInt(secondTime)
+                card: card,
+                firstTime: parseInt(firstTime, 10),
+                secondTime: parseInt(secondTime, 10)
             })
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Fehler beim Speichern');
         }
-        
+
         const result = await response.json();
         showNotification(result.message || 'Cycle-Konfiguration gespeichert', 'success');
-        
+
     } catch (error) {
         console.error('Fehler beim Speichern der Cycle-Konfiguration:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
@@ -1946,8 +1969,8 @@ socket.on('overviewConfigChanged', (data) => {
 
 // === Schedule Management ===
 
-let scheduleConfig = { defaultCard: 'cycle', rules: [] };
-let schedule2Config = { defaultCard: 'cycle', rules: [] };
+let scheduleConfig = { defaultCard: 'cycle-1', rules: [] };
+let schedule2Config = { defaultCard: 'cycle-1', rules: [] };
 let scheduleStatusInterval = null;
 let schedule2StatusInterval = null;
 let currentScheduleTab = 1; // 1 oder 2
@@ -2419,7 +2442,7 @@ function clearRuleForm() {
     document.getElementById('endTime').value = '23:59';
     
     // Setze Standard-Karte
-    document.getElementById('ruleCard').value = 'cycle';
+    document.getElementById('ruleCard').value = 'cycle-1';
 }
 
 // Socket.IO Event-Listener für Schedule

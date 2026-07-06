@@ -4,7 +4,7 @@ const { calculateCurrentCard } = require('../services/schedule');
 const { syncActivePresetsForConfig } = require('../services/presetSync');
 const logger = require('../utils/logger');
 
-function loadScheduleConfig(configPath, defaultCard = 'cycle') {
+function loadScheduleConfig(configPath, defaultCard = 'cycle-1') {
     if (fs.existsSync(configPath)) {
         return JSON.parse(fs.readFileSync(configPath, 'utf8'));
     }
