@@ -1,69 +1,65 @@
-# 🏥 Health Status Dashboard
+# Health Status Dashboard
 
 ## Übersicht
-Der neue Health Status Abschnitt in den Einstellungen zeigt den aktuellen Zustand der Datenbankverbindung und des Systems an.
 
-## 🎯 Features
+Der Health-Status im Admin zeigt den aktuellen Zustand der Datenbankverbindung und grundlegende Systemmetriken an.
 
-### **System Status**
-- ✅ **Healthy/Unhealthy** Status mit visuellen Indikatoren
-- 🕒 **Letzte Aktualisierung** Zeitstempel
-- 🔄 **Auto-Refresh** alle 10 Sekunden (optional)
+**Ort im Admin:** **System → Status & Reload** (`#/system/status`)
 
-### **Datenbank Status**
-- 🗄️ **Verbindungsstatus** (Verbunden/Getrennt)
-- 📊 **Connection Statistics** (Aktive/Gesamte Verbindungen)
-- ❌ **Fehlerzähler** bei Verbindungsproblemen
+Implementierung: [`public/js/admin/health.js`](public/js/admin/health.js)  
+Backend: [`src/routes/health.js`](src/routes/health.js)
 
-### **System Metriken**
-- ⏱️ **Laufzeit** (Tage, Stunden, Minuten)
-- 💾 **Speicherverbrauch** (Heap Used/Total)
-- 🔗 **Aktive Verbindungen** im Pool
+## Features
 
-## 🎨 UI/UX
+### System Status
 
-### **Farbkodierung**
-- 🟢 **Grün**: Alles OK (Healthy, Verbunden)
-- 🔴 **Rot**: Probleme (Unhealthy, Getrennt)
-- 🔵 **Blau**: Info/Neutral
+- **Healthy / Unhealthy** mit visuellen Indikatoren
+- Zeitstempel der letzten Aktualisierung
+- Optionaler **Auto-Refresh** alle 10 Sekunden
 
-### **Icons**
-- ✅ `bi-check-circle-fill`: System OK
-- ⚠️ `bi-exclamation-triangle-fill`: System Probleme
-- 🗄️ `bi-database`: Datenbank Status
-- ⏱️ `bi-clock`: Laufzeit
-- 💾 `bi-memory`: Speicher
-- 🔗 `bi-activity`: Verbindungen
+### Datenbank Status
 
-## 🔧 Bedienung
+- Verbindungsstatus (Verbunden / Getrennt)
+- Connection Statistics aus dem DB-Pool
+- Fehlerzähler bei Verbindungsproblemen
 
-### **Manuelle Aktualisierung**
+### System Metriken
+
+- Laufzeit (Uptime)
+- Speicherverbrauch (`heapUsed` / `heapTotal`)
+- Aktive Verbindungen im Pool
+
+## Bedienung
+
+### Manuelle Aktualisierung
+
 ```javascript
-refreshHealthStatus() // Lädt aktuellen Status
+refreshHealthStatus()
 ```
 
-### **Auto-Refresh**
+### Auto-Refresh
+
 ```javascript
-toggleAutoRefresh() // Startet/Stoppt Auto-Refresh (10s)
+toggleAutoRefresh()  // Intervall: 10 Sekunden
 ```
 
-### **Automatisches Laden**
-- Wird automatisch geladen beim Wechsel zum "Einstellungen" Tab
-- Lädt sich selbst bei Tab-Wechsel neu
+Der Status wird automatisch geladen, wenn die Seite **Status & Reload** geöffnet wird.
 
-## 📊 API Integration
+## API
 
-### **Health Endpoint**
+### Endpoint
+
 ```bash
 GET /api/health
 ```
 
-### **Response Format**
+### Response (healthy)
+
 ```json
 {
     "status": "healthy",
     "database": "connected",
-    "timestamp": "2024-01-15T10:30:00.000Z",
+    "timestamp": "2026-07-07T10:30:00.000Z",
     "uptime": 3600,
     "memory": {
         "heapUsed": 50000000,
@@ -79,63 +75,53 @@ GET /api/health
 }
 ```
 
-## 🚀 Verwendung
+### Response (unhealthy)
 
-### **1. Admin-Interface öffnen**
-```
-http://localhost:3000/admin
-```
+HTTP **503** mit `"status": "unhealthy"` und `"database": "disconnected"`.  
+In Nicht-Produktionsumgebungen enthält die Antwort zusätzlich `error` mit der Fehlermeldung.
 
-### **2. Einstellungen Tab wählen**
-- Klicke auf "Einstellungen" Tab
-- Health Status wird automatisch geladen
+## Verwendung
 
-### **3. Auto-Refresh aktivieren**
-- Klicke auf "Auto-Refresh" Button
-- Status wird alle 10 Sekunden aktualisiert
+1. Admin öffnen: `http://localhost:3000/admin`
+2. **System → Status & Reload** wählen
+3. Optional **Auto-Refresh** aktivieren
+4. Bei Bedarf **Aktualisieren** klicken
 
-### **4. Manuelle Aktualisierung**
-- Klicke auf "Aktualisieren" Button
-- Sofortige Status-Aktualisierung
+## Troubleshooting
 
-## 🔍 Troubleshooting
+### „Verbindung zum Server fehlgeschlagen“
 
-### **"Verbindung zum Server fehlgeschlagen"**
-- Prüfe ob Server läuft: `pm2 status`
-- Prüfe Port: `netstat -tlnp | grep 3000`
+- Server läuft? `pm2 status` oder `npm run dev`
+- Port erreichbar? `curl http://localhost:3000/api/health`
 
-### **"Datenbank Getrennt"**
-- Prüfe Datenbankverbindung
-- Prüfe `.env` Datei
-- Prüfe Server Logs: `pm2 logs getraenkekarte`
+### „Datenbank Getrennt“
 
-### **Auto-Refresh funktioniert nicht**
-- Prüfe Browser-Konsole auf JavaScript-Fehler
-- Prüfe ob Tab aktiv ist (Browser pausiert Timer bei inaktiven Tabs)
+- `.env`-Datenbankzugang prüfen
+- MySQL-Dienst und Netzwerk prüfen
+- Logs: `pm2 logs getraenkekarte`
+- Details: [DATABASE-RESILIENCE.md](DATABASE-RESILIENCE.md)
 
-## 📈 Monitoring
+### Auto-Refresh pausiert
 
-### **Wichtige Metriken**
-1. **Database Status**: Sollte immer "Verbunden" sein
-2. **Connection Stats**: Aktive Verbindungen sollten > 0 sein
-3. **Failed Connections**: Sollte 0 bleiben
-4. **Memory Usage**: Sollte stabil bleiben
-5. **Uptime**: Zeigt Stabilität der Anwendung
+Browser drosseln Timer in inaktiven Tabs – Tab aktiv lassen oder manuell aktualisieren.
 
-### **Alerts**
-- 🔴 **Database Getrennt**: Sofortige Aufmerksamkeit erforderlich
-- 🟡 **Failed Connections > 0**: Überwachen, könnte auf Probleme hinweisen
-- 🟡 **Memory Usage hoch**: Möglicherweise Memory Leak
+## Wichtige Metriken
 
-## 🎯 Nächste Schritte
+| Metrik | Erwartung |
+|--------|-----------|
+| Database Status | „Verbunden“ |
+| Active Connections | > 0 bei laufendem Betrieb |
+| Failed Connections | Sollte 0 bleiben |
+| Memory Usage | Stabil über Zeit |
+| Uptime | Steigend ohne unerwartete Resets |
 
-1. **Email Alerts**: Bei kritischen Problemen
-2. **Historical Data**: Verlauf der Metriken
-3. **Performance Metrics**: Response Times, etc.
-4. **Mobile View**: Optimierung für mobile Geräte
+## Hinweise
+
+- Der Health-Check führt `SELECT 1` aus – er testet die echte DB-Verbindung, nicht nur den Prozessstatus.
+- `connectionStats` kommt aus dem MySQL-Pool in [`src/db/pool.js`](src/db/pool.js).
+- Für produktives Monitoring kann `/api/health` extern abgefragt werden (z. B. Uptime-Robot, PM2, Health-Monitor-Script).
 
 ---
 
-**Implementiert**: 2024-01-15  
-**Version**: 3.8.5+  
-**Status**: ✅ Produktionsreif
+**Stand:** 2026-07-07  
+**Version:** 4.3.1
