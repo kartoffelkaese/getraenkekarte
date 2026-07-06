@@ -14,6 +14,7 @@ const CARDS = [
     { slug: 'hochzeit-3spalten', label: 'Hochzeitskarte (3 Spalten)', html: 'hochzeit-3spalten.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Hochzeitskarte (3 Spalten)' },
     { slug: 'hochzeit-dunkel-3spalten', label: 'Hochzeitskarte dunkel (3 Spalten)', html: 'hochzeit-dunkel-3spalten.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Hochzeitskarte dunkel (3 Spalten)' },
     { slug: 'jugendliche', label: 'Jugendkarte', html: 'jugendliche.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Jugendkarte' },
+    { slug: 'weihnachten-jugendliche', label: 'Weihnachtskarte Jugend', html: 'weihnachten-jugendliche.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Weihnachtskarte Jugend' },
     { slug: 'speisekarte', label: 'Speisekarte', html: 'speisekarte.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Speisekarte' },
     { slug: 'bilder', label: 'Bilder', html: 'bilder.html', scheduleable: true, overviewSelectable: true, presetLocation: false, inLinks: true, linkLabel: 'Bilder' },
     { slug: 'overview-1', label: 'Overview 1', html: 'overview-1.html', scheduleable: true, overviewSelectable: false, presetLocation: false, inLinks: true, linkLabel: 'Overview 1' },

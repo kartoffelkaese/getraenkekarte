@@ -1,4 +1,4 @@
-/* Weihnachtskarte – Theme für /weihnachten (Full-HD TV) */
+/* Weihnachtskarte – Theme für /weihnachten und /weihnachten-jugendliche (Full-HD TV) */
 
 :root {
     --xmas-red: #c41e3a;
@@ -35,11 +35,13 @@
     }
 }
 
-html:has(body.weihnachten) {
+html:has(body.weihnachten),
+html:has(body.weihnachten-jugendliche) {
     background-color: #0a0a0a;
 }
 
-body.weihnachten {
+body.weihnachten,
+body.weihnachten-jugendliche {
     background-color: #0a0a0a;
     color: var(--xmas-white);
     --bg-dark: #0a0a0a;
@@ -50,7 +52,8 @@ body.weihnachten {
 }
 
 /* Schneefall nur im Zusatzstoffe-Footer */
-body.weihnachten .additives-container {
+body.weihnachten .additives-container,
+body.weihnachten-jugendliche .additives-container {
     background-color: #0a0a0a;
     border-top: none;
     overflow: hidden;
@@ -58,7 +61,8 @@ body.weihnachten .additives-container {
     position: fixed;
 }
 
-body.weihnachten .additives-container .weihnachten-snow {
+body.weihnachten .additives-container .weihnachten-snow,
+body.weihnachten-jugendliche .additives-container .weihnachten-snow {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -66,7 +70,8 @@ body.weihnachten .additives-container .weihnachten-snow {
     overflow: hidden;
 }
 
-body.weihnachten .additives-container .snowflake {
+body.weihnachten .additives-container .snowflake,
+body.weihnachten-jugendliche .additives-container .snowflake {
     position: absolute;
     top: -4px;
     width: 4px;
@@ -77,21 +82,34 @@ body.weihnachten .additives-container .snowflake {
     animation: weihnachten-snowflake-fall linear infinite;
 }
 
-body.weihnachten .additives-container .snowflake:nth-child(1) { left: 4%; animation-duration: 7s; animation-delay: 0s; }
-body.weihnachten .additives-container .snowflake:nth-child(2) { left: 12%; animation-duration: 9s; animation-delay: -2s; width: 2px; height: 2px; }
-body.weihnachten .additives-container .snowflake:nth-child(3) { left: 20%; animation-duration: 8s; animation-delay: -4s; }
-body.weihnachten .additives-container .snowflake:nth-child(4) { left: 28%; animation-duration: 10s; animation-delay: -1s; width: 5px; height: 5px; }
-body.weihnachten .additives-container .snowflake:nth-child(5) { left: 36%; animation-duration: 7.5s; animation-delay: -3s; }
-body.weihnachten .additives-container .snowflake:nth-child(6) { left: 44%; animation-duration: 9.5s; animation-delay: -5s; width: 2px; height: 2px; }
-body.weihnachten .additives-container .snowflake:nth-child(7) { left: 52%; animation-duration: 8.5s; animation-delay: -2.5s; }
-body.weihnachten .additives-container .snowflake:nth-child(8) { left: 60%; animation-duration: 11s; animation-delay: -6s; width: 5px; height: 5px; }
-body.weihnachten .additives-container .snowflake:nth-child(9) { left: 68%; animation-duration: 7s; animation-delay: -1.5s; }
-body.weihnachten .additives-container .snowflake:nth-child(10) { left: 76%; animation-duration: 9s; animation-delay: -4.5s; width: 2px; height: 2px; }
-body.weihnachten .additives-container .snowflake:nth-child(11) { left: 84%; animation-duration: 8s; animation-delay: -3.5s; }
-body.weihnachten .additives-container .snowflake:nth-child(12) { left: 92%; animation-duration: 10s; animation-delay: -0.5s; width: 3px; height: 3px; }
+body.weihnachten .additives-container .snowflake:nth-child(1),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(1) { left: 4%; animation-duration: 7s; animation-delay: 0s; }
+body.weihnachten .additives-container .snowflake:nth-child(2),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(2) { left: 12%; animation-duration: 9s; animation-delay: -2s; width: 2px; height: 2px; }
+body.weihnachten .additives-container .snowflake:nth-child(3),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(3) { left: 20%; animation-duration: 8s; animation-delay: -4s; }
+body.weihnachten .additives-container .snowflake:nth-child(4),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(4) { left: 28%; animation-duration: 10s; animation-delay: -1s; width: 5px; height: 5px; }
+body.weihnachten .additives-container .snowflake:nth-child(5),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(5) { left: 36%; animation-duration: 7.5s; animation-delay: -3s; }
+body.weihnachten .additives-container .snowflake:nth-child(6),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(6) { left: 44%; animation-duration: 9.5s; animation-delay: -5s; width: 2px; height: 2px; }
+body.weihnachten .additives-container .snowflake:nth-child(7),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(7) { left: 52%; animation-duration: 8.5s; animation-delay: -2.5s; }
+body.weihnachten .additives-container .snowflake:nth-child(8),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(8) { left: 60%; animation-duration: 11s; animation-delay: -6s; width: 5px; height: 5px; }
+body.weihnachten .additives-container .snowflake:nth-child(9),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(9) { left: 68%; animation-duration: 7s; animation-delay: -1.5s; }
+body.weihnachten .additives-container .snowflake:nth-child(10),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(10) { left: 76%; animation-duration: 9s; animation-delay: -4.5s; width: 2px; height: 2px; }
+body.weihnachten .additives-container .snowflake:nth-child(11),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(11) { left: 84%; animation-duration: 8s; animation-delay: -3.5s; }
+body.weihnachten .additives-container .snowflake:nth-child(12),
+body.weihnachten-jugendliche .additives-container .snowflake:nth-child(12) { left: 92%; animation-duration: 10s; animation-delay: -0.5s; width: 3px; height: 3px; }
 
 /* Kategorie-Überschriften – rot-grüner Verlauf statt pink/weiß */
-body.weihnachten .category-header h2 {
+body.weihnachten .category-header h2,
+body.weihnachten-jugendliche .category-header h2 {
     position: relative;
     letter-spacing: 0.06em;
     border-bottom: none !important;
@@ -99,7 +117,8 @@ body.weihnachten .category-header h2 {
     text-shadow: none;
 }
 
-body.weihnachten .category-header h2::after {
+body.weihnachten .category-header h2::after,
+body.weihnachten-jugendliche .category-header h2::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -111,7 +130,8 @@ body.weihnachten .category-header h2::after {
 }
 
 /* Getränke-Karten – roter Akzent-Rand in allen Spalten */
-body.weihnachten .card {
+body.weihnachten .card,
+body.weihnachten-jugendliche .card {
     background-color: #0a0a0a;
     border: none;
     box-shadow: none;
@@ -119,12 +139,14 @@ body.weihnachten .card {
     border-left: 3px solid var(--xmas-red);
 }
 
-body.weihnachten .additives-info {
+body.weihnachten .additives-info,
+body.weihnachten-jugendliche .additives-info {
     opacity: 0.85;
 }
 
 /* Zusatzstoffe – grüner Glow nur innerhalb des Footers */
-body.weihnachten .additives-container::before {
+body.weihnachten .additives-container::before,
+body.weihnachten-jugendliche .additives-container::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -136,7 +158,8 @@ body.weihnachten .additives-container::before {
     animation: xmas-glow-breathe var(--xmas-glow-duration) ease-in-out infinite;
 }
 
-body.weihnachten .additives-container::after {
+body.weihnachten .additives-container::after,
+body.weihnachten-jugendliche .additives-container::after {
     content: '';
     position: absolute;
     top: 0;
@@ -149,32 +172,66 @@ body.weihnachten .additives-container::after {
     animation: xmas-glow-breathe var(--xmas-glow-duration) ease-in-out infinite;
 }
 
-body.weihnachten .additives-content {
+body.weihnachten .additives-content,
+body.weihnachten-jugendliche .additives-content {
     position: relative;
     z-index: 4;
 }
 
-body.weihnachten .additives-content small {
+body.weihnachten .additives-content small,
+body.weihnachten-jugendliche .additives-content small {
     color: var(--text-secondary);
 }
 
-body.weihnachten .additional-content {
+body.weihnachten .additional-content,
+body.weihnachten-jugendliche .additional-content {
     background-color: transparent;
     border-radius: 0;
 }
 
+/* Jugendkarte – pink Akzente durch Weihnachtsfarben ersetzen */
+body.weihnachten-jugendliche .jugend-ads-container {
+    border-top-color: rgba(30, 107, 60, 0.25);
+}
+
+body.weihnachten-jugendliche .social-media,
+body.weihnachten-jugendliche .app-store-badges {
+    border-color: rgba(30, 107, 60, 0.35);
+    box-shadow: 0 0 30px rgba(30, 107, 60, 0.12);
+}
+
+body.weihnachten-jugendliche .social-media .handle::after,
+body.weihnachten-jugendliche .app-store-badges h3::after {
+    background: linear-gradient(90deg, transparent, var(--xmas-green), var(--xmas-red), transparent);
+}
+
+body.weihnachten-jugendliche .additional-content::before {
+    background: linear-gradient(180deg,
+        transparent,
+        rgba(30, 107, 60, 0.8),
+        rgba(196, 30, 58, 0.8),
+        rgba(30, 107, 60, 0.8),
+        transparent
+    );
+    box-shadow: 0 0 15px rgba(30, 107, 60, 0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
-    body.weihnachten .additives-container .snowflake {
+    body.weihnachten .additives-container .snowflake,
+    body.weihnachten-jugendliche .additives-container .snowflake {
         animation: none;
         display: none;
     }
 
     body.weihnachten .additives-container::before,
-    body.weihnachten .additives-container::after {
+    body.weihnachten-jugendliche .additives-container::before,
+    body.weihnachten .additives-container::after,
+    body.weihnachten-jugendliche .additives-container::after {
         animation: none;
     }
 
-    body.weihnachten .additives-container::before {
+    body.weihnachten .additives-container::before,
+    body.weihnachten-jugendliche .additives-container::before {
         opacity: 0.6;
     }
 }
