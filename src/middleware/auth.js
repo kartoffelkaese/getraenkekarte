@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const basicAuth = require('basic-auth');
+const { parse: parseBasicAuth } = require('basic-auth');
 
 function safeEqual(a, b) {
     if (typeof a !== 'string' || typeof b !== 'string') {
@@ -14,7 +14,8 @@ function safeEqual(a, b) {
 }
 
 function verifyCredentials(req) {
-    const user = basicAuth(req);
+    const authHeader = req.headers.authorization;
+    const user = authHeader ? parseBasicAuth(authHeader) : undefined;
     const expectedUser = process.env.ADMIN_USER || '';
     const expectedPass = process.env.ADMIN_PASSWORD || '';
 
