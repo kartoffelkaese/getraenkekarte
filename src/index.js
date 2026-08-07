@@ -127,6 +127,7 @@ registerScheduleRoutes(app, {
 
 // Admin-Bereich mit Authentifizierung
 app.use('/admin.html', auth);
+app.use('/admin-v2.html', auth);
 app.use('/js/admin.js', auth);
 app.use('/js/admin', auth);
 
