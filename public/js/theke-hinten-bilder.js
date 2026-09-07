@@ -1,6 +1,23 @@
 // Bilder-Slideshow für theke-hinten-bilder.html
 
 const additionalContent = document.querySelector('.additional-content');
+let refreshImageStack = null;
+
+function applyImagesConfig(config) {
+    document.body.classList.toggle('images-transparent-bg', !!config.transparentBackground);
+    if (refreshImageStack) refreshImageStack();
+}
+
+async function loadImagesConfig() {
+    try {
+        const response = await fetch('/api/images-config');
+        if (response.ok) {
+            applyImagesConfig(await response.json());
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Bilder-Konfiguration:', error);
+    }
+}
 
 async function fetchAndDisplayImages() {
     try {
@@ -67,7 +84,6 @@ function startImageStack(images) {
             img.style.top = '50%';
             img.style.transform = `translate(-50%, -50%) rotate(${stackItem.rotation}deg)`;
             img.style.objectFit = 'cover';
-            img.style.boxShadow = '0 4px 16px rgba(0,0,0,0.13)';
             img.style.borderRadius = '16px';
             img.style.opacity = '1';
             img.style.zIndex = i + 1;
@@ -86,6 +102,8 @@ function startImageStack(images) {
         });
         additionalContent.appendChild(container);
     }
+
+    refreshImageStack = showStack;
 
     // Nach dem Preload der Bildgrößen starten
     preloadImageSizes(images, function(imagesWithSize) {
@@ -126,6 +144,12 @@ function startImageStack(images) {
 if (additionalContent) {
     // Entferne eventuell initial eingefügte Werbung
     additionalContent.innerHTML = '';
+    loadImagesConfig();
     fetchAndDisplayImages();
-    // setInterval(fetchAndDisplayImages, 60000); // Automatisches Nachladen entfernt
+
+    if (typeof socket !== 'undefined') {
+        socket.on('imagesConfigChanged', (config) => {
+            applyImagesConfig(config);
+        });
+    }
 } 

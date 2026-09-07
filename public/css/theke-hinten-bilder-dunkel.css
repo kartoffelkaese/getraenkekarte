@@ -127,3 +127,8 @@ body.theke-hinten-bilder-dunkel .bilder-stack-img {
     background: #2a2722;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
+
+body.theke-hinten-bilder-dunkel.images-transparent-bg .bilder-stack-img {
+    background: transparent;
+    box-shadow: none;
+}

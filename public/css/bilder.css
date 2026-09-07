@@ -42,6 +42,11 @@ body.bilder .additional-content {
     object-fit: cover;
 }
 
+body.images-transparent-bg .bilder-stack-img {
+    background: transparent;
+    box-shadow: none;
+}
+
 /* Responsive Anpassungen */
 @media (max-width: 768px) {
     .bilder-stack-container {

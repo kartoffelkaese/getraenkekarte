@@ -1,6 +1,23 @@
 // Vollbild-Bilderdarstellung für bilder.html
 
 const additionalContent = document.querySelector('.additional-content');
+let refreshImageStack = null;
+
+function applyImagesConfig(config) {
+    document.body.classList.toggle('images-transparent-bg', !!config.transparentBackground);
+    if (refreshImageStack) refreshImageStack();
+}
+
+async function loadImagesConfig() {
+    try {
+        const response = await fetch('/api/images-config');
+        if (response.ok) {
+            applyImagesConfig(await response.json());
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Bilder-Konfiguration:', error);
+    }
+}
 
 async function fetchAndDisplayImages() {
     try {
@@ -66,7 +83,6 @@ function startImageStack(images) {
             img.style.top = '50%';
             img.style.transform = `translate(-50%, -50%) rotate(${stackItem.rotation}deg)`;
             img.style.objectFit = 'cover';
-            img.style.boxShadow = '0 8px 32px rgba(0,0,0,0.2)';
             img.style.borderRadius = '20px';
             img.style.opacity = '1';
             img.style.zIndex = i + 1;
@@ -87,6 +103,8 @@ function startImageStack(images) {
         });
         additionalContent.appendChild(container);
     }
+
+    refreshImageStack = showStack;
 
     // Nach dem Preload der Bildgrößen starten
     preloadImageSizes(images, function(imagesWithSize) {
@@ -127,5 +145,13 @@ function startImageStack(images) {
 // Initial laden
 if (additionalContent) {
     additionalContent.innerHTML = '';
+    loadImagesConfig();
     fetchAndDisplayImages();
+
+    const imagesSocket = typeof io !== 'undefined' ? io() : null;
+    if (imagesSocket) {
+        imagesSocket.on('imagesConfigChanged', (config) => {
+            applyImagesConfig(config);
+        });
+    }
 }

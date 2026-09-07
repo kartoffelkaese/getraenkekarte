@@ -41,6 +41,7 @@ function handleAdminNavigate(state) {
             fetchDishes();
         } else if (page === 'bilder') {
             fetchImages();
+            loadImagesConfig();
         } else {
             const sub = state.sub || 'logo';
             switch (sub) {
@@ -3022,6 +3023,53 @@ socket.on('hochzeitConfigChanged', (config) => {
     const fontSizeSelect = document.getElementById('hochzeitFontSize');
     if (fontSizeSelect && config.fontSize) {
         fontSizeSelect.value = config.fontSize;
+    }
+});
+
+// === Bilder-Karten (PNG-Transparenz) ===
+
+async function loadImagesConfig() {
+    try {
+        const response = await fetch('/api/images-config');
+        if (response.ok) {
+            const config = await response.json();
+            const toggle = document.getElementById('imagesTransparentBackground');
+            if (toggle) {
+                toggle.checked = !!config.transparentBackground;
+            }
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Bilder-Konfiguration:', error);
+    }
+}
+
+async function saveImagesConfig(transparentBackground) {
+    try {
+        const response = await fetch('/api/images-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ transparentBackground })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Fehler beim Speichern');
+        }
+
+        showNotification('Bilder-Einstellung gespeichert', 'success');
+    } catch (error) {
+        console.error('Fehler beim Speichern der Bilder-Konfiguration:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+        loadImagesConfig();
+    }
+}
+
+socket.on('imagesConfigChanged', (config) => {
+    const toggle = document.getElementById('imagesTransparentBackground');
+    if (toggle) {
+        toggle.checked = !!config.transparentBackground;
     }
 });
 

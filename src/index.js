@@ -268,6 +268,49 @@ app.post('/api/hochzeit-config', (req, res) => {
     }
 });
 
+// API-Endpunkte für Bilder-Karten (PNG-Transparenz)
+app.get('/api/images-config', (req, res) => {
+    try {
+        const configPath = path.join(__dirname, '../images-config.json');
+
+        if (fs.existsSync(configPath)) {
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            res.json(configData);
+        } else {
+            res.json({
+                transparentBackground: false
+            });
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Bilder-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
+    }
+});
+
+app.post('/api/images-config', (req, res) => {
+    try {
+        const { transparentBackground } = req.body;
+
+        if (typeof transparentBackground !== 'boolean') {
+            return res.status(400).json({ error: 'Ungültiger Wert für transparentBackground. Erlaubt: true, false' });
+        }
+
+        const configData = {
+            transparentBackground
+        };
+
+        const configPath = path.join(__dirname, '../images-config.json');
+        fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+
+        io.emit('imagesConfigChanged', configData);
+
+        res.json({ message: 'Bilder-Konfiguration gespeichert', config: configData });
+    } catch (error) {
+        console.error('Fehler beim Speichern der Bilder-Konfiguration:', error);
+        res.status(500).json({ error: 'Fehler beim Speichern der Konfiguration' });
+    }
+});
+
 app.post('/api/cycle-config', (req, res) => {
     try {
         const { type, firstTime, secondTime, card, speisekarteCard } = req.body;

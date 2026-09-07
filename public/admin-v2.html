@@ -1021,6 +1021,16 @@
 
         <div id="bilderPage" class="admin-page">
         <div id="bilderSection" class="admin-panel">
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="imagesTransparentBackground"
+                       onchange="saveImagesConfig(this.checked)">
+                <label class="form-check-label" for="imagesTransparentBackground">
+                    PNG-Transparenz anzeigen
+                </label>
+            </div>
+            <p class="text-muted small mb-3">
+                Gilt für alle Bilder-Karten (Bilder, Theke Hinten Bilder, Theke Hinten Bilder dunkel).
+            </p>
             <form id="imageUploadForm" class="mb-0">
                 <div class="mb-2">
                     <label for="imageFile" class="form-label">Bild auswählen</label>
