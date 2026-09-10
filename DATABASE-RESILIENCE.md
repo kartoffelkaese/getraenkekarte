@@ -176,6 +176,6 @@ node scripts/health-monitor.js
 
 ---
 
-**Stand:** 2026-07-07  
-**Version:** 4.3.1  
+**Stand:** 2026-09-10  
+**Version:** 4.4.0  
 **Implementierung:** [`src/db/pool.js`](src/db/pool.js), [`src/routes/health.js`](src/routes/health.js)

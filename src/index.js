@@ -268,19 +268,28 @@ app.post('/api/hochzeit-config', (req, res) => {
     }
 });
 
-// API-Endpunkte für Bilder-Karten (PNG-Transparenz)
+// API-Endpunkte für Bilder-Karten (PNG-Transparenz, Logo-Modus)
+function readImagesConfig() {
+    const configPath = path.join(__dirname, '../images-config.json');
+    if (fs.existsSync(configPath)) {
+        return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+    return {
+        transparentBackground: false,
+        logoMode: false
+    };
+}
+
+function normalizeImagesConfig(rawConfig) {
+    return {
+        transparentBackground: !!rawConfig.transparentBackground,
+        logoMode: !!rawConfig.logoMode
+    };
+}
+
 app.get('/api/images-config', (req, res) => {
     try {
-        const configPath = path.join(__dirname, '../images-config.json');
-
-        if (fs.existsSync(configPath)) {
-            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            res.json(configData);
-        } else {
-            res.json({
-                transparentBackground: false
-            });
-        }
+        res.json(normalizeImagesConfig(readImagesConfig()));
     } catch (error) {
         console.error('Fehler beim Laden der Bilder-Konfiguration:', error);
         res.status(500).json({ error: 'Fehler beim Laden der Konfiguration' });
@@ -289,15 +298,20 @@ app.get('/api/images-config', (req, res) => {
 
 app.post('/api/images-config', (req, res) => {
     try {
-        const { transparentBackground } = req.body;
+        const { transparentBackground, logoMode } = req.body;
+        const configData = normalizeImagesConfig(readImagesConfig());
 
-        if (typeof transparentBackground !== 'boolean') {
+        if (typeof transparentBackground === 'boolean') {
+            configData.transparentBackground = transparentBackground;
+        } else if (transparentBackground !== undefined) {
             return res.status(400).json({ error: 'Ungültiger Wert für transparentBackground. Erlaubt: true, false' });
         }
 
-        const configData = {
-            transparentBackground
-        };
+        if (typeof logoMode === 'boolean') {
+            configData.logoMode = logoMode;
+        } else if (logoMode !== undefined) {
+            return res.status(400).json({ error: 'Ungültiger Wert für logoMode. Erlaubt: true, false' });
+        }
 
         const configPath = path.join(__dirname, '../images-config.json');
         fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));

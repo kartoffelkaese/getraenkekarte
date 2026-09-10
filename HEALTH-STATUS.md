@@ -82,7 +82,7 @@ In Nicht-Produktionsumgebungen enthält die Antwort zusätzlich `error` mit der 
 
 ## Verwendung
 
-1. Admin öffnen: `http://localhost:3000/admin`
+1. Admin öffnen: `http://localhost:3000/admin` oder `http://localhost:3000/admin-v2.html`
 2. **System → Status & Reload** wählen
 3. Optional **Auto-Refresh** aktivieren
 4. Bei Bedarf **Aktualisieren** klicken
@@ -123,5 +123,5 @@ Browser drosseln Timer in inaktiven Tabs – Tab aktiv lassen oder manuell aktua
 
 ---
 
-**Stand:** 2026-07-07  
-**Version:** 4.3.1
+**Stand:** 2026-09-10  
+**Version:** 4.4.0

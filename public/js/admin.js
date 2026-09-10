@@ -3026,31 +3026,45 @@ socket.on('hochzeitConfigChanged', (config) => {
     }
 });
 
-// === Bilder-Karten (PNG-Transparenz) ===
+// === Bilder-Karten (PNG-Transparenz, Logo-Modus) ===
+
+function applyImagesConfigToUI(config) {
+    const transparentToggle = document.getElementById('imagesTransparentBackground');
+    const logoToggle = document.getElementById('imagesLogoMode');
+    if (transparentToggle) {
+        transparentToggle.checked = !!config.transparentBackground;
+    }
+    if (logoToggle) {
+        logoToggle.checked = !!config.logoMode;
+    }
+}
 
 async function loadImagesConfig() {
     try {
         const response = await fetch('/api/images-config');
         if (response.ok) {
-            const config = await response.json();
-            const toggle = document.getElementById('imagesTransparentBackground');
-            if (toggle) {
-                toggle.checked = !!config.transparentBackground;
-            }
+            applyImagesConfigToUI(await response.json());
         }
     } catch (error) {
         console.error('Fehler beim Laden der Bilder-Konfiguration:', error);
     }
 }
 
-async function saveImagesConfig(transparentBackground) {
+async function saveImagesConfigFromUI() {
+    const transparentToggle = document.getElementById('imagesTransparentBackground');
+    const logoToggle = document.getElementById('imagesLogoMode');
+    if (!transparentToggle || !logoToggle) return;
+
     try {
         const response = await fetch('/api/images-config', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ transparentBackground })
+            body: JSON.stringify({
+                transparentBackground: transparentToggle.checked,
+                logoMode: logoToggle.checked
+            })
         });
 
         if (!response.ok) {
@@ -3067,9 +3081,6 @@ async function saveImagesConfig(transparentBackground) {
 }
 
 socket.on('imagesConfigChanged', (config) => {
-    const toggle = document.getElementById('imagesTransparentBackground');
-    if (toggle) {
-        toggle.checked = !!config.transparentBackground;
-    }
+    applyImagesConfigToUI(config);
 });
 

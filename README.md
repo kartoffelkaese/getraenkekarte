@@ -23,7 +23,7 @@ Alle Anzeige-Karten sind in [`src/config/cards.js`](src/config/cards.js) zentral
 | `weihnachten-jugendliche` | Weihnachts-Theme der Jugendkarte |
 | `hochzeit` / `hochzeit-dunkel` | Hochzeitskarten (hell/dunkel) |
 | `hochzeit-3spalten` / `hochzeit-dunkel-3spalten` | Hochzeitskarten (3 Spalten) |
-| `bilder` | Historische Bildergalerie |
+| `bilder` | Vollbild-Bildergalerie |
 
 **Speisekarten**
 
@@ -74,6 +74,23 @@ Zwei unabhängige Zeitplaner (`schedule-1`, `schedule-2`) wechseln Karten nach R
 ### Overview-Karten
 
 `overview-1` und `overview-2` zeigen eine per Admin fernsteuerbare Karte. Konfiguration in `overview-config.json`.
+
+### Bilder-Karten
+
+Die Karten `bilder`, `theke-hinten-bilder` und `theke-hinten-bilder-dunkel` zeigen hochgeladene Bilder aus `/uploads`. Konfiguration in [`images-config.json`](images-config.json) und im Admin unter **Karten → Bilder**:
+
+```json
+{
+  "transparentBackground": false,
+  "logoMode": false
+}
+```
+
+- **Stapel-Modus** (Standard): bis zu 4 Bilder gestapelt, zufällige Rotation, automatischer Wechsel ab 5 Bildern
+- **PNG-Transparenz**: transparenter Hintergrund und kein Schatten für PNGs (unabhängig vom Logo-Modus)
+- **Logo-Modus**: ein Bild zur Zeit, vollständig sichtbar (`object-fit: contain`, max. 60vh), Fly-in von rechts → Schweben (wie Jugendkarte) → Exit nach links; sequenzieller Wechsel bei mehreren Bildern
+
+Implementierung: [`public/js/images-player.js`](public/js/images-player.js), [`public/css/images-player.css`](public/css/images-player.css)
 
 ### Weitere Funktionen
 
@@ -147,6 +164,7 @@ npm run build:admin  # Admin-Bundle bauen
 
 - `/` – Redirect zur Haupttheke
 - `/admin` – Admin-Interface (Basic Auth)
+- `/admin-v2.html` – Admin-Interface v2 (helles UI, mobile-first, Basic Auth)
 
 ### Alle Karten
 
@@ -190,6 +208,11 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 - `GET /api/schedule-config/current` – Aktuelle Schedule-1-Karte
 - `GET /api/schedule-2-config/current` – Aktuelle Schedule-2-Karte
 - `GET/POST /api/hochzeit-config` – Hochzeitskarten-Schriftgröße
+- `GET/POST /api/images-config` – Bilder-Karten (`transparentBackground`, `logoMode`)
+- `GET /api/images` – Liste hochgeladener Bilder
+- `POST /api/images` – Bild hochladen
+- `DELETE /api/images/:id` – Einzelnes Bild löschen
+- `DELETE /api/images/all` – Alle Bilder löschen
 - `GET /api/version` – Versionsinfo
 
 ### Getränke & Kategorien
@@ -221,11 +244,12 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 | `drinksUpdated` | Getränke geändert |
 | `categoriesUpdated` | Kategorien geändert |
 | `dishesChanged` | Speisekarte geändert |
-| `cycleConfigChanged` | Cycle-Konfiguration geändert |
+| `cycleConfigChanged` | Cycle-Konfiguration geändert (Cycle-Seiten laden neu) |
+| `imagesConfigChanged` | Bilder-Konfiguration geändert (Transparenz / Logo-Modus) |
+| `hochzeitConfigChanged` | Hochzeitskarten-Schriftgröße geändert |
 | `scheduleConfigChanged` / `schedule2ConfigChanged` | Schedule geändert |
 | `overviewConfigChanged` | Overview geändert |
 | `priceOverridesChanged` | Preis-Overrides geändert |
-| `forceCycleReload` | Cycle-Seiten neu laden |
 | `forceScheduleReload` / `forceSchedule2Reload` | Schedule neu laden |
 | `forceOverviewReload` | Overview neu laden |
 | `forceThekeHintenReload` | Theke-Hinten neu laden |
