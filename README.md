@@ -160,6 +160,14 @@ npm run lint      # ESLint
 npm run build:admin  # Admin-Bundle bauen
 ```
 
+## Moderne Karten (Test)
+
+`/haupttheke-modern` – Haupttheke im dunklen, modernen Design: Getränke links in automatisch verteilten Spalten, rechts eine Seitenleiste mit Logo, Werbung und Zusatzstoffen. Akzentfarbe ist das Magenta der bestehenden Karten (`#a50775`, für Schrift aufgehellt). Die Karte nutzt die Daten und Admin-Einstellungen der **Haupttheke** und reagiert auf „Haupttheke neu starten“.
+
+- **Auto-Fit** (`public/js/modern-card.js`): Kategorien werden in Sortierreihenfolge auf Spalten verteilt; Spaltenzahl und Schriftgröße werden so gewählt, dass **alle Getränke sichtbar** sind und nichts abgeschnitten wird. Unter ca. 20 px (bei 1080p) erscheint eine Warnung in der Browser-Konsole.
+- Manuelle Spaltenumbrüche und die Logo-Position aus dem Admin werden in diesen Karten ignoriert.
+- Design: `public/css/modern.css`, Schrift Inter lokal unter `public/fonts/inter/` (OFL-Lizenz liegt bei).
+
 ## Projektstruktur
 
 ```
