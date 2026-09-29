@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "ext": "nodemon src/index.js --host 192.168.1.126 -p 3000",
+    "ext": "HOST=0.0.0.0 nodemon src/index.js",
     "lint": "eslint src scripts tests public/js",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"public/js/**/*.js\" \"scripts/**/*.js\" \"tests/**/*.js\"",
@@ -18,7 +18,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "description": "Getränkekarte mit Echtzeit-Updates",
   "dependencies": {
     "basic-auth": "^3.0.0",

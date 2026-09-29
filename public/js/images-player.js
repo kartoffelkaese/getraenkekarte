@@ -1,3 +1,5 @@
+/* exported initImagesPlayer */
+// Wird von bilder.js und theke-hinten-bilder.js aufgerufen
 function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMessageClass, errorMessage }) {
     if (!container) return;
 
@@ -24,9 +26,7 @@ function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMes
     let imageStackInterval = null;
     let logoAnimationToken = 0;
     let logoFloatTimeout = null;
-    let stackRefresh = null;
 
-    const LOGO_FLY_DURATION_MS = 1200;
     const LOGO_FLOAT_DURATION_MS = 6000;
 
     function stopCurrentPlayer() {
@@ -39,7 +39,6 @@ function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMes
             logoFloatTimeout = null;
         }
         logoAnimationToken++;
-        stackRefresh = null;
     }
 
     function getRandomRotation() {
@@ -104,6 +103,8 @@ function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMes
     }
 
     function startStackMode(images) {
+        // Gleicher Token wie im Logo-Modus: stopCurrentPlayer() beendet alte Durchläufe
+        const token = ++logoAnimationToken;
         let stack = [];
         const maxStack = 4;
         let currentIndex = 0;
@@ -124,14 +125,14 @@ function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMes
             container.appendChild(stackContainer);
         }
 
-        stackRefresh = showStack;
-
         preloadImageSizes(images, function(imagesWithSize) {
+            if (token !== logoAnimationToken) return;
             stack = [];
             showStack();
 
             let initialFill = 0;
             function initialStackGrow() {
+                if (token !== logoAnimationToken) return;
                 if (initialFill < Math.min(imagesWithSize.length, maxStack)) {
                     const nextImage = imagesWithSize[initialFill];
                     stack.push({ ...nextImage, rotation: getRandomRotation() });
@@ -252,10 +253,14 @@ function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMes
             const response = await fetch('/api/images');
             const images = await response.json();
             if (!Array.isArray(images) || images.length === 0) {
+                stopCurrentPlayer();
                 currentImages = [];
                 container.innerHTML = `<div class="text-center ${emptyMessageClass || 'text-muted'} fs-1">${emptyMessage}</div>`;
                 return;
             }
+            const unchanged = currentImages.length === images.length
+                && currentImages.every((img, i) => img.filename === images[i].filename);
+            if (unchanged) return;
             currentImages = images;
             startPlayer();
         } catch {
@@ -270,6 +275,16 @@ function initImagesPlayer({ container, layout, getSocket, emptyMessage, emptyMes
     if (socket) {
         socket.on('imagesConfigChanged', (config) => {
             applyImagesConfig(config);
+        });
+        // Bilder hochgeladen/gelöscht – kurz bündeln, da Mehrfach-Uploads einzeln melden
+        let imagesChangedTimeout = null;
+        socket.on('imagesChanged', () => {
+            clearTimeout(imagesChangedTimeout);
+            imagesChangedTimeout = setTimeout(fetchAndDisplayImages, 1000);
+        });
+        // Nach Verbindungsabbruch verpasste Änderungen nachholen
+        socket.io.on('reconnect', () => {
+            loadImagesConfig().then(() => fetchAndDisplayImages());
         });
     }
 }

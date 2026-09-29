@@ -19,7 +19,7 @@
     function fillSelect(select, cards, selectedValue) {
         if (!select) return;
         const keepEmpty = select.dataset.keepEmpty === 'true';
-        select.innerHTML = keepEmpty ? '<option value="">Kein Preset ausgewählt</option>' : '';
+        select.innerHTML = keepEmpty ? '<option value="">Keine Auswahl</option>' : '';
         cards.forEach((card) => {
             const option = document.createElement('option');
             option.value = card.slug;

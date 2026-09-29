@@ -1,7 +1,7 @@
 const socket = io({
     reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 10000
 });
 const currentLocation = document.body.dataset.location;
 
@@ -42,14 +42,18 @@ fetchAds();
 fetchLogo();
 loadAdditives();
 
-// Lade die Werbungen beim Start
-if (!isWerbefreiSeite()) {
-fetchAds();
-}
-
 // Socket.io Events
 socket.on('connect', () => {
     console.log('Socket.IO verbunden:', socket.id);
+});
+
+// Nach Verbindungsabbruch alles neu laden – Events während der Trennung gingen verloren
+socket.io.on('reconnect', () => {
+    fetchDrinks();
+    if (!isWerbefreiSeite()) {
+        fetchAds();
+    }
+    loadAdditives();
 });
 
 socket.on('disconnect', (reason) => {
@@ -223,7 +227,9 @@ function displayDrinks(drinks) {
         });
     } else {
         // Für Theke-Hinten: Erstelle neue Spalten (2 oder 3 je nach data-columns)
-        const columnCount = Math.min(3, Math.max(2, parseInt(document.body.dataset.columns, 10) || 3));
+        // data-drink-columns: nur Spaltenzahl; data-columns steuert zusätzlich Schriftgrößen per CSS (styles.css)
+        const columnSetting = document.body.dataset.drinkColumns || document.body.dataset.columns;
+        const columnCount = Math.min(3, Math.max(2, parseInt(columnSetting, 10) || 3));
         const drinksList = document.getElementById('drinksList');
         drinksList.innerHTML = '';
         
@@ -237,6 +243,9 @@ function displayDrinks(drinks) {
         rowContainer.className = 'drinks-row';
         drinksContainer.appendChild(rowContainer);
 
+        // Optionale Zusatzklassen je Spalte, z. B. data-column-classes="left-column,right-column"
+        const columnClasses = (document.body.dataset.columnClasses || '').split(',').map(c => c.trim());
+
         // Erstelle die Spalten (columnCount)
         const columns = [];
         for (let i = 0; i < columnCount; i++) {
@@ -244,6 +253,9 @@ function displayDrinks(drinks) {
             col.className = 'category-column';
             if (columnCount === 3 && i === 1) {
                 col.classList.add('middle-column');
+            }
+            if (columnClasses[i]) {
+                col.classList.add(columnClasses[i]);
             }
             columns.push(col);
             rowContainer.appendChild(col);

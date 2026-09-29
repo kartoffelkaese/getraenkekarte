@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env'), quiet: true });
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -173,7 +173,7 @@ function getProductionContentSecurityPolicy() {
                 'https://cdn.jsdelivr.net',
                 'https://www.gstatic.com',
             ],
-            // admin.html u. a. nutzt onclick="..."
+            // admin-v2.html nutzt onclick="..."
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
             connectSrc: [

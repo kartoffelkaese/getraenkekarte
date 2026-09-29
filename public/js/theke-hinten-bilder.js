@@ -1,3 +1,4 @@
+/* global socket -- aus app.js */
 // Bilder-Slideshow für theke-hinten-bilder.html
 
 const additionalContent = document.querySelector('.additional-content');

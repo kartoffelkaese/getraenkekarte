@@ -1,29 +1,24 @@
 const path = require('path');
-const fs = require('fs');
-const { calculateCurrentCard } = require('../services/schedule');
-const { syncActivePresetsForConfig } = require('../services/presetSync');
+const { calculateCurrentCard, validateScheduleConfig, migrateLegacyPresetRules } = require('../services/schedule');
+const { isValidScheduleCard } = require('../utils/safePath');
+const { readJson, writeJsonAtomic } = require('../utils/jsonConfig');
 const logger = require('../utils/logger');
 
 function loadScheduleConfig(configPath, defaultCard = 'cycle-1') {
-    if (fs.existsSync(configPath)) {
-        return JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    }
-    return { defaultCard, rules: [] };
+    return migrateLegacyPresetRules(readJson(configPath, { defaultCard, rules: [] }));
 }
 
-function registerScheduleRoutes(app, { io, validateScheduleConfig, activatePresetFromCard, activePresets }) {
+function registerScheduleRoutes(app, { io }) {
     const schedules = [
         {
             apiPrefix: '/api/schedule-config',
             configFile: 'schedule-1-config.json',
             changedEvent: 'scheduleConfigChanged',
-            reloadEvent: 'forceScheduleReload',
         },
         {
             apiPrefix: '/api/schedule-2-config',
             configFile: 'schedule-2-config.json',
             changedEvent: 'schedule2ConfigChanged',
-            reloadEvent: 'forceSchedule2Reload',
         },
     ];
 
@@ -52,12 +47,12 @@ function registerScheduleRoutes(app, { io, validateScheduleConfig, activatePrese
                     rules: rules || [],
                 };
 
-                const validationError = validateScheduleConfig(configData);
+                const validationError = validateScheduleConfig(configData, isValidScheduleCard);
                 if (validationError) {
                     return res.status(400).json({ error: validationError });
                 }
 
-                fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+                writeJsonAtomic(configPath, configData);
                 io.emit(schedule.changedEvent, configData);
 
                 res.json({ message: 'Schedule-Konfiguration gespeichert', config: configData });
@@ -71,16 +66,6 @@ function registerScheduleRoutes(app, { io, validateScheduleConfig, activatePrese
             try {
                 const configData = loadScheduleConfig(configPath);
                 const currentCard = calculateCurrentCard(configData);
-
-                if (currentCard.startsWith('preset:')) {
-                    activatePresetFromCard(currentCard, activePresets);
-                } else {
-                    syncActivePresetsForConfig(configData, activePresets, {
-                        activatePresetFromCard,
-                        logger,
-                    });
-                }
-
                 res.json({ currentCard, config: configData });
             } catch (error) {
                 logger.error(`Fehler beim Berechnen der aktuellen Karte (${schedule.configFile}):`, error);

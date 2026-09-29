@@ -11,13 +11,11 @@
         speisekarte: { title: 'Speisekarte', desc: 'Gerichte und Preise der Speisekarte.', groupLabel: 'Karten' },
         bilder: { title: 'Bilder', desc: 'Bilder für die Bilder-Karte hochladen und verwalten.', groupLabel: 'Karten' },
         temp: { title: 'Temporäre Preise', desc: 'Preis-Überschreibungen für Theke Hinten.', groupLabel: 'Preise' },
-        'theke-presets': { title: 'Theke-Hinten Presets', desc: 'Presets für Theke-Hinten-Karten aktivieren und verwalten.', groupLabel: 'Preise' },
         schedule: { title: 'Schedule', desc: 'Automatischer Kartenwechsel nach Zeitplan.', groupLabel: 'Anzeige' },
         cycle: { title: 'Cycle', desc: 'Wechsel zwischen Karten im Cycle-Modus.', groupLabel: 'Anzeige' },
         overview: { title: 'Overview', desc: 'Konfiguration der Overview-Displays.', groupLabel: 'Anzeige' },
         status: { title: 'Status & Reload', desc: 'System-Health und Karten-Neustart.', groupLabel: 'System' },
         hochzeit: { title: 'Hochzeitskarten', desc: 'Einstellungen für alle Hochzeitskarten.', groupLabel: 'System' },
-        presets: { title: 'Presets', desc: 'Karteneinstellungen als Preset speichern und laden.', groupLabel: 'System' },
         links: { title: 'Links', desc: 'Alle Karten-URLs auf einen Blick.', groupLabel: 'System' },
     };
 
@@ -46,7 +44,7 @@
             return page;
         }
         if (group === 'preise') {
-            return page === 'temp' ? 'temp-prices' : 'theke-presets';
+            return 'temp-prices';
         }
         if (group === 'anzeige') {
             if (page === 'schedule') return 'schedule-1';
@@ -82,8 +80,9 @@
             return { group: 'karten', page, sub, scheduleTab: 1 };
         }
 
-        if (group === 'preise' && (page === 'temp' || page === 'theke-presets')) {
-            return { group: 'preise', page, sub: null, scheduleTab: 1 };
+        // Preise: nur noch temporäre Preise (alte Links auf Theke-Presets landen hier)
+        if (group === 'preise') {
+            return { group: 'preise', page: 'temp', sub: null, scheduleTab: 1 };
         }
 
         if (group === 'anzeige' && page) {
@@ -95,7 +94,7 @@
             }
         }
 
-        if (group === 'system' && page) {
+        if (group === 'system' && ['status', 'hochzeit', 'links'].includes(page)) {
             return { group: 'system', page, sub: null, scheduleTab: 1 };
         }
 
@@ -224,11 +223,7 @@
                 }
             }
         } else if (group === 'preise') {
-            if (page === 'temp') {
-                showPage('tempPricesPage');
-            } else {
-                showPage('thekePresetsPage');
-            }
+            showPage('tempPricesPage');
         } else if (group === 'anzeige') {
             if (page === 'schedule') {
                 showPage('schedulePage');
@@ -256,7 +251,6 @@
             const pageMap = {
                 status: 'statusPage',
                 hochzeit: 'hochzeitPage',
-                presets: 'presetsPage',
                 links: 'linksPage',
             };
             showPage(pageMap[page]);

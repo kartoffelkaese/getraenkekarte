@@ -20,27 +20,6 @@
     let frameUnloadTimeout = null;
     const socket = typeof io !== 'undefined' ? io() : null;
 
-    function extractLocationFromPreset(presetName) {
-        if (!presetName.startsWith('preset:')) {
-            return null;
-        }
-        const filename = presetName.replace('preset:', '');
-        if (filename.startsWith('haupttheke-')) {
-            return 'haupttheke';
-        }
-        if (filename.startsWith('theke-hinten-')) {
-            return 'theke-hinten';
-        }
-        return null;
-    }
-
-    function resolveFrameSlug(cardSlug) {
-        if (cardSlug.startsWith('preset:')) {
-            return extractLocationFromPreset(cardSlug) || 'cycle-1';
-        }
-        return cardSlug;
-    }
-
     function loadFrame(cardName) {
         const frameId = `${cardName}Frame`;
         const frame = document.getElementById(frameId);
@@ -68,8 +47,7 @@
 
     function unloadInactiveFrames() {
         const allFrames = document.querySelectorAll('.schedule-frame');
-        const currentFrameName = resolveFrameSlug(currentCard);
-        const activeFrame = document.getElementById(`${currentFrameName}Frame`);
+        const activeFrame = document.getElementById(`${currentCard}Frame`);
 
         allFrames.forEach((frame) => {
             if (frame !== activeFrame && !frame.classList.contains('active')) {
@@ -89,16 +67,14 @@
         }
 
         if (currentCard) {
-            const currentFrameName = resolveFrameSlug(currentCard);
-            const currentFrame = document.getElementById(`${currentFrameName}Frame`);
+            const currentFrame = document.getElementById(`${currentCard}Frame`);
             if (currentFrame) {
                 currentFrame.classList.remove('active');
             }
         }
 
         currentCard = newCard;
-        const cardToLoad = resolveFrameSlug(currentCard);
-        const newFrame = loadFrame(cardToLoad);
+        const newFrame = loadFrame(currentCard);
 
         if (newFrame) {
             newFrame.classList.add('active');

@@ -38,3 +38,5 @@ coverage/
 *.swo
 .DS_Store
 Thumbs.db 
+# Ehemalige Preset-Ablage (Funktion entfernt, Ordner kann gelöscht werden)
+data/

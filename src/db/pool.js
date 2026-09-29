@@ -1,5 +1,5 @@
 const mysql = require('mysql2');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env'), quiet: true });
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -67,16 +67,25 @@ async function safeQuery(sql, params = []) {
     }
 }
 
-setInterval(async () => {
+const heartbeat = setInterval(async () => {
     try {
         await safeQuery('SELECT 1 as heartbeat');
     } catch (error) {
         console.error('Datenbank Heartbeat fehlgeschlagen:', error.message);
     }
 }, 5 * 60 * 1000);
+// Heartbeat hält den Prozess nicht am Leben (Tests, Shutdown)
+heartbeat.unref();
+
+/** Beendet Heartbeat und Pool (für Graceful Shutdown). */
+async function closePool() {
+    clearInterval(heartbeat);
+    await db.end();
+}
 
 module.exports = {
     db,
     safeQuery,
+    closePool,
     connectionStats,
 };

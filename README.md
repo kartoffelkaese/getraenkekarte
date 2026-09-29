@@ -95,7 +95,6 @@ Implementierung: [`public/js/images-player.js`](public/js/images-player.js), [`p
 ### Weitere Funktionen
 
 - Temporäre Preis-Overrides für Theke-Hinten (JSON, ohne DB-Änderung)
-- Presets für Karteneinstellungen
 - Hochzeitskarten-Schriftgröße konfigurierbar
 - Socket.IO für Echtzeit-Updates und Fern-Reload
 - MySQL mit Connection Pool und Retry-Logik
@@ -135,6 +134,7 @@ DB_SSL=false
 ADMIN_USER=admin
 ADMIN_PASSWORD=your_admin_password
 PORT=3000
+# HOST=127.0.0.1   # Standard; 0.0.0.0 = im LAN erreichbar
 ```
 
 ### 4. Server starten
@@ -146,9 +146,11 @@ npm run dev
 # Produktion
 npm start
 
-# Externe IP (z. B. Brightsign)
+# Im LAN erreichbar (HOST=0.0.0.0, z. B. für Brightsign)
 npm run ext
 ```
+
+Die JSON-Konfigurationen (`cycle-config.json`, `schedule-*-config.json` usw.) werden atomar geschrieben – ein Absturz beim Speichern hinterlässt keine halbe Datei. Ist eine Datei trotzdem beschädigt, nutzt der Server Standardwerte und loggt einen Fehler. Der Server beendet sich bei `SIGTERM`/`SIGINT` sauber (z. B. PM2-Neustart).
 
 ### Weitere npm-Scripts
 
@@ -158,13 +160,31 @@ npm run lint      # ESLint
 npm run build:admin  # Admin-Bundle bauen
 ```
 
+## Projektstruktur
+
+```
+src/
+├── index.js            # Einstieg: Express, Socket.IO, Middleware, Reihenfolge der Routen, Start/Shutdown
+├── socket.js           # Socket.IO: authentifizierte Reload-Signale an Displays
+├── config/             # cards.js (Karten-Registry), paths.js (alle Pfade), security.js (CORS/CSP)
+├── routes/             # je Bereich ein Modul: configs, drinks, ads, logo, additives, dishes, images, schedule, …
+├── services/           # Logik ohne HTTP: schedule (Regeln, Validierung)
+├── db/                 # pool.js (Pool, Retry, Heartbeat), migrations.js (Schema beim Start)
+├── middleware/auth.js  # Basic Auth
+└── utils/              # jsonConfig (atomares Speichern), validation, uploads, safePath, logger, …
+```
+
+Neue API-Endpunkte kommen in das passende Modul unter `src/routes/` (Muster: `registerXyzRoutes(app, { io })`).
+
+Das Admin-Frontend (`public/admin-v2.html`) lädt seine Skripte aus `public/js/admin/` – je Bereich eine Datei (`core.js` zuerst, dann `drinks.js`, `dishes.js`, `schedule.js` usw.). Es sind klassische Skripte, die Funktionen und Zustand global teilen; die Reihenfolge der `<script>`-Tags ist daher wichtig.
+
 ## Verfügbare Seiten
 
 ### Start & Admin
 
 - `/` – Redirect zur Haupttheke
-- `/admin` – Admin-Interface (Basic Auth)
-- `/admin-v2.html` – Admin-Interface v2 (helles UI, mobile-first, Basic Auth)
+- `/admin-v2.html` – Admin-Interface (helles UI, mobile-first, Basic Auth)
+- `/admin`, `/admin.html` – leiten auf `/admin-v2.html` um
 
 ### Alle Karten
 
@@ -189,9 +209,9 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 | Bereich | Inhalt |
 |---------|--------|
 | **Karten** | Haupttheke, Theke Hinten, Jugendkarte, Speisekarte, Bilder – jeweils Logo, Kategorien, Getränke, Zusatzstoffe, Werbung |
-| **Preise** | Temporäre Preise, Theke-Hinten-Presets |
+| **Preise** | Temporäre Preise |
 | **Anzeige** | Schedule 1/2, Cycle 1/2, Overview 1/2 |
-| **System** | Status & Reload, Hochzeitskarten, Presets, Links |
+| **System** | Status & Reload, Hochzeitskarten, Links |
 
 ## API-Endpunkte
 
@@ -226,10 +246,9 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 - `GET /api/dishes` – Alle Gerichte
 - `POST/PUT/DELETE /api/dishes` – Gerichte verwalten
 
-### Preise & Presets
+### Preise
 
 - `GET/POST/DELETE /api/price-overrides/:location` – Temporäre Preise
-- `GET/POST/DELETE /api/presets/:location` – Presets
 
 ### System
 
@@ -241,9 +260,12 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 
 | Event | Beschreibung |
 |-------|--------------|
-| `drinksUpdated` | Getränke geändert |
-| `categoriesUpdated` | Kategorien geändert |
-| `dishesChanged` | Speisekarte geändert |
+| `drinkStatusChanged` / `drinkPriceChanged` | Getränk ein-/ausgeblendet bzw. Preisanzeige geändert |
+| `categoryVisibilityChanged` / `categoryPricesChanged` / `categorySortChanged` / `categoryColumnBreakChanged` | Kategorie-Einstellungen geändert |
+| `adsChanged` / `logoChanged` | Werbung bzw. Logo geändert |
+| `additivesChanged` / `drinkAdditivesChanged` | Zusatzstoffe geändert |
+| `dishesChanged` | Speisekarte geändert (Gericht angelegt, bearbeitet, gelöscht) |
+| `imagesChanged` | Bild hochgeladen oder gelöscht (Bilder-Karten laden die Liste neu) |
 | `cycleConfigChanged` | Cycle-Konfiguration geändert (Cycle-Seiten laden neu) |
 | `imagesConfigChanged` | Bilder-Konfiguration geändert (Transparenz / Logo-Modus) |
 | `hochzeitConfigChanged` | Hochzeitskarten-Schriftgröße geändert |
@@ -252,8 +274,12 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 | `priceOverridesChanged` | Preis-Overrides geändert |
 | `forceScheduleReload` / `forceSchedule2Reload` | Schedule neu laden |
 | `forceOverviewReload` | Overview neu laden |
+| `forceCycleReload` | Cycle 1 (`standard`) / Cycle 2 (`jugend`) neu laden |
+| `forceHauptthekeReload` | Haupttheke neu laden |
 | `forceThekeHintenReload` | Theke-Hinten neu laden |
 | `forceJugendkarteReload` | Jugendkarte neu laden |
+
+Die `force…Reload`-Events sendet nur ein angemeldeter Admin (Basic Auth); der Server verteilt sie an alle Displays. Displays verbinden sich nach einem Serverausfall unbegrenzt neu und laden verpasste Daten nach.
 
 ## Verwendung
 

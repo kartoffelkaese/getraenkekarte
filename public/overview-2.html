@@ -89,8 +89,8 @@
         let frameUnloadTimeout = null;
         const socket = io({
             reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 10000
         });
         
         // Lade Overview-Konfiguration
@@ -208,6 +208,11 @@
         // Socket.IO Event-Listener
         socket.on('connect', () => {
             console.log('Socket.IO verbunden:', socket.id);
+        });
+        
+        // Nach Verbindungsabbruch Konfiguration neu holen (verpasste Änderungen)
+        socket.io.on('reconnect', () => {
+            loadOverviewConfig();
         });
         
         socket.on('disconnect', (reason) => {

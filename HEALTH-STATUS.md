@@ -82,7 +82,7 @@ In Nicht-Produktionsumgebungen enthält die Antwort zusätzlich `error` mit der 
 
 ## Verwendung
 
-1. Admin öffnen: `http://localhost:3000/admin` oder `http://localhost:3000/admin-v2.html`
+1. Admin öffnen: `http://localhost:3000/admin-v2.html` (`/admin` leitet dorthin um)
 2. **System → Status & Reload** wählen
 3. Optional **Auto-Refresh** aktivieren
 4. Bei Bedarf **Aktualisieren** klicken

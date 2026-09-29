@@ -35,7 +35,6 @@
                 <div class="admin-nav-group">
                     <div class="admin-nav-group-title">Preise</div>
                     <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="temp"><i class="bi bi-tag"></i> Temporäre Preise</button>
-                    <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="theke-presets"><i class="bi bi-bookmark"></i> Theke-Hinten Presets</button>
                 </div>
                 <div class="admin-nav-group">
                     <div class="admin-nav-group-title">Anzeige</div>
@@ -47,7 +46,6 @@
                     <div class="admin-nav-group-title">System</div>
                     <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="status"><i class="bi bi-heart-pulse"></i> Status &amp; Reload</button>
                     <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="hochzeit"><i class="bi bi-gem"></i> Hochzeitskarten</button>
-                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="presets"><i class="bi bi-bookmarks"></i> Presets</button>
                     <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="links"><i class="bi bi-link-45deg"></i> Links</button>
                 </div>
             </nav>
@@ -74,7 +72,6 @@
                 <div class="admin-nav-group">
                     <div class="admin-nav-group-title">Preise</div>
                     <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="temp"><i class="bi bi-tag"></i> Temporäre Preise</button>
-                    <button class="admin-nav-link" data-nav data-nav-group="preise" data-nav-page="theke-presets"><i class="bi bi-bookmark"></i> Theke-Hinten Presets</button>
                 </div>
                 <div class="admin-nav-group">
                     <div class="admin-nav-group-title">Anzeige</div>
@@ -86,7 +83,6 @@
                     <div class="admin-nav-group-title">System</div>
                     <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="status"><i class="bi bi-heart-pulse"></i> Status &amp; Reload</button>
                     <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="hochzeit"><i class="bi bi-gem"></i> Hochzeitskarten</button>
-                    <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="presets"><i class="bi bi-bookmarks"></i> Presets</button>
                     <button class="admin-nav-link" data-nav data-nav-group="system" data-nav-page="links"><i class="bi bi-link-45deg"></i> Links</button>
                 </div>
             </div>
@@ -356,6 +352,20 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6 mt-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Cycle-Karten</h5>
+                                <p class="card-text">Sendet ein Reload-Signal an Cycle 1 (Standard) bzw. Cycle 2 (Jugend)</p>
+                                <button class="btn btn-outline-secondary" onclick="forceCycleReload('standard')">
+                                    <i class="bi bi-arrow-clockwise"></i> Cycle 1 neu starten
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="forceCycleReload('jugend')">
+                                    <i class="bi bi-arrow-clockwise"></i> Cycle 2 neu starten
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -381,51 +391,6 @@
                                 <button class="btn btn-primary" onclick="saveHochzeitFontSize()">
                                     <i class="bi bi-save"></i> Speichern
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Globale Presets -->
-        <div id="presetsPage" class="admin-page">
-            <div class="mb-4">
-                <h3 class="admin-section-heading">Preset-Verwaltung</h3>
-                <p class="text-muted mb-3">Speichere die aktuellen Einstellungen einer Karte als wiederverwendbares Preset.</p>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Preset speichern</h5>
-                                <p class="card-text">Speichere die aktuellen Einstellungen einer Karte als Preset</p>
-                                <div class="mb-3">
-                                    <label for="presetLocation" class="form-label">Karte</label>
-                                    <select class="form-select" id="presetLocation">
-                                        <option value="haupttheke">Haupttheke</option>
-                                        <option value="theke-hinten">Theke Hinten</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="presetName" class="form-label">Preset-Name</label>
-                                    <input type="text" class="form-control" id="presetName" placeholder="z.B. Abendpreset">
-                                </div>
-                                <button class="btn btn-primary" onclick="savePreset()">
-                                    <i class="bi bi-save"></i> Preset speichern
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Gespeicherte Presets</h5>
-                                <p class="card-text">Liste aller Presets für die ausgewählte Karte</p>
-                                <div id="presetsList">
-                                    <div class="text-center">
-                                        <p class="mt-2">Wähle eine Karte aus</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -756,60 +721,6 @@
                                     <!-- Temporäre Preise werden hier dynamisch eingefügt -->
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div>
-
-        <!-- Theke-Hinten Presets -->
-        <div id="thekePresetsPage" class="admin-page">
-        <div id="thekePresetsSection" class="admin-panel">
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i>
-                <strong>Hinweis:</strong> Presets überschreiben die Datenbank-Einstellungen. Temporäre Preise haben Vorrang vor Presets.
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Preset-Aktivierung</h5>
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="thekePresetsActive" 
-                                       onchange="toggleThekePresetsActive(this.checked)">
-                                <label class="form-check-label" for="thekePresetsActive">
-                                    Presets aktivieren
-                                </label>
-                            </div>
-                            <div class="mb-3">
-                                <label for="activePresetSelect" class="form-label">Aktives Preset</label>
-                                <select class="form-select" id="activePresetSelect" onchange="updateActivePreset()">
-                                    <option value="">Kein Preset ausgewählt</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-primary" onclick="saveThekePresetsConfig()">
-                                <i class="bi bi-save"></i> Speichern
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Preset-Verwaltung</h5>
-                            <button class="btn btn-success mb-3" onclick="showCreatePresetModal()">
-                                <i class="bi bi-plus-circle"></i> Neues Preset erstellen
-                            </button>
-                            <div id="thekePresetsList">
-                                <p class="text-muted">Keine Presets vorhanden</p>
-                            </div>
-                            <div class="mt-3">
-                                <button class="btn btn-outline-secondary" onclick="forceThekeHintenReload()">
-                                    <i class="bi bi-arrow-clockwise"></i> Reload Karten
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1313,7 +1224,19 @@
     <script src="/js/admin/cards.js"></script>
     <script src="/js/admin/health.js"></script>
     <script src="/js/admin/nav.js"></script>
-    <script src="/js/admin.js"></script>
+    <!-- Admin-Module: Reihenfolge beibehalten (core zuerst; DOMContentLoaded-Handler laufen in dieser Reihenfolge) -->
+    <script src="/js/admin/core.js"></script>
+    <script src="/js/admin/drinks.js"></script>
+    <script src="/js/admin/additives.js"></script>
+    <script src="/js/admin/ads-logo.js"></script>
+    <script src="/js/admin/dishes.js"></script>
+    <script src="/js/admin/images.js"></script>
+    <script src="/js/admin/cycle.js"></script>
+    <script src="/js/admin/prices.js"></script>
+    <script src="/js/admin/reload.js"></script>
+    <script src="/js/admin/overview.js"></script>
+    <script src="/js/admin/schedule.js"></script>
+    <script src="/js/admin/display-configs.js"></script>
     
     <script>
         // Lade Version beim Seitenstart
