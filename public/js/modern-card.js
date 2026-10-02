@@ -89,7 +89,7 @@
     }
 
     function priceCell(price) {
-        return `<span class="mc-price">${formatPrice(price)}<span class="mc-eur">€</span></span>`;
+        return `<span class="mc-price">${formatPrice(price)}</span>`;
     }
 
     function drinkRowHtml(drink, columns) {
@@ -112,12 +112,11 @@
             }
         }
         const codes = additiveCodes(drink);
-        const leader = columns.length > 0 && showsPrice(drink) ? '<span class="mc-leader"></span>' : '';
         return `<div class="mc-name-cell" data-drink-id="${escapeAttr(drink.id)}">`
             + `<span class="mc-name">${escapeHtml(drink.name)}`
             + `${codes ? `<sup class="mc-add">${escapeHtml(codes)}</sup>` : ''}`
             + `${volumeNote ? `<span class="mc-vol-note">${escapeHtml(volumeNote)}</span>` : ''}</span>`
-            + `${leader}</div>${cells.join('')}`;
+            + `</div>${cells.join('')}`;
     }
 
     /** Gruppiert sichtbare Getränke nach Kategorie in Sortierreihenfolge (wie app.js). */
@@ -343,7 +342,7 @@
 
     function renderAdditives() {
         if (!slots.additives) return;
-        slots.additives.innerHTML = state.additives
+        slots.additives.innerHTML = '<span class="mc-note">Alle Preise in Euro</span>' + state.additives
             .map((a) => `<span class="mc-additive"><b>${escapeHtml(a.code)}</b> ${escapeHtml(a.name)}</span>`)
             .join('');
     }
