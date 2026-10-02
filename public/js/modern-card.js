@@ -72,8 +72,11 @@
     const hasTwoSizes = (drink) => drink.has_small_size === 1;
 
     /**
-     * Preisspalten einer Kategorie: das häufigste Volumen (bzw. Volumen-Paar bei zwei Größen)
-     * steht einmal im Kategoriekopf, abweichende Volumen stehen klein hinter dem Getränkenamen.
+     * Preisspalten einer Kategorie (Werte = Volumen im Kategoriekopf):
+     * - zwei Größen: das häufigste Volumen-Paar steht im Kopf
+     * - eine Größe, bei allen Getränken gleich: steht einmal im Kopf
+     * - unterschiedliche Größen: Kopf bleibt leer, das Volumen steht hinter jedem Getränk
+     * Abweichungen vom Kopf stehen immer klein hinter dem Getränkenamen.
      */
     function priceColumns(drinks) {
         const priced = drinks.filter(showsPrice);
@@ -83,7 +86,8 @@
             return pair.split('|');
         }
         if (priced.length > 0) {
-            return [mostCommon(priced.map((d) => formatVolume(d.volume_normal)))];
+            const volumes = new Set(priced.map((d) => formatVolume(d.volume_normal)));
+            return [volumes.size === 1 ? [...volumes][0] : ''];
         }
         return [];
     }
