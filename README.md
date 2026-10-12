@@ -157,7 +157,6 @@ Die JSON-Konfigurationen (`cycle-config.json`, `schedule-*-config.json` usw.) we
 ```bash
 npm test          # Tests ausführen
 npm run lint      # ESLint
-npm run build:admin  # Admin-Bundle bauen
 ```
 
 ## Moderne Karten (Test)

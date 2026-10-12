@@ -1,12 +1,11 @@
 const express = require('express');
 const http = require('http');
-const path = require('path');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
-require('dotenv').config({ path: path.join(__dirname, '../.env'), quiet: true });
+require('./config/env');
 
 const auth = require('./middleware/auth');
 const { requireMutatingApiAuth } = require('./middleware/auth');

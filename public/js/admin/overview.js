@@ -53,16 +53,9 @@ async function saveOverviewConfig(overview) {
     }
 }
 
-// Funktion für Forced-Reload der Overview-Karten
-async function forceOverviewReload(overview) {
-    try {
-        // Sende Socket.IO Event für Reload
-        socket.emit('forceOverviewReload', { overview });
-        showNotification(`Reload-Signal an ${overview} gesendet`, 'success');
-    } catch (error) {
-        console.error('Fehler beim Senden des Reload-Signals:', error);
-        showNotification('Fehler beim Senden des Reload-Signals', 'error');
-    }
+// Forced-Reload der Overview-Karten (sendReloadSignal aus reload.js)
+function forceOverviewReload(overview) {
+    sendReloadSignal('forceOverviewReload', overview, { overview });
 }
 
 // Socket.IO Event-Listener für Overview-Konfiguration

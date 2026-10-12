@@ -15,6 +15,15 @@ function guardedSocketEvent(socket, eventName, handler) {
     });
 }
 
+// Reload-Signale ohne Nutzdaten: werden unverändert an alle Displays weitergereicht
+const SIMPLE_RELOAD_EVENTS = [
+    'forceThekeHintenReload',
+    'forceHauptthekeReload',
+    'forceJugendkarteReload',
+    'forceScheduleReload',
+    'forceSchedule2Reload',
+];
+
 /** Socket.IO: Verbindungs-Logging und authentifizierte Reload-Signale vom Admin an die Displays. */
 function registerSocketHandlers(io) {
     io.on('connection', (socket) => {
@@ -28,20 +37,12 @@ function registerSocketHandlers(io) {
             console.error('Socket.IO Fehler:', error);
         });
 
-        guardedSocketEvent(socket, 'forceThekeHintenReload', () => {
-            console.log('Force Theke-Hinten Reload Event empfangen');
-            io.emit('forceThekeHintenReload');
-        });
-
-        guardedSocketEvent(socket, 'forceHauptthekeReload', () => {
-            console.log('Force Haupttheke Reload Event empfangen');
-            io.emit('forceHauptthekeReload');
-        });
-
-        guardedSocketEvent(socket, 'forceJugendkarteReload', () => {
-            console.log('Force Jugendkarte Reload Event empfangen');
-            io.emit('forceJugendkarteReload');
-        });
+        for (const eventName of SIMPLE_RELOAD_EVENTS) {
+            guardedSocketEvent(socket, eventName, () => {
+                console.log(`${eventName} Event empfangen`);
+                io.emit(eventName);
+            });
+        }
 
         guardedSocketEvent(socket, 'forceOverviewReload', (data) => {
             console.log('Force Overview Reload Event empfangen:', data);
@@ -52,28 +53,6 @@ function registerSocketHandlers(io) {
             const type = data && ['standard', 'jugend', 'all'].includes(data.type) ? data.type : 'all';
             console.log('Force Cycle Reload Event empfangen:', type);
             io.emit('forceCycleReload', { type });
-        });
-
-        guardedSocketEvent(socket, 'forceScheduleReload', () => {
-            console.log('Force Schedule Reload Event empfangen');
-            io.emit('forceScheduleReload');
-        });
-
-        guardedSocketEvent(socket, 'forceSchedule2Reload', () => {
-            console.log('Force Schedule-2 Reload Event empfangen');
-            io.emit('forceSchedule2Reload');
-        });
-
-        socket.on('updateDrink', async (data) => {
-            if (!requireSocketAuth(socket)) {
-                return;
-            }
-            console.log('Update Drink Event empfangen:', {
-                socketId: socket.id,
-                location: data?.location,
-                drinkId: data?.id,
-                isActive: data?.is_active,
-            });
         });
     });
 }

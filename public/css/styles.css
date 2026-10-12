@@ -687,25 +687,6 @@ body.theke-hinten .logo-image.small {
     max-height: 10vh;
 }
 
-/* Admin Tabs Styling */
-.nav-tabs .nav-link {
-    color: #333333;
-    border: 1px solid #dee2e6;
-    margin-right: 0.5rem;
-    transition: all 0.2s ease-in-out;
-}
-
-.nav-tabs .nav-link:hover {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-}
-
-.nav-tabs .nav-link.active {
-    color: #0d6efd;
-    font-weight: 500;
-    border-color: #dee2e6 #dee2e6 #fff;
-}
-
 /* Zusatzstoff-Auswahl Styling */
 .additive-badge {
     display: inline-block;
@@ -952,41 +933,11 @@ body.jugendliche .drink-ad img {
     margin: 0 2rem;
 }
 
-body.jugendliche .drink-ad .drink-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-body.jugendliche .drink-ad .drink-name {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-}
-
-body.jugendliche .drink-ad .drink-price {
-    font-size: 2rem;
-}
-
-body.jugendliche .card {
-    transition: all 0.3s ease;
-    margin-bottom: 0.15rem;
-    background-color: #000;
-    border: none;
-    border-left: 1px solid #a50775;
-    /* border-radius: 0; */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
 body.jugendliche .additives-info {
     font-size: 0.75rem;
 }
 
 /* Events Styles */
-.events-section {
-    margin-top: 2rem;
-}
-
 #events-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1049,43 +1000,6 @@ body.jugendliche .additives-info {
     margin: 0.5rem 0;
     font-size: 1.5rem; /* Vergrößert von 1.2rem */
     line-height: 1.3;
-}
-
-.event-description {
-    color: var(--text-light);
-    opacity: 0.8;
-    margin: 1rem 0;
-    line-height: 1.5;
-}
-
-.event-price {
-    color: var(--primary-color);
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin: 1rem 0 0 0;
-}
-
-.event-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.badge-youth {
-    background-color: var(--primary-color);
-    color: var(--text-light);
-}
-
-.badge-all {
-    background-color: #2a2a2a;
-    color: var(--text-light);
-    border: 1px solid var(--primary-color);
 }
 
 .no-events {

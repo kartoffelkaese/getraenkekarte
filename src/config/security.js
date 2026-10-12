@@ -1,4 +1,4 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env'), quiet: true });
+require('./env');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
