@@ -24,17 +24,9 @@ mkdir -p scripts
 # Mache health-monitor.js ausführbar
 chmod +x scripts/health-monitor.js
 
-# Starte die Hauptanwendung
-echo "📱 Starte Hauptanwendung..."
+# Starte Hauptanwendung und Health Monitor (beide in ecosystem.config.js definiert)
+echo "📱 Starte Hauptanwendung und Health Monitor..."
 pm2 start ecosystem.config.js
-
-# Warte 10 Sekunden
-echo "⏳ Warte 10s bis Anwendung gestartet ist..."
-sleep 10
-
-# Starte Health Monitor
-echo "🔍 Starte Health Monitor..."
-pm2 start scripts/health-monitor.js --name "health-monitor"
 
 # Zeige Status
 echo "📊 PM2 Status:"
