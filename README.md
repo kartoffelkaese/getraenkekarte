@@ -159,7 +159,7 @@ npm test          # Tests ausführen
 npm run lint      # ESLint
 ```
 
-## Moderne Karten (Test)
+## Moderne Karten
 
 `/haupttheke-modern` – Haupttheke im dunklen, modernen Design: Getränke links in automatisch verteilten Spalten, rechts eine Seitenleiste mit Logo, Werbung und Zusatzstoffen. Akzentfarbe ist das Magenta der bestehenden Karten (`#a50775`, für Schrift aufgehellt). Die Karte nutzt die Daten und Admin-Einstellungen der **Haupttheke** und reagiert auf „Haupttheke neu starten“.
 
