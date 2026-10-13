@@ -35,6 +35,15 @@
         speisekarte: ['gerichte'],
     };
 
+    // Einstiegsseite je Bereich für die untere Leiste (mobil); danach die zuletzt besuchte Seite
+    const GROUP_START = {
+        karten: { group: 'karten', page: 'haupttheke', sub: 'logo', scheduleTab: 1 },
+        preise: { group: 'preise', page: 'temp', sub: null, scheduleTab: 1 },
+        anzeige: { group: 'anzeige', page: 'schedule', sub: null, scheduleTab: 1 },
+        system: { group: 'system', page: 'status', sub: null, scheduleTab: 1 },
+    };
+    const lastRouteByGroup = {};
+
     let state = { ...DEFAULT_ROUTE, scheduleTab: 1 };
     let onNavigateCallback = null;
 
@@ -122,11 +131,29 @@
     }
 
     function updateSidebarActive() {
-        document.querySelectorAll('.admin-nav-link[data-nav]').forEach((btn) => {
+        // Mobil: CSS zeigt nur die Seiten des aktiven Bereichs – vor dem Scrollen zur aktiven Seite setzen
+        document.body.dataset.adminGroup = state.group;
+
+        document.querySelectorAll('[data-nav]').forEach((btn) => {
             const navGroup = btn.dataset.navGroup;
             const navPage = btn.dataset.navPage;
             const isActive = navGroup === state.group && navPage === state.page;
             btn.classList.toggle('active', isActive);
+            if (isActive && btn.classList.contains('admin-chip')) {
+                btn.scrollIntoView({ block: 'nearest', inline: 'center' });
+            }
+        });
+
+        // Mobil: aktiver Bereich in der unteren Leiste
+        lastRouteByGroup[state.group] = { ...state };
+        document.querySelectorAll('[data-nav-grouptab]').forEach((btn) => {
+            const isActive = btn.dataset.navGrouptab === state.group;
+            btn.classList.toggle('active', isActive);
+            if (isActive) {
+                btn.setAttribute('aria-current', 'page');
+            } else {
+                btn.removeAttribute('aria-current');
+            }
         });
     }
 
@@ -141,7 +168,8 @@
         }
 
         const subs = CARD_SUBS[state.page] || [];
-        subnav.style.display = 'block';
+        // Nur eine Unterseite (Speisekarte): keine Reiter nötig
+        subnav.style.display = subs.length > 1 ? 'block' : 'none';
         pills.innerHTML = subs
             .map(
                 (sub) =>
@@ -272,6 +300,9 @@
             }
         }
         applyVisibility();
+        if (prev.page !== state.page || prev.sub !== state.sub || prev.scheduleTab !== state.scheduleTab) {
+            window.scrollTo(0, 0);
+        }
         if (typeof onNavigateCallback === 'function') {
             onNavigateCallback(state, prev);
         }
@@ -282,7 +313,7 @@
     }
 
     function bindSidebar() {
-        document.querySelectorAll('.admin-nav-link[data-nav]').forEach((btn) => {
+        document.querySelectorAll('[data-nav]').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const group = btn.dataset.navGroup;
                 const page = btn.dataset.navPage;
@@ -296,11 +327,13 @@
                     sub,
                     scheduleTab: page === 'schedule' ? state.scheduleTab : 1,
                 });
+            });
+        });
 
-                const offcanvas = document.getElementById('adminSidebarOffcanvas');
-                if (offcanvas) {
-                    bootstrap.Offcanvas.getInstance(offcanvas)?.hide();
-                }
+        document.querySelectorAll('[data-nav-grouptab]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const group = btn.dataset.navGrouptab;
+                navigate({ ...(lastRouteByGroup[group] || GROUP_START[group]) });
             });
         });
 

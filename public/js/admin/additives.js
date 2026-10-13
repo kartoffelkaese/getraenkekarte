@@ -101,6 +101,7 @@ function displayAdditives(additives) {
         `;
         additivesTableBody.appendChild(row);
     });
+    applyResponsiveTableLabels(additivesTableBody.closest('table'));
 }
 
 async function toggleFooterVisibility(id, showInFooter) {

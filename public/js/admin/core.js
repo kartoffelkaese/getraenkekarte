@@ -149,6 +149,9 @@ document.addEventListener('DOMContentLoaded', function() {
         AdminNav.init();
     }
 
+    // Fest im HTML stehende Tabellenzeilen (z. B. Logo) für die Handy-Ansicht beschriften
+    document.querySelectorAll('.admin-responsive-table').forEach(applyResponsiveTableLabels);
+
     fetchAdditives();
     
     // Initialisiere das Dish-Modal

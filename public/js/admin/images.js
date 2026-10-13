@@ -119,6 +119,7 @@ function displayImages(images) {
         `;
         tbody.appendChild(tr);
     });
+    applyResponsiveTableLabels(tbody.closest('table'));
 }
 
 // Bild manuell löschen
