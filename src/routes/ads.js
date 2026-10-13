@@ -139,6 +139,8 @@ function registerAdsRoutes(app, { io }) {
 
             // Lösche den Datenbankeintrag
             await safeQuery('DELETE FROM ads WHERE id = ?', [adId]);
+            // Karten-Einstellungen der Werbung mit entfernen
+            await safeQuery("DELETE FROM display_settings WHERE element_type = 'ad' AND element_id = ?", [adId]);
 
             // Lösche das Bild, falls es existiert
             if (fullImagePath && fs.existsSync(fullImagePath)) {

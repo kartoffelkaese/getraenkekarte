@@ -1,6 +1,6 @@
 {
   "name": "getraenkekarte",
-  "version": "5.1.6",
+  "version": "5.1.7",
   "main": "src/index.js",
   "engines": {
     "node": ">=22.16.0",
