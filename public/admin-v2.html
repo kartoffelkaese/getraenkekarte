@@ -751,6 +751,9 @@
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
+                <button class="btn btn-primary" onclick="showAddDrinkModal()">
+                    <i class="bi bi-plus-circle"></i> Neues Getränk
+                </button>
             </div>
             <div class="table-responsive">
                 <table class="table admin-responsive-table">
@@ -761,7 +764,7 @@
                             <th>Kategorie</th>
                             <th>Aktiv</th>
                             <th>Preis anzeigen</th>
-                            <th style="width: 150px;">Zusatzstoffe</th>
+                            <th style="width: 250px;">Aktionen</th>
                         </tr>
                     </thead>
                     <tbody id="drinksTableBody">
@@ -884,6 +887,108 @@
             </div>
         </div>
         </div><!-- /bilderPage -->
+
+        <!-- Modal für neues Getränk -->
+        <div class="modal fade" id="drinkModal" tabindex="-1" aria-labelledby="drinkModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen-sm-down">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="drinkModalLabel">Neues Getränk</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="drinkForm" novalidate>
+                            <div class="mb-3">
+                                <label for="drinkName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="drinkName" maxlength="255" required autocomplete="off">
+                            </div>
+                            <div class="mb-3">
+                                <label for="drinkCategory" class="form-label">Kategorie</label>
+                                <select class="form-select" id="drinkCategory" required></select>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="drinkPrice" class="form-label">Preis (€)</label>
+                                    <input type="number" class="form-control" id="drinkPrice" step="0.01" min="0" max="999.99" inputmode="decimal" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="drinkVolume" class="form-label">Größe</label>
+                                    <input type="text" class="form-control" id="drinkVolume" maxlength="20" list="drinkVolumeOptions" placeholder="z. B. 0.4L" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="drinkHasSmallSize" onchange="toggleDrinkSmallSizeFields()">
+                                <label class="form-check-label" for="drinkHasSmallSize">Auch in klein erhältlich</label>
+                            </div>
+                            <div class="row g-3 mb-3" id="drinkSmallSizeFields" style="display: none;">
+                                <div class="col-6">
+                                    <label for="drinkSmallPrice" class="form-label">Preis klein (€)</label>
+                                    <input type="number" class="form-control" id="drinkSmallPrice" step="0.01" min="0" max="999.99" inputmode="decimal">
+                                </div>
+                                <div class="col-6">
+                                    <label for="drinkSmallVolume" class="form-label">Größe klein</label>
+                                    <input type="text" class="form-control" id="drinkSmallVolume" maxlength="10" list="drinkVolumeOptions" placeholder="z. B. 0.2L" autocomplete="off">
+                                </div>
+                            </div>
+                            <datalist id="drinkVolumeOptions">
+                                <option value="0.1L"></option>
+                                <option value="0.2L"></option>
+                                <option value="0.3L"></option>
+                                <option value="0.33L"></option>
+                                <option value="0.4L"></option>
+                                <option value="0.5L"></option>
+                                <option value="0.75L"></option>
+                                <option value="1L"></option>
+                                <option value="4cl"></option>
+                            </datalist>
+                            <!-- nur beim Anlegen -->
+                            <div id="drinkActiveGroup">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="drinkActive">
+                                    <label class="form-check-label" for="drinkActive">Sofort auf allen Karten anzeigen</label>
+                                </div>
+                                <p class="form-text mb-0">
+                                    Getränke gelten für alle Karten gemeinsam. Ohne diese Option bleibt das neue Getränk
+                                    zunächst ausgeblendet und wird je Karte über den Schalter „Aktiv“ eingeschaltet.
+                                </p>
+                            </div>
+                            <!-- nur beim Bearbeiten -->
+                            <p class="form-text mb-0" id="drinkEditHint" style="display: none;">
+                                Die Änderung gilt für alle Karten, auf denen das Getränk steht.
+                            </p>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-primary" id="saveDrinkBtn" onclick="saveDrink()">Speichern</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Getränk löschen -->
+        <div class="modal fade" id="drinkDeleteModal" tabindex="-1" aria-labelledby="drinkDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="drinkDeleteModalLabel">Getränk löschen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Möchten Sie <strong id="drinkDeleteName"></strong> wirklich löschen?</p>
+                        <p class="mb-0">
+                            Das Getränk wird von <strong>allen Karten</strong> entfernt, nicht nur von dieser.
+                            Das kann nicht rückgängig gemacht werden. Zum Ausblenden auf einer einzelnen Karte
+                            genügt der Schalter „Aktiv“.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-danger" id="confirmDrinkDeleteBtn" onclick="confirmDeleteDrink()">Löschen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Modal für Gericht hinzufügen/bearbeiten -->
         <div class="modal fade" id="dishModal" tabindex="-1">

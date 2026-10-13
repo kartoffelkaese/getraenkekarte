@@ -245,6 +245,10 @@ Navigation über Sidebar mit Hash-Routing (`#/karten/haupttheke/logo`, etc.).
 ### Getränke & Kategorien
 
 - `GET /api/drinks/:location` – Getränke pro Standort
+- `POST /api/drinks` – Getränk anlegen (gilt für alle Karten; ohne `is_active` zunächst ausgeblendet)
+- `PUT /api/drinks/:id` – Getränk bearbeiten (Name, Kategorie, Preis, Größen; gilt für alle Karten)
+- `GET /api/drink/:id` – Stammdaten eines Getränks ohne temporäre Preise (für den Bearbeiten-Dialog)
+- `DELETE /api/drinks/:id` – Getränk löschen (entfernt es von allen Karten samt Karten-Einstellungen, Zusatzstoff-Zuordnung und temporärem Preis)
 - `GET /api/categories/:location` – Kategorien pro Standort
 - Diverse Toggle-/Reorder-Endpunkte für Getränke, Kategorien, Werbung, Logo
 

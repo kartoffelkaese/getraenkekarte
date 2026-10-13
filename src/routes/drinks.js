@@ -1,12 +1,96 @@
 const { safeQuery } = require('../db/pool');
 const { apiError } = require('../utils/apiError');
-const { readJson } = require('../utils/jsonConfig');
-const { readToggleBody, toSortOrder } = require('../utils/validation');
+const { readJson, writeJsonAtomic } = require('../utils/jsonConfig');
+const { readToggleBody, toSortOrder, toId, toBool } = require('../utils/validation');
 const { PRICE_OVERRIDES } = require('../config/paths');
 const { PRICE_OVERRIDE_LOCATIONS } = require('../config/cards');
 const logger = require('../utils/logger');
 
 /** Getränke und Kategorien je Location (inkl. temporärer Preise). */
+
+const MAX_PRICE = 999.99; // drinks2.preis ist DECIMAL(5,2)
+
+function parsePrice(value) {
+    const text = typeof value === 'string' ? value.trim().replace(',', '.') : value;
+    if (text === '' || text === null || text === undefined) return null;
+    const n = Number(text);
+    if (!Number.isFinite(n) || n < 0 || n > MAX_PRICE) return null;
+    return Math.round(n * 100) / 100;
+}
+
+function parseVolume(value, maxLength) {
+    if (value === undefined || value === null) return null;
+    if (typeof value !== 'string') return undefined;
+    const text = value.trim();
+    if (text === '') return null;
+    return text.length <= maxLength ? text : undefined;
+}
+
+/**
+ * Prüft die Eingabe für ein neues oder bearbeitetes Getränk (is_active zählt nur beim Anlegen).
+ * Gibt { drink } mit bereinigten Werten oder { error } mit einer Meldung zurück.
+ */
+function validateNewDrink(body) {
+    if (!body || typeof body !== 'object') {
+        return { error: 'Ungültige Eingabe' };
+    }
+
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    if (!name || name.length > 255) {
+        return { error: 'Name ist erforderlich (höchstens 255 Zeichen)' };
+    }
+
+    const preis = parsePrice(body.preis);
+    if (preis === null) {
+        return { error: `Preis muss zwischen 0 und ${MAX_PRICE} liegen` };
+    }
+
+    const category_id = toId(body.category_id);
+    if (category_id === null) {
+        return { error: 'Kategorie ist erforderlich' };
+    }
+
+    const volume_normal = parseVolume(body.volume_normal, 20);
+    if (volume_normal === undefined) {
+        return { error: 'Größe darf höchstens 20 Zeichen haben' };
+    }
+
+    const has_small_size = body.has_small_size === undefined ? false : toBool(body.has_small_size);
+    if (has_small_size === null) {
+        return { error: 'Ungültige Angabe zur kleinen Größe' };
+    }
+
+    let small_price = null;
+    let volume_small = null;
+    if (has_small_size) {
+        small_price = parsePrice(body.small_price);
+        if (small_price === null) {
+            return { error: 'Preis der kleinen Größe ist erforderlich' };
+        }
+        volume_small = parseVolume(body.volume_small, 10);
+        if (volume_small === undefined) {
+            return { error: 'Kleine Größe darf höchstens 10 Zeichen haben' };
+        }
+    }
+
+    const is_active = body.is_active === undefined ? false : toBool(body.is_active);
+    if (is_active === null) {
+        return { error: 'Ungültige Angabe zu "aktiv"' };
+    }
+
+    return {
+        drink: { name, preis, category_id, volume_normal, has_small_size, small_price, volume_small, is_active },
+    };
+}
+
+// Entfernt ein gelöschtes Getränk aus den temporären Preisen
+function removeDrinkFromPriceOverrides(id) {
+    const config = readJson(PRICE_OVERRIDES, { active: false, drinks: {} });
+    if (config.drinks && Object.prototype.hasOwnProperty.call(config.drinks, id)) {
+        delete config.drinks[id];
+        writeJsonAtomic(PRICE_OVERRIDES, config);
+    }
+}
 
 function registerDrinksRoutes(app, { io }) {
     // API-Endpunkte mit Location-Parameter
@@ -72,6 +156,145 @@ function registerDrinksRoutes(app, { io }) {
             res.json(drinksWithOverrides);
         } catch (err) {
             console.error('Drinks API Error:', err);
+            apiError(res, 500, err);
+        }
+    });
+
+    // Neues Getränk anlegen (gilt für alle Karten; Sichtbarkeit je Karte über den Schalter "Aktiv")
+    app.post('/api/drinks', async (req, res) => {
+        const { drink, error } = validateNewDrink(req.body);
+        if (error) {
+            return res.status(400).json({ error });
+        }
+
+        try {
+            const [categories] = await safeQuery('SELECT id FROM categories WHERE id = ?', [drink.category_id]);
+            if (!categories || categories.length === 0) {
+                return res.status(400).json({ error: 'Kategorie nicht gefunden' });
+            }
+
+            const [result] = await safeQuery(
+                `INSERT INTO drinks2
+                    (name, preis, category_id, is_active, show_price, has_small_size, small_price, volume_normal, volume_small)
+                 VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+                [
+                    drink.name,
+                    drink.preis,
+                    drink.category_id,
+                    drink.is_active,
+                    drink.has_small_size,
+                    drink.small_price,
+                    drink.volume_normal,
+                    drink.volume_small,
+                ]
+            );
+
+            io.emit('drinksChanged');
+            res.status(201).json({ success: true, id: result.insertId });
+        } catch (err) {
+            console.error('Create Drink Error:', err);
+            apiError(res, 500, err);
+        }
+    });
+
+    // Einzelnes Getränk mit den Stammdaten aus der Datenbank (ohne temporäre Preise) – für den Bearbeiten-Dialog
+    app.get('/api/drink/:id', async (req, res) => {
+        const id = toId(req.params.id);
+        if (id === null) {
+            return res.status(400).json({ error: 'Ungültige Getränke-ID' });
+        }
+
+        try {
+            const [rows] = await safeQuery(
+                `SELECT id, name, preis, category_id, has_small_size, small_price, volume_normal, volume_small
+                 FROM drinks2 WHERE id = ?`,
+                [id]
+            );
+            if (!rows || rows.length === 0) {
+                return res.status(404).json({ error: 'Getränk nicht gefunden' });
+            }
+            res.json(rows[0]);
+        } catch (err) {
+            console.error('Drink API Error:', err);
+            apiError(res, 500, err);
+        }
+    });
+
+    // Getränk bearbeiten (Stammdaten gelten für alle Karten; "Aktiv" bleibt je Karte beim Schalter)
+    app.put('/api/drinks/:id', async (req, res) => {
+        const id = toId(req.params.id);
+        if (id === null) {
+            return res.status(400).json({ error: 'Ungültige Getränke-ID' });
+        }
+
+        const { drink, error } = validateNewDrink(req.body);
+        if (error) {
+            return res.status(400).json({ error });
+        }
+
+        try {
+            const [rows] = await safeQuery('SELECT id FROM drinks2 WHERE id = ?', [id]);
+            if (!rows || rows.length === 0) {
+                return res.status(404).json({ error: 'Getränk nicht gefunden' });
+            }
+
+            const [categories] = await safeQuery('SELECT id FROM categories WHERE id = ?', [drink.category_id]);
+            if (!categories || categories.length === 0) {
+                return res.status(400).json({ error: 'Kategorie nicht gefunden' });
+            }
+
+            await safeQuery(
+                `UPDATE drinks2
+                 SET name = ?, preis = ?, category_id = ?, has_small_size = ?, small_price = ?,
+                     volume_normal = ?, volume_small = ?
+                 WHERE id = ?`,
+                [
+                    drink.name,
+                    drink.preis,
+                    drink.category_id,
+                    drink.has_small_size,
+                    drink.small_price,
+                    drink.volume_normal,
+                    drink.volume_small,
+                    id,
+                ]
+            );
+
+            io.emit('drinksChanged');
+            res.json({ success: true });
+        } catch (err) {
+            console.error('Update Drink Error:', err);
+            apiError(res, 500, err);
+        }
+    });
+
+    // Getränk löschen – entfernt es von allen Karten samt Karten-Einstellungen und temporärem Preis
+    app.delete('/api/drinks/:id', async (req, res) => {
+        const id = toId(req.params.id);
+        if (id === null) {
+            return res.status(400).json({ error: 'Ungültige Getränke-ID' });
+        }
+
+        try {
+            const [rows] = await safeQuery('SELECT id FROM drinks2 WHERE id = ?', [id]);
+            if (!rows || rows.length === 0) {
+                return res.status(404).json({ error: 'Getränk nicht gefunden' });
+            }
+
+            await safeQuery("DELETE FROM display_settings WHERE element_type = 'drink' AND element_id = ?", [id]);
+            // Zuordnungen in drink_additives entfernt die Datenbank selbst (ON DELETE CASCADE)
+            await safeQuery('DELETE FROM drinks2 WHERE id = ?', [id]);
+
+            try {
+                removeDrinkFromPriceOverrides(id);
+            } catch (error) {
+                console.error('Fehler beim Bereinigen der Preis-Overrides:', error);
+            }
+
+            io.emit('drinksChanged');
+            res.json({ success: true });
+        } catch (err) {
+            console.error('Delete Drink Error:', err);
             apiError(res, 500, err);
         }
     });
@@ -238,4 +461,5 @@ function registerDrinksRoutes(app, { io }) {
 
 module.exports = {
     registerDrinksRoutes,
+    validateNewDrink,
 };

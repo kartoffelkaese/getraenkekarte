@@ -298,10 +298,23 @@ async function displayDrinks(drinks) {
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    <button class="btn btn-outline-secondary edit-additives-btn mb-1" 
-                            onclick="showAdditiveSelection(${drink.id})">
-                        Bearbeiten <span class="additive-count">${drinkAdditives.length}</span>
-                    </button>
+                    <div class="drink-actions d-flex gap-2 mb-1">
+                        <button class="btn btn-outline-secondary edit-additives-btn flex-grow-1" 
+                                title="Zusatzstoffe bearbeiten"
+                                onclick="showAdditiveSelection(${drink.id})">
+                            Zusatzstoffe <span class="additive-count">${drinkAdditives.length}</span>
+                        </button>
+                        <button class="btn btn-outline-primary edit-drink-btn" title="Getränk bearbeiten"
+                                aria-label="Getränk bearbeiten"
+                                onclick="showEditDrinkModal(${drink.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger delete-drink-btn" title="Getränk löschen"
+                                aria-label="Getränk löschen" data-drink-name="${escapeAttr(drink.name)}"
+                                onclick="deleteDrink(${drink.id}, this.dataset.drinkName)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                     <div class="additive-badges" style="font-size: 0.8rem;">
                         ${drinkAdditives.map(a => `<span class="additive-badge">${escapeHtml(a.code)}</span>`).join('')}
                     </div>
@@ -535,5 +548,187 @@ async function saveAdditiveSelection() {
     } catch (error) {
         console.error('Fehler:', error);
         alert('Fehler beim Speichern der Zusatzstoffe');
+    }
+}
+
+// === Getränke anlegen, bearbeiten und löschen ===
+
+let drinkModal;
+
+// null = neues Getränk, sonst die ID des bearbeiteten Getränks
+let editingDrinkId = null;
+
+let drinkDeleteModal;
+
+let drinkToDelete = null;
+
+function toggleDrinkSmallSizeFields() {
+    const hasSmallSize = document.getElementById('drinkHasSmallSize').checked;
+    document.getElementById('drinkSmallSizeFields').style.display = hasSmallSize ? '' : 'none';
+}
+
+// Bereitet den Dialog vor: Kategorien laden, Formular leeren, Texte für Anlegen/Bearbeiten setzen
+async function prepareDrinkModal(isEdit) {
+    if (!drinkModal) {
+        drinkModal = new bootstrap.Modal(document.getElementById('drinkModal'));
+    }
+
+    const response = await fetch(`/api/categories/${currentLocation}`);
+    if (!response.ok) throw new Error('Kategorien konnten nicht geladen werden');
+    const categories = await response.json();
+    const select = document.getElementById('drinkCategory');
+    select.innerHTML = '<option value="">Bitte wählen …</option>';
+    categories.forEach((category) => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        select.appendChild(option);
+    });
+
+    document.getElementById('drinkForm').reset();
+    document.getElementById('drinkModalLabel').textContent = isEdit ? 'Getränk bearbeiten' : 'Neues Getränk';
+    document.getElementById('drinkActiveGroup').style.display = isEdit ? 'none' : '';
+    document.getElementById('drinkEditHint').style.display = isEdit ? '' : 'none';
+}
+
+// Öffnet den Dialog für ein neues Getränk
+async function showAddDrinkModal() {
+    try {
+        await prepareDrinkModal(false);
+    } catch (error) {
+        console.error('Fehler beim Laden der Kategorien:', error);
+        showNotification('Fehler beim Laden der Kategorien', 'error');
+        return;
+    }
+
+    editingDrinkId = null;
+    toggleDrinkSmallSizeFields();
+    drinkModal.show();
+}
+
+// Öffnet den Dialog mit den Stammdaten eines bestehenden Getränks
+async function showEditDrinkModal(id) {
+    let drink;
+    try {
+        await prepareDrinkModal(true);
+        // Stammdaten direkt laden: die Liste kann temporäre Preise enthalten
+        const response = await fetch(`/api/drink/${id}`);
+        if (!response.ok) throw new Error('Getränk konnte nicht geladen werden');
+        drink = await response.json();
+    } catch (error) {
+        console.error('Fehler beim Laden des Getränks:', error);
+        showNotification('Fehler beim Laden des Getränks', 'error');
+        return;
+    }
+
+    editingDrinkId = id;
+    document.getElementById('drinkName').value = drink.name || '';
+    document.getElementById('drinkCategory').value = drink.category_id ?? '';
+    document.getElementById('drinkPrice').value = drink.preis ?? '';
+    document.getElementById('drinkVolume').value = drink.volume_normal || '';
+    document.getElementById('drinkHasSmallSize').checked = Boolean(drink.has_small_size);
+    document.getElementById('drinkSmallPrice').value = drink.small_price ?? '';
+    document.getElementById('drinkSmallVolume').value = drink.volume_small || '';
+    toggleDrinkSmallSizeFields();
+    drinkModal.show();
+}
+
+// Speichert ein neues oder das bearbeitete Getränk
+async function saveDrink() {
+    const isEdit = editingDrinkId !== null;
+    const name = document.getElementById('drinkName').value.trim();
+    const categoryId = document.getElementById('drinkCategory').value;
+    const price = document.getElementById('drinkPrice').value;
+    const hasSmallSize = document.getElementById('drinkHasSmallSize').checked;
+    const smallPrice = document.getElementById('drinkSmallPrice').value;
+
+    if (!name) {
+        showNotification('Bitte geben Sie einen Namen ein', 'error');
+        return;
+    }
+    if (!categoryId) {
+        showNotification('Bitte wählen Sie eine Kategorie aus', 'error');
+        return;
+    }
+    if (price === '' || Number(price) < 0) {
+        showNotification('Bitte geben Sie einen gültigen Preis ein', 'error');
+        return;
+    }
+    if (hasSmallSize && (smallPrice === '' || Number(smallPrice) < 0)) {
+        showNotification('Bitte geben Sie den Preis für die kleine Größe ein', 'error');
+        return;
+    }
+
+    const saveButton = document.getElementById('saveDrinkBtn');
+    saveButton.disabled = true;
+
+    try {
+        const data = {
+            name,
+            preis: price,
+            category_id: categoryId,
+            volume_normal: document.getElementById('drinkVolume').value,
+            has_small_size: hasSmallSize,
+            small_price: hasSmallSize ? smallPrice : null,
+            volume_small: hasSmallSize ? document.getElementById('drinkSmallVolume').value : null,
+        };
+        if (!isEdit) {
+            data.is_active = document.getElementById('drinkActive').checked;
+        }
+
+        const response = isEdit
+            ? await sendJson(`/api/drinks/${editingDrinkId}`, data, 'PUT')
+            : await sendJson('/api/drinks', data);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Fehler beim Speichern');
+        }
+
+        drinkModal.hide();
+        showNotification(`„${escapeHtml(name)}“ wurde ${isEdit ? 'gespeichert' : 'angelegt'}`, 'success');
+        fetchDrinks();
+    } catch (error) {
+        console.error('Fehler beim Speichern des Getränks:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+    } finally {
+        saveButton.disabled = false;
+    }
+}
+
+// Fragt vor dem Löschen nach (das Getränk verschwindet von allen Karten)
+function deleteDrink(id, name) {
+    if (!drinkDeleteModal) {
+        drinkDeleteModal = new bootstrap.Modal(document.getElementById('drinkDeleteModal'));
+    }
+    drinkToDelete = { id, name };
+    document.getElementById('drinkDeleteName').textContent = name || 'dieses Getränk';
+    drinkDeleteModal.show();
+}
+
+async function confirmDeleteDrink() {
+    if (!drinkToDelete) return;
+    const { id, name } = drinkToDelete;
+
+    const confirmButton = document.getElementById('confirmDrinkDeleteBtn');
+    confirmButton.disabled = true;
+
+    try {
+        const response = await fetch(`/api/drinks/${id}`, { method: 'DELETE' });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Fehler beim Löschen');
+        }
+
+        drinkDeleteModal.hide();
+        drinkToDelete = null;
+        showNotification(`„${escapeHtml(name)}“ wurde gelöscht`, 'success');
+        fetchDrinks();
+    } catch (error) {
+        console.error('Fehler beim Löschen des Getränks:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+    } finally {
+        confirmButton.disabled = false;
     }
 }
