@@ -69,18 +69,12 @@ async function saveCycleConfig(type) {
             throw new Error('Ungültiger Cycle-Typ');
         }
 
-        const response = await fetch('/api/cycle-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: type,
-                card: card,
-                speisekarteCard: speisekarteCard,
-                firstTime: parseInt(firstTime, 10),
-                secondTime: parseInt(secondTime, 10)
-            })
+        const response = await sendJson('/api/cycle-config', {
+            type: type,
+            card: card,
+            speisekarteCard: speisekarteCard,
+            firstTime: parseInt(firstTime, 10),
+            secondTime: parseInt(secondTime, 10)
         });
 
         if (!response.ok) {

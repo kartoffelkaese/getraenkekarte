@@ -360,13 +360,7 @@ function displayAds(ads) {
 // Funktion zum Umschalten des Getränkestatus
 async function toggleDrinkStatus(id, is_active) {
     try {
-        const response = await fetch(`/api/drinks/toggle/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id, is_active })
-        });
+        const response = await sendJson(`/api/drinks/toggle/${currentLocation}`, { id, is_active });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -384,13 +378,7 @@ async function toggleDrinkStatus(id, is_active) {
 // Funktion zum Umschalten der Preisanzeige für ein Getränk
 async function toggleDrinkPrice(id, show_price) {
     try {
-        const response = await fetch(`/api/drinks/toggle-price/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id, show_price })
-        });
+        const response = await sendJson(`/api/drinks/toggle-price/${currentLocation}`, { id, show_price });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -417,14 +405,7 @@ async function toggleCategoryVisibility(id, isVisible) {
             switchElement.disabled = true;
         }
 
-        const response = await fetch(`/api/categories/toggle-visibility/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id, is_visible: isVisible })
-        });
+        const response = await sendJson(`/api/categories/toggle-visibility/${currentLocation}`, { id, is_visible: isVisible });
 
         if (!response.ok) {
             throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
@@ -451,14 +432,7 @@ async function toggleCategoryPrices(id, showPrices) {
             switchElement.disabled = true;
         }
 
-        const response = await fetch(`/api/categories/toggle-prices/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id, show_prices: showPrices })
-        });
+        const response = await sendJson(`/api/categories/toggle-prices/${currentLocation}`, { id, show_prices: showPrices });
 
         if (!response.ok) {
             throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
@@ -476,13 +450,7 @@ async function toggleCategoryPrices(id, showPrices) {
 // Funktion zum Aktualisieren der Kategorie-Reihenfolge
 async function updateCategoryOrder(id, sort_order) {
     try {
-        const response = await fetch(`/api/categories/update-order/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id, sort_order: parseInt(sort_order, 10) })
-        });
+        const response = await sendJson(`/api/categories/update-order/${currentLocation}`, { id, sort_order: parseInt(sort_order, 10) });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -506,14 +474,7 @@ async function toggleCategoryColumnBreak(id, force_column_break) {
             switchElement.disabled = true;
         }
 
-        const response = await fetch(`/api/categories/toggle-column-break/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id, force_column_break })
-        });
+        const response = await sendJson(`/api/categories/toggle-column-break/${currentLocation}`, { id, force_column_break });
 
         if (!response.ok) {
             throw new Error(`Netzwerk-Antwort war nicht ok: ${response.status}`);
@@ -563,13 +524,7 @@ async function saveAdditiveSelection() {
             return parseInt(option.getAttribute('onclick').match(/\d+/)[0]);
         });
 
-        const response = await fetch(`/api/drink-additives/${currentDrinkId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ additiveIds })
-        });
+        const response = await sendJson(`/api/drink-additives/${currentDrinkId}`, { additiveIds });
 
         if (!response.ok) {
             throw new Error('Fehler beim Speichern der Zusatzstoffe');

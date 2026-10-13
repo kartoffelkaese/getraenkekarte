@@ -100,6 +100,15 @@ function handleAdminNavigate(state) {
     }
 }
 
+// Sendet JSON an die API; die Auswertung der Antwort bleibt beim Aufrufer
+function sendJson(url, body, method = 'POST') {
+    return fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+}
+
 function applyResponsiveTableLabels(table) {
     if (!table) return;
     const headers = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());

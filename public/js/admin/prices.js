@@ -131,15 +131,9 @@ async function toggleTempPricesActive(active) {
 // Funktion zum Speichern der temporären Preise
 async function saveTempPrices() {
     try {
-        const response = await fetch('/api/price-overrides/theke-hinten', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                active: tempPricesData.active,
-                drinks: tempPricesData.drinks
-            })
+        const response = await sendJson('/api/price-overrides/theke-hinten', {
+            active: tempPricesData.active,
+            drinks: tempPricesData.drinks
         });
         
         if (!response.ok) {

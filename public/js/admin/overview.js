@@ -31,13 +31,7 @@ async function saveOverviewConfig(overview) {
         const cardSelect = document.getElementById(`${overview.replace('-', '')}Card`);
         const card = cardSelect.value;
         
-        const response = await fetch(`/api/overview-config/${overview}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ card })
-        });
+        const response = await sendJson(`/api/overview-config/${overview}`, { card });
         
         if (!response.ok) {
             const errorData = await response.json();

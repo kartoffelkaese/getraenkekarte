@@ -61,11 +61,7 @@ async function saveAdditive() {
     const method = id ? 'PUT' : 'POST';
 
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, name, show_in_footer: showInFooter })
-        });
+        const response = await sendJson(url, { code, name, show_in_footer: showInFooter }, method);
 
         if (!response.ok) throw new Error('Netzwerk-Antwort war nicht ok');
 
@@ -109,11 +105,7 @@ function displayAdditives(additives) {
 
 async function toggleFooterVisibility(id, showInFooter) {
     try {
-        const response = await fetch(`/api/additives/${id}/toggle-footer`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ show_in_footer: showInFooter })
-        });
+        const response = await sendJson(`/api/additives/${id}/toggle-footer`, { show_in_footer: showInFooter }, 'PUT');
         
         if (!response.ok) throw new Error('Netzwerk-Antwort war nicht ok');
         

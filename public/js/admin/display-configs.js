@@ -23,13 +23,7 @@ async function saveHochzeitFontSize() {
     const fontSize = fontSizeSelect.value;
     
     try {
-        const response = await fetch('/api/hochzeit-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ fontSize })
-        });
+        const response = await sendJson('/api/hochzeit-config', { fontSize });
         
         if (response.ok) {
             await response.json();
@@ -82,15 +76,9 @@ async function saveImagesConfigFromUI() {
     if (!transparentToggle || !logoToggle) return;
 
     try {
-        const response = await fetch('/api/images-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                transparentBackground: transparentToggle.checked,
-                logoMode: logoToggle.checked
-            })
+        const response = await sendJson('/api/images-config', {
+            transparentBackground: transparentToggle.checked,
+            logoMode: logoToggle.checked
         });
 
         if (!response.ok) {

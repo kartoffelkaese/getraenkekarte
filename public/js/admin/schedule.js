@@ -384,13 +384,7 @@ async function saveRule() {
 async function saveScheduleConfigFor(number, config) {
     const schedule = SCHEDULES[number];
     try {
-        const response = await fetch(schedule.api, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(config)
-        });
+        const response = await sendJson(schedule.api, config);
 
         if (!response.ok) {
             const errorData = await response.json();

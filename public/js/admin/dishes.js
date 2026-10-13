@@ -170,13 +170,7 @@ async function deleteDish(id) {
 // Funktion zum Aktualisieren des Status eines Gerichts
 async function toggleDishStatus(id, isActive) {
     try {
-        const response = await fetch(`/api/dishes/${id}/status`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ is_active: isActive })
-        });
+        const response = await sendJson(`/api/dishes/${id}/status`, { is_active: isActive }, 'PUT');
         
         if (response.ok) {
             showNotification('Status erfolgreich aktualisiert', 'success');
@@ -192,13 +186,7 @@ async function toggleDishStatus(id, isActive) {
 // Funktion zum Aktualisieren der Reihenfolge eines Gerichts
 async function updateDishOrder(id, sortOrder) {
     try {
-        const response = await fetch(`/api/dishes/${id}/order`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ sort_order: parseInt(sortOrder) })
-        });
+        const response = await sendJson(`/api/dishes/${id}/order`, { sort_order: parseInt(sortOrder) }, 'PUT');
         
         if (response.ok) {
             showNotification('Reihenfolge erfolgreich aktualisiert', 'success');

@@ -4,13 +4,7 @@
 // Funktion zum Umschalten des Werbungsstatus
 async function toggleAdStatus(id, is_active) {
     try {
-        const response = await fetch(`/api/ads/toggle/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id, is_active })
-        });
+        const response = await sendJson(`/api/ads/toggle/${currentLocation}`, { id, is_active });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -29,13 +23,7 @@ async function toggleAdStatus(id, is_active) {
 // Funktion zum Aktualisieren der Werbung-Reihenfolge
 async function updateAdOrder(id, sort_order) {
     try {
-        const response = await fetch(`/api/ads/update-order/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id, sort_order: parseInt(sort_order, 10) })
-        });
+        const response = await sendJson(`/api/ads/update-order/${currentLocation}`, { id, sort_order: parseInt(sort_order, 10) });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -52,13 +40,7 @@ async function updateAdOrder(id, sort_order) {
 async function toggleLogoVisibility(is_active) {
     try {
         console.log('Sende Logo-Status-Update:', { is_active, currentLocation });
-        const response = await fetch(`/api/logo/toggle/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ is_active })
-        });
+        const response = await sendJson(`/api/logo/toggle/${currentLocation}`, { is_active });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -80,13 +62,7 @@ async function toggleLogoVisibility(is_active) {
 // Funktion zum Aktualisieren der Logo-Position
 async function updateLogoOrder(sort_order) {
     try {
-        const response = await fetch(`/api/logo/update-order/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ sort_order: parseInt(sort_order, 10) })
-        });
+        const response = await sendJson(`/api/logo/update-order/${currentLocation}`, { sort_order: parseInt(sort_order, 10) });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -101,13 +77,7 @@ async function updateLogoOrder(sort_order) {
 // Funktion zum Umschalten des Logo-Spaltenumbruchs
 async function toggleLogoColumnBreak(force_column_break) {
     try {
-        const response = await fetch(`/api/logo/toggle-column-break/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ force_column_break })
-        });
+        const response = await sendJson(`/api/logo/toggle-column-break/${currentLocation}`, { force_column_break });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
@@ -131,13 +101,7 @@ async function updateLogoSize(logo_size) {
     }
     
     try {
-        const response = await fetch(`/api/logo/update-size/${currentLocation}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ logo_size })
-        });
+        const response = await sendJson(`/api/logo/update-size/${currentLocation}`, { logo_size });
         
         if (!response.ok) {
             throw new Error('Netzwerk-Antwort war nicht ok');
